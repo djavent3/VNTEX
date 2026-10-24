@@ -1,0 +1,3798 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNTEX — Universal Batch Audio Converter &amp; DSP Codec Engine</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- LameJS for client-side MP3 encoding -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
+  <!-- JSZip for batch ZIP download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            studio: {
+              950: '#030305', // Deep pitch-black void
+              900: '#040406', // Recessed hardware input wells
+              850: '#08080c', // Primary obsidian panel surface
+              800: '#0b0b10', // Secondary obsidian card / button surface
+              700: '#15151e', // Primary dark hairline border
+              600: '#1c1c28', // Elevated / hover hairline border
+            },
+            accent: {
+              cyan: '#06b6d4',
+              violet: '#8b5cf6',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #030305;
+      background-image: radial-gradient(circle at 50% 0%, #08080f 0%, #030305 65%);
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+    /* Custom Obsidian Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #030305;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #15151e;
+      border-radius: 9999px;
+      border: 1px solid #1c1c28;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #252536;
+    }
+    /* Obsidian Studio Surface Panels */
+    .glass-panel {
+      background: rgba(8, 8, 12, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid #15151e;
+      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.95), inset 0 1px 0 0 rgba(255, 255, 255, 0.025);
+    }
+    /* Deep Black Glass for Modals, Dropzone & Inspector */
+    .obsidian-modal-glass {
+      background: rgba(6, 6, 9, 0.96);
+      backdrop-filter: blur(24px);
+      border: 1px solid #1c1c28;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.98), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+    }
+    /* Recessed Hardware Input Wells */
+    .hardware-well {
+      background-color: #040406;
+      border: 1px solid #15151e;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.92);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .hardware-well:hover {
+      border-color: #1c1c28;
+    }
+    .hardware-well:focus,
+    .hardware-well:focus-within {
+      border-color: #06b6d4 !important;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(6, 182, 212, 0.18);
+      outline: none;
+    }
+    /* Pitch-Black Waveform Metering Canvas Well */
+    .waveform-well {
+      background-color: #040407;
+      border: 1px solid #15151e;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.96);
+    }
+    .drop-zone-active {
+      border-color: #06b6d4 !important;
+      background: rgba(6, 182, 212, 0.06) !important;
+      box-shadow: 0 0 36px rgba(6, 182, 212, 0.18), inset 0 0 20px rgba(6, 182, 212, 0.06);
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- TOP STUDIO HEADER -->
+  <header class="sticky top-0 z-30 bg-[#050508]/95 backdrop-blur-xl border-b border-[#15151e]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/15 border border-cyan-400/25">
+          <span class="font-mono font-extrabold text-sm tracking-tighter text-slate-950">VX</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-lg font-extrabold tracking-widest text-white">VNTEX</h1>
+            <span class="text-cyan-400 font-mono text-[11px] uppercase px-2 py-0.5 rounded-md bg-[#040406] border border-[#1c1c28] tracking-wider">DSP // CODEC ENGINE</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Universal Batch Audio Transcoder • Lossless Binary Metadata &amp; Artwork Engine</p>
+        </div>
+      </div>
+
+      <!-- Header Right Controls -->
+      <div class="flex items-center gap-2.5">
+        <button id="btnLoadDemo" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#0b0b10] hover:bg-[#11111a] text-violet-300 border border-[#1c1c28] hover:border-violet-500/50 transition flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i>
+          <span>Load 3 Demo Studio Tracks</span>
+        </button>
+
+        <button id="btnToggleLog" class="px-3 py-2 rounded-xl text-xs font-mono bg-[#08080c] hover:bg-[#0b0b10] text-slate-300 border border-[#15151e] hover:border-[#1c1c28] transition flex items-center gap-2" title="Toggle DSP Console">
+          <i class="fa-solid fa-terminal text-cyan-400"></i>
+          <span class="hidden md:inline">DSP Log</span>
+          <span id="logCountBadge" class="px-1.5 py-0.2 bg-[#040406] text-cyan-400 border border-[#1c1c28] rounded text-[10px]">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- STEP 1: DRAG & DROP UPLOAD ZONE + QUICK FORMAT MATRIX -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      <!-- Dropzone (7 cols) -->
+      <div id="dropZone" class="lg:col-span-7 obsidian-modal-glass rounded-2xl border-2 border-dashed border-[#1c1c28] hover:border-cyan-500/60 transition-all p-6 flex flex-col justify-center items-center text-center cursor-pointer relative group overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/[0.03] rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-violet-500/[0.03] rounded-full blur-2xl pointer-events-none"></div>
+
+        <input type="file" id="fileInput" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.aac,.ogg,.opus,.wma,.webm" class="hidden" />
+
+        <div class="w-14 h-14 rounded-2xl bg-[#040406] border border-[#1c1c28] flex items-center justify-center mb-3 group-hover:scale-105 group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all">
+          <i class="fa-solid fa-cloud-arrow-up text-2xl text-cyan-400"></i>
+        </div>
+
+        <h2 class="text-base sm:text-lg font-semibold text-white mb-1">
+          Drop audio files here for batch conversion, or <span class="text-cyan-400 underline decoration-cyan-500/40">browse files</span>
+        </h2>
+        <p class="text-xs text-slate-400 max-w-lg mb-4">
+          Supports multi-file batch import with automatic binary extraction of <span class="text-slate-200 font-medium">ID3v2.3/2.4, Vorbis Comments, FLAC Pictures &amp; iTunes M4A Atoms</span>.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-mono">
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-cyan-300 border border-[#15151e]">MP3</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-emerald-300 border border-[#15151e]">FLAC</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-amber-300 border border-[#15151e]">WAV</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-violet-300 border border-[#15151e]">AIFF</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-pink-300 border border-[#15151e]">M4A / ALAC</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-blue-300 border border-[#15151e]">OGG</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-indigo-300 border border-[#15151e]">OPUS</span>
+          <span class="px-2.5 py-0.5 rounded bg-[#040406] text-slate-300 border border-[#15151e]">WEBM / WMA</span>
+        </div>
+      </div>
+
+      <!-- Format Capability & Tag Preservation Telemetry Card (5 cols) -->
+      <div class="lg:col-span-5 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-microchip"></i> Deep Binary Cover Art &amp; Tag Engine
+            </span>
+            <span id="capLosslessBadge" class="px-2 py-0.5 text-[11px] font-mono rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+              Lossless Audio
+            </span>
+          </div>
+
+          <div class="p-3.5 rounded-xl hardware-well mb-3">
+            <div class="flex items-center justify-between mb-1">
+              <h3 id="capFormatTitle" class="text-sm font-bold text-white">FLAC — Free Lossless Audio Codec</h3>
+              <span id="capExtBadge" class="text-xs font-mono text-cyan-400">.flac</span>
+            </div>
+            <p id="capFormatDesc" class="text-xs text-slate-400 leading-relaxed">
+              Bit-exact studio archival format. Embeds native Vorbis Comment blocks (Title, Artist, BPM, Key) and METADATA_BLOCK_PICTURE binary artwork.
+            </p>
+          </div>
+        </div>
+
+        <!-- Live Capability Pills -->
+        <div class="grid grid-cols-2 gap-2.5 text-xs mb-3">
+          <div id="capTagBox" class="p-2.5 rounded-xl bg-[#040406] border border-[#15151e] flex items-center gap-2.5">
+            <div id="capTagIcon" class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-tags"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] uppercase font-mono text-slate-500">Metadata Transfer</div>
+              <div id="capTagStatus" class="font-semibold text-slate-100 truncate">Vorbis Comments</div>
+            </div>
+          </div>
+
+          <div id="capArtBox" class="p-2.5 rounded-xl bg-[#040406] border border-[#15151e] flex items-center gap-2.5">
+            <div id="capArtIcon" class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-image"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] uppercase font-mono text-slate-500">Cover Art Transfer</div>
+              <div id="capArtStatus" class="font-semibold text-slate-100 truncate">FLAC Picture Block</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-[#15151e] text-[11px]">
+          <span class="text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Full-file head &amp; tail binary art scanner active
+          </span>
+          <button type="button" id="btnOpenFormatCompareTop" class="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition">
+            <i class="fa-solid fa-table-columns"></i> Compare All Formats
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: GLOBAL BATCH SETTINGS BAR + SELECTED FORMAT FEATURES & COMPATIBILITY SHOWCASE -->
+    <section class="glass-panel rounded-2xl p-5 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#15151e]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-cyan-400"></i>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-100">Output Format Selector, Mastering &amp; Platform Compatibility</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button type="button" id="btnOpenFormatCompare" class="px-3 py-1.5 rounded-lg bg-[#040406] hover:bg-[#0b0b10] text-violet-300 border border-[#1c1c28] hover:border-violet-500/40 font-medium flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-table-list text-violet-400"></i> Full Format Compatibility Matrix
+          </button>
+          <button type="button" id="btnApplyGlobalToAll" class="text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#040406] border border-[#15151e] hover:border-[#1c1c28] transition">
+            <i class="fa-solid fa-rotate"></i> Reset Per-Track Overrides
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Quick Format Selector Pills -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Select Target Output Format (Click to inspect format features &amp; compatibility below)</span>
+          <span id="selectedFormatQuickSummary" class="text-[11px] font-mono text-cyan-400 hidden sm:inline">Lossless • Cover Art ✓ • Metadata ✓</span>
+        </div>
+        <div id="formatQuickPills" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Settings Controls Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        <!-- Target Format -->
+        <div>
+          <label for="globalFormat" class="block text-xs font-medium text-slate-400 mb-1.5">Target Output Format</label>
+          <select id="globalFormat" class="w-full rounded-xl hardware-well px-3 py-2.5 text-sm text-white font-medium cursor-pointer">
+            <option value="mp3" class="bg-[#040406]">MP3 (MPEG-1 Layer III)</option>
+            <option value="flac" class="bg-[#040406]" selected>FLAC (Lossless Archival)</option>
+            <option value="wav" class="bg-[#040406]">WAV (Uncompressed PCM)</option>
+            <option value="aiff" class="bg-[#040406]">AIFF (Apple Studio PCM)</option>
+            <option value="m4a" class="bg-[#040406]">M4A (ALAC / iTunes Atom)</option>
+            <option value="ogg" class="bg-[#040406]">OGG (Ogg Studio Container)</option>
+            <option value="opus" class="bg-[#040406]">OPUS (Ogg Opus Container)</option>
+          </select>
+        </div>
+
+        <!-- Bitrate / Bit Depth Preset -->
+        <div>
+          <label for="globalQuality" class="block text-xs font-medium text-slate-400 mb-1.5">Quality / Bit Depth</label>
+          <select id="globalQuality" class="w-full rounded-xl hardware-well px-3 py-2.5 text-sm text-white font-medium cursor-pointer">
+            <!-- Populated dynamically based on format -->
+          </select>
+        </div>
+
+        <!-- Sample Rate -->
+        <div>
+          <label for="globalSampleRate" class="block text-xs font-medium text-slate-400 mb-1.5">Sample Rate (Resampler)</label>
+          <select id="globalSampleRate" class="w-full rounded-xl hardware-well px-3 py-2.5 text-sm text-white font-medium cursor-pointer">
+            <option value="original" class="bg-[#040406]">Keep Source Rate</option>
+            <option value="44100" class="bg-[#040406]" selected>44.1 kHz (CD / Mastering)</option>
+            <option value="48000" class="bg-[#040406]">48.0 kHz (Broadcast / Video)</option>
+            <option value="96000" class="bg-[#040406]">96.0 kHz (Hi-Res Studio)</option>
+          </select>
+        </div>
+
+        <!-- Channels -->
+        <div>
+          <label for="globalChannels" class="block text-xs font-medium text-slate-400 mb-1.5">Audio Channels</label>
+          <select id="globalChannels" class="w-full rounded-xl hardware-well px-3 py-2.5 text-sm text-white font-medium cursor-pointer">
+            <option value="stereo" class="bg-[#040406]" selected>Stereo (2.0 Channels)</option>
+            <option value="mono" class="bg-[#040406]">Mono (1.0 Downmix)</option>
+          </select>
+        </div>
+
+        <!-- Preserve Metadata Toggle -->
+        <div class="flex flex-col justify-end">
+          <label class="flex items-center justify-between p-2.5 rounded-xl hardware-well cursor-pointer h-[42px]">
+            <span class="text-xs font-medium text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-tags text-cyan-400"></i> Preserve Tags
+            </span>
+            <input type="checkbox" id="togglePreserveTags" checked class="w-4 h-4 accent-cyan-500 rounded cursor-pointer" />
+          </label>
+        </div>
+
+        <!-- Embed Cover Art Toggle -->
+        <div class="flex flex-col justify-end">
+          <label class="flex items-center justify-between p-2.5 rounded-xl hardware-well cursor-pointer h-[42px]">
+            <span class="text-xs font-medium text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-compact-disc text-violet-400"></i> Embed Cover Art
+            </span>
+            <input type="checkbox" id="toggleEmbedArt" checked class="w-4 h-4 accent-cyan-500 rounded cursor-pointer" />
+          </label>
+        </div>
+      </div>
+
+      <!-- SELECTED FORMAT FEATURES, COVER ART & PLATFORM COMPATIBILITY DECK -->
+      <div id="formatCompatibilityDeck" class="rounded-2xl bg-[#040406] border border-[#15151e] p-4 sm:p-5 space-y-4">
+        <!-- Populated dynamically by updateGlobalFormatUI() -->
+      </div>
+    </section>
+
+    <!-- STEP 3: BATCH QUEUE & ACTION TOOLBAR -->
+    <section class="space-y-4">
+      <!-- Queue Header & Batch Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-3 glass-panel px-5 py-3.5 rounded-2xl">
+        <div class="flex items-center gap-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-cyan-400"></i>
+            Batch Queue
+            <span id="queueCountBadge" class="px-2.5 py-0.5 text-xs font-mono rounded-full bg-[#040406] text-cyan-400 border border-[#1c1c28]">0 tracks</span>
+          </h2>
+          <span id="batchStatusText" class="text-xs text-slate-500 hidden sm:inline">Ready for processing</span>
+        </div>
+
+        <!-- Batch Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnBatchEditMeta" disabled class="px-3 py-2 rounded-xl text-xs font-medium bg-[#0b0b10] hover:bg-[#12121a] disabled:opacity-35 disabled:pointer-events-none text-slate-200 border border-[#1c1c28] transition flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square text-cyan-400"></i>
+            <span>Batch Stamp Album/Artist</span>
+          </button>
+
+          <button id="btnClearCompleted" disabled class="px-3 py-2 rounded-xl text-xs font-medium bg-[#0b0b10] hover:bg-[#12121a] disabled:opacity-35 disabled:pointer-events-none text-slate-300 border border-[#1c1c28] transition">
+            Clear Completed
+          </button>
+
+          <button id="btnClearAll" disabled class="px-3 py-2 rounded-xl text-xs font-medium bg-[#0b0b10] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40 disabled:opacity-35 disabled:pointer-events-none text-slate-300 border border-[#1c1c28] transition">
+            Clear All
+          </button>
+
+          <button id="btnDownloadZip" disabled class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#0b0b10] hover:bg-emerald-950/40 text-emerald-300 border border-emerald-500/40 disabled:opacity-35 disabled:pointer-events-none transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-file-zipper"></i>
+            <span>Download All ZIP</span>
+          </button>
+
+          <button id="btnConvertAll" disabled class="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 disabled:opacity-35 disabled:pointer-events-none transition flex items-center gap-2 shadow-lg shadow-cyan-500/15">
+            <i id="convertBtnIcon" class="fa-solid fa-bolt"></i>
+            <span id="convertBtnText">Convert All Files</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Overall Batch Progress Bar (Hidden when idle) -->
+      <div id="batchProgressContainer" class="hidden glass-panel rounded-2xl p-4 border border-cyan-500/30">
+        <div class="flex items-center justify-between text-xs mb-2">
+          <span id="batchProgressLabel" class="font-mono text-cyan-300 flex items-center gap-2">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Transcoding batch queue...
+          </span>
+          <span id="batchProgressPercent" class="font-mono font-bold text-white">0%</span>
+        </div>
+        <div class="w-full h-2 bg-[#040406] border border-[#15151e] rounded-full overflow-hidden">
+          <div id="batchProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Empty Queue State -->
+      <div id="emptyQueueState" class="obsidian-modal-glass rounded-2xl p-12 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-[#040406] border border-[#1c1c28] flex items-center justify-center mx-auto mb-4 text-cyan-400/70 shadow-inner">
+          <i class="fa-solid fa-music text-2xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-white mb-1">Your conversion queue is empty</h3>
+        <p class="text-xs text-slate-400 max-w-md mx-auto mb-5">
+          Drag and drop audio files into the obsidian dropzone above, or load our synthesized studio demo tracks (complete with embedded cover art, BPM, Key, and ID3/Vorbis metadata) to test instant batch conversion.
+        </p>
+        <button id="btnEmptyLoadDemo" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition inline-flex items-center gap-2 shadow-lg shadow-violet-600/20">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Generate &amp; Load 3 Demo Studio Tracks</span>
+        </button>
+      </div>
+
+      <!-- Queue List Container -->
+      <div id="queueList" class="space-y-3"></div>
+    </section>
+
+      <!-- DSP CONSOLE / REAL-TIME CONVERSION LOG -->
+    <section id="dspLogSection" class="hidden obsidian-modal-glass rounded-2xl overflow-hidden">
+      <div class="px-4 py-2.5 bg-[#040406] border-b border-[#15151e] flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs font-mono text-cyan-400">
+          <i class="fa-solid fa-terminal"></i>
+          <span>VNTEX Binary DSP &amp; Tagging Telemetry Log</span>
+        </div>
+        <button id="btnClearLog" class="text-[11px] font-mono text-slate-400 hover:text-white transition">Clear Console</button>
+      </div>
+      <div id="dspLogContent" class="p-4 max-h-56 overflow-y-auto font-mono text-xs space-y-1.5 bg-[#030305] text-slate-300"></div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto border-t border-[#15151e] bg-[#030305] py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span><strong class="text-slate-300 font-mono tracking-wider">VNTEX</strong> Universal Audio Transcoder • 100% Client-Side Web Audio API &amp; Binary Tag Engine</span>
+      <span class="font-mono text-[11px] text-slate-400">ID3v2.3 (TENC) • Vorbis Comments • FLAC Picture Block • RIFF INFO/ISFT • MP4 ilst</span>
+    </div>
+  </footer>
+
+  <!-- MODAL 1: EDIT TRACK METADATA & COVER ART -->
+  <div id="metadataModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="obsidian-modal-glass w-full max-w-2xl rounded-2xl overflow-hidden animate-fade-in">
+      <div class="px-6 py-4 bg-[#040406] border-b border-[#15151e] flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-sliders text-cyan-400"></i>
+          <h3 class="text-base font-bold text-white" id="metaModalHeader">Edit Track Metadata &amp; Artwork</h3>
+        </div>
+        <button id="btnCloseMetaModal" class="w-8 h-8 rounded-lg bg-[#0b0b10] hover:bg-[#14141f] text-slate-400 hover:text-white border border-[#1c1c28] flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 max-h-[80vh] overflow-y-auto">
+        <!-- Cover Art Column (4 cols) -->
+        <div class="md:col-span-4 flex flex-col items-center">
+          <div class="relative group w-40 h-40 rounded-2xl overflow-hidden bg-[#040406] border border-[#1c1c28] shadow-2xl mb-3">
+            <img id="metaModalCoverPreview" src="https://placehold.co/300x300/040406/06b6d4?text=No+Cover" alt="Cover Art" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-2">
+              <button type="button" id="btnUploadNewCover" class="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs w-full">
+                Upload Image
+              </button>
+              <button type="button" id="btnGenerateProceduralCover" class="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs w-full">
+                Synth Cover Art
+              </button>
+            </div>
+          </div>
+          <input type="file" id="coverArtFileInput" accept="image/jpeg,image/png,image/webp" class="hidden" />
+          <span id="metaCoverDimensions" class="text-[11px] font-mono text-slate-400 text-center">JPEG/PNG Binary Ready</span>
+          <button type="button" id="btnRemoveCover" class="mt-1.5 text-xs text-rose-400 hover:text-rose-300 transition">Remove Cover Art</button>
+
+          <label class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl hardware-well cursor-pointer text-[11px] text-slate-300">
+            <input type="checkbox" id="metaApplyCoverToAll" class="w-3.5 h-3.5 accent-cyan-500 rounded cursor-pointer" />
+            <span>Apply art to all batch tracks</span>
+          </label>
+        </div>
+
+        <!-- Metadata Fields Column (8 cols) -->
+        <div class="md:col-span-8 space-y-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Track Title (`TIT2` / `TITLE`)</label>
+              <input type="text" id="metaInputTitle" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-white" placeholder="Track Title" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Artist (`TPE1` / `ARTIST`)</label>
+              <input type="text" id="metaInputArtist" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-white" placeholder="Artist Name" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Album (`TALB` / `ALBUM`)</label>
+              <input type="text" id="metaInputAlbum" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-white" placeholder="Album Title" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Release Year (`TYER` / `DATE`)</label>
+              <input type="text" id="metaInputYear" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-white font-mono" placeholder="2025" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Genre (`TCON` / `GENRE`)</label>
+              <input type="text" id="metaInputGenre" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-white" placeholder="Electronic / Synthwave" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Tempo BPM (`TBPM`)</label>
+              <input type="text" id="metaInputBpm" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-cyan-300 font-mono" placeholder="124" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Musical Key (`TKEY` / Camelot)</label>
+              <input type="text" id="metaInputKey" class="w-full rounded-xl hardware-well px-3.5 py-2 text-sm text-violet-300 font-mono" placeholder="8A / Am" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-[#040406] border-t border-[#15151e] flex items-center justify-between">
+        <span class="text-xs text-slate-400">Changes will be embedded directly into the converted output file.</span>
+        <div class="flex items-center gap-2.5">
+          <button type="button" id="btnCancelMetaModal" class="px-4 py-2 rounded-xl text-xs font-medium bg-[#0b0b10] hover:bg-[#14141f] text-slate-300 border border-[#1c1c28] transition">Cancel</button>
+          <button type="button" id="btnSaveMetaModal" class="px-5 py-2 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition shadow-lg shadow-cyan-500/20">Save Metadata</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: BINARY OUTPUT TAG INSPECTOR (VERIFIES EMBEDDED METADATA IN CONVERTED BLOB) -->
+  <div id="inspectorModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="obsidian-modal-glass w-full max-w-xl rounded-2xl border border-emerald-500/40 overflow-hidden">
+      <div class="px-6 py-4 bg-[#040406] border-b border-[#15151e] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-shield-check text-emerald-400"></i>
+          <h3 class="text-sm font-bold text-white">Converted Binary Tag &amp; Artwork Verification</h3>
+        </div>
+        <button id="btnCloseInspector" class="w-8 h-8 rounded-lg bg-[#0b0b10] hover:bg-[#14141f] text-slate-400 hover:text-white border border-[#1c1c28] flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="inspectorBody" class="p-6 space-y-4 text-xs">
+        <!-- Populated dynamically by re-parsing the converted output blob -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BATCH STAMP ARTIST / ALBUM -->
+  <div id="batchStampModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="obsidian-modal-glass w-full max-w-md rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-[#040406] border-b border-[#15151e] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-cyan-400"></i> Batch Stamp Common Tags
+        </h3>
+        <button id="btnCloseBatchStamp" class="w-8 h-8 rounded-lg bg-[#0b0b10] text-slate-400 hover:text-white border border-[#1c1c28] flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-3.5 text-xs">
+        <p class="text-slate-400">Leave any field blank to keep each track's existing value.</p>
+        <div>
+          <label class="block text-slate-300 mb-1">Batch Artist</label>
+          <input type="text" id="batchInputArtist" class="w-full rounded-xl hardware-well px-3 py-2 text-sm text-white" placeholder="e.g. VNTEX Collective" />
+        </div>
+        <div>
+          <label class="block text-slate-300 mb-1">Batch Album</label>
+          <input type="text" id="batchInputAlbum" class="w-full rounded-xl hardware-well px-3 py-2 text-sm text-white" placeholder="e.g. Midnight Horizon LP" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1">Batch Year</label>
+            <input type="text" id="batchInputYear" class="w-full rounded-xl hardware-well px-3 py-2 text-sm text-white font-mono" placeholder="2025" />
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1">Batch Genre</label>
+            <input type="text" id="batchInputGenre" class="w-full rounded-xl hardware-well px-3 py-2 text-sm text-white" placeholder="Electronic" />
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-3.5 bg-[#040406] border-t border-[#15151e] flex justify-end gap-2">
+        <button id="btnApplyBatchStamp" class="px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition">Apply to All Tracks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ALL-FORMATS SIDE-BY-SIDE COMPATIBILITY & FEATURE MATRIX -->
+  <div id="formatCompareModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="obsidian-modal-glass w-full max-w-5xl rounded-2xl overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="px-6 py-4 bg-[#040406] border-b border-[#15151e] flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-table-columns text-cyan-400"></i>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white">Universal Audio Format Feature &amp; Platform Compatibility Matrix</h3>
+            <p class="text-[11px] text-slate-400">Click any format row to set it as your active Global Batch Output Format</p>
+          </div>
+        </div>
+        <button id="btnCloseFormatCompare" class="w-8 h-8 rounded-lg bg-[#0b0b10] hover:bg-[#14141f] text-slate-400 hover:text-white border border-[#1c1c28] flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-auto text-xs space-y-4">
+        <div class="overflow-x-auto rounded-xl border border-[#15151e]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#040406] border-b border-[#15151e] text-[11px] font-mono uppercase text-slate-400">
+                <th class="py-3 px-4">Format</th>
+                <th class="py-3 px-4">Audio Type</th>
+                <th class="py-3 px-4">Cover Art Transfer</th>
+                <th class="py-3 px-4">Metadata &amp; DJ Tags</th>
+                <th class="py-3 px-4">OS (Mac / Win / Mobile)</th>
+                <th class="py-3 px-4">DJ Gear (CDJ / Serato / Rekordbox)</th>
+                <th class="py-3 px-4">Studio DAWs</th>
+              </tr>
+            </thead>
+            <tbody id="formatCompareTableBody" class="divide-y divide-[#15151e] bg-[#08080c]">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- APPLICATION JAVASCRIPT -->
+  <script>
+    /*************************************************************************
+     * 1. FORMAT SPECIFICATIONS & PLATFORM COMPATIBILITY DEFINITIONS
+     *************************************************************************/
+    const FORMAT_SPECS = {
+      mp3: {
+        name: 'MP3 — MPEG-1 Audio Layer III',
+        shortLabel: 'MP3',
+        ext: 'mp3',
+        mime: 'audio/mpeg',
+        lossless: false,
+        compressionSummary: 'Lossy Perceptual (Up to 320 kbps CBR)',
+        desc: 'Universal distribution format supported by 100% of consumer devices, DJ hardware, car stereos, and operating systems with native ID3v2.3 artwork and tags.',
+        tagContainer: 'ID3v2.3 Binary Frames',
+        tagDetails: 'Transfers Title (TIT2), Artist (TPE1), Album (TALB), Year (TYER), Genre (TCON), Tempo BPM (TBPM), and Musical Key (TKEY).',
+        artSupport: 'ID3v2.3 APIC Front Cover',
+        artDetails: '100% Universal Cover Art Transfer. Embeds baseline JPEG/PNG binary inside an ID3v2.3 APIC (0x03 Front Cover) frame read by every OS, player, and DJ deck.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM', 'Key', 'Front Cover Art'],
+        platforms: {
+          os: [
+            { name: 'macOS Finder & Apple Music', status: 'full', note: 'Native audio + cover art thumbnail' },
+            { name: 'Windows Explorer & Media Player', status: 'full', note: 'Native audio + cover art thumbnail' },
+            { name: 'iOS / Android / Car Audio', status: 'full', note: 'Universal mobile & automotive support' }
+          ],
+          dj: [
+            { name: 'Pioneer CDJ-3000 / 2000NXS2 / Rekordbox', status: 'full', note: 'Reads BPM, Key & Artwork natively' },
+            { name: 'Serato DJ Pro / Traktor / VirtualDJ', status: 'full', note: 'Full ID3v2.3 tag & cover art display' }
+          ],
+          daw: [
+            { name: 'Logic Pro / Ableton Live / FL Studio', status: 'full', note: 'Direct timeline import' },
+            { name: 'Pro Tools / Cubase / Studio One', status: 'full', note: 'Direct import (converts to session PCM)' }
+          ],
+          web: [
+            { name: 'All Web Browsers & Discord', status: 'full', note: 'Inline HTML5 player & social preview' }
+          ]
+        },
+        qualities: [
+          { value: '320', label: '320 kbps CBR (Insane Studio)' },
+          { value: '256', label: '256 kbps CBR (High Quality)' },
+          { value: '192', label: '192 kbps CBR (Standard)' },
+          { value: '128', label: '128 kbps CBR (Compact)' }
+        ]
+      },
+      flac: {
+        name: 'FLAC — Free Lossless Audio Codec',
+        shortLabel: 'FLAC',
+        ext: 'flac',
+        mime: 'audio/flac',
+        lossless: true,
+        compressionSummary: 'Bit-Exact Lossless Archival (16-bit / 24-bit)',
+        desc: 'Audiophile & studio archival standard. Preserves bit-for-bit master audio quality while embedding native Vorbis Comments and Block 6 binary cover art.',
+        tagContainer: 'Vorbis Comments (Block 4)',
+        tagDetails: 'Transfers TITLE, ARTIST, ALBUM, DATE, GENRE, BPM, and INITIALKEY inside a native FLAC Block 4 Vorbis Comment packet.',
+        artSupport: 'FLAC Picture (Block 6)',
+        artDetails: '100% Native Cover Art Transfer. Writes a dedicated FLAC METADATA_BLOCK_PICTURE (Block 6) header with exact pixel dimensions and JPEG/PNG bytes.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM', 'Key', 'Block 6 Cover Art'],
+        platforms: {
+          os: [
+            { name: 'Windows 10/11 Explorer & Media Player', status: 'full', note: 'Native artwork & tag display' },
+            { name: 'macOS Finder / QuickLook (macOS 11+)', status: 'partial', note: 'Plays in Finder/VLC; Apple Music app requires ALAC/AIFF' },
+            { name: 'Android / iOS Files', status: 'full', note: 'Native playback across modern mobile OS' }
+          ],
+          dj: [
+            { name: 'Pioneer CDJ-3000 / Tour1 / Rekordbox', status: 'full', note: 'Full lossless + cover art (older CDJ-2000 non-NXS2 use AIFF/WAV)' },
+            { name: 'Serato DJ Pro / Traktor / Denon Engine', status: 'full', note: 'First-class lossless DJ format with art' }
+          ],
+          daw: [
+            { name: 'Ableton Live / FL Studio / Reaper / Cubase', status: 'full', note: 'Direct lossless import & export' },
+            { name: 'Logic Pro X / Pro Tools (2021+)', status: 'partial', note: 'Supported in modern versions; AIFF/WAV preferred for legacy rigs' }
+          ],
+          web: [
+            { name: 'Chrome / Edge / Firefox / Safari / Discord', status: 'full', note: 'Native browser playback' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: '16-bit Lossless PCM' },
+          { value: '24', label: '24-bit Studio Master PCM' }
+        ]
+      },
+      wav: {
+        name: 'WAV — RIFF WAVE Uncompressed PCM',
+        shortLabel: 'WAV',
+        ext: 'wav',
+        mime: 'audio/wav',
+        lossless: true,
+        compressionSummary: 'Uncompressed Studio Master PCM (16 / 24 / 32-bit Float)',
+        desc: 'Universal DAW & broadcast master format. Writes dual metadata: standard RIFF LIST-INFO chunks plus a word-aligned RIFF "id3 " chunk so modern apps display cover art.',
+        tagContainer: 'RIFF INFO + ID3v2 Chunk',
+        tagDetails: 'Dual-writes RIFF LIST-INFO (INAM, IART, IPRD, ICRD, IGNR) AND a complete ID3v2.3 chunk (TIT2, TPE1, TBPM, TKEY) for maximum cross-platform reading.',
+        artSupport: 'RIFF "id3 " APIC Chunk',
+        artDetails: 'Hybrid Cover Art Transfer. Embeds cover art inside a RIFF "id3 " chunk. Read by Rekordbox, Serato, Windows 10/11, JRiver, Kid3, and Foobar2000 (legacy WAV players may ignore WAV art).',
+        artLevel: 'hybrid',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM (ID3)', 'Key (ID3)', 'RIFF id3 Cover Art'],
+        platforms: {
+          os: [
+            { name: 'Windows 10/11 / Foobar2000 / MusicBee', status: 'full', note: 'Reads RIFF INFO & id3 chunk cover art' },
+            { name: 'macOS Finder / Apple Music', status: 'partial', note: 'Plays audio everywhere; macOS ignores WAV cover art (use AIFF for Mac art)' },
+            { name: 'iOS / Android / Hardware Samplers', status: 'full', note: 'Universal uncompressed audio playback' }
+          ],
+          dj: [
+            { name: 'Pioneer CDJ (All Models) / Rekordbox', status: 'full', note: '100% audio compatibility; Rekordbox reads embedded id3 chunk' },
+            { name: 'Serato DJ Pro / Traktor / VirtualDJ', status: 'full', note: 'Reads embedded WAV ID3v2 tags & cover art' }
+          ],
+          daw: [
+            { name: 'All DAWs (Pro Tools, Logic, Ableton, FL)', status: 'full', note: 'Gold-standard zero-decode studio master format' },
+            { name: 'Hardware Samplers (MPC, Elektron, SP-404)', status: 'full', note: 'Native 16/24-bit sample import' }
+          ],
+          web: [
+            { name: 'All Web Browsers & HTML5 Audio', status: 'full', note: 'Native uncompressed playback' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: '16-bit Integer PCM (CD)' },
+          { value: '24', label: '24-bit Integer PCM (Studio)' },
+          { value: '32f', label: '32-bit IEEE Float PCM (DAW)' }
+        ]
+      },
+      aiff: {
+        name: 'AIFF — Audio Interchange File Format',
+        shortLabel: 'AIFF',
+        ext: 'aiff',
+        mime: 'audio/x-aiff',
+        lossless: true,
+        compressionSummary: 'Uncompressed Big-Endian Studio PCM (16-bit / 24-bit)',
+        desc: 'The ultimate uncompressed format when you need BOTH uncompressedWAV-level quality AND 100% reliable cover art & metadata on macOS, Apple Music, and Pioneer CDJs.',
+        tagContainer: 'IFF NAME/AUTH + Native ID3 Chunk',
+        tagDetails: 'Writes native IFF NAME/AUTH chunks plus an official AIFF "ID3 " chunk containing full ID3v2.3 text frames (Title, Artist, Album, BPM, Key).',
+        artSupport: 'Native AIFF "ID3 " APIC',
+        artDetails: '100% Native Cover Art Transfer. Unlike WAV, the AIFF specification officially standardizes the "ID3 " chunk—so Apple Music, Finder, Pioneer CDJs, and Serato all display cover art.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM', 'Key', 'Native ID3 Cover Art'],
+        platforms: {
+          os: [
+            { name: 'macOS Finder / Apple Music / iOS', status: 'full', note: 'First-class Apple uncompressed format with full Cover Art' },
+            { name: 'Windows Media Player / VLC / Foobar', status: 'full', note: 'Plays audio & reads ID3 chunk metadata' }
+          ],
+          dj: [
+            { name: 'Pioneer CDJ (All Models) / Rekordbox', status: 'full', note: 'Pro DJ favorite: uncompressed audio + full CDJ screen artwork!' },
+            { name: 'Serato DJ Pro / Traktor Pro / VirtualDJ', status: 'full', note: 'Full native tag, BPM, Key & cover art support' }
+          ],
+          daw: [
+            { name: 'Logic Pro X / Ableton Live / Pro Tools', status: 'full', note: 'Bit-exact studio master import/export' }
+          ],
+          web: [
+            { name: 'Safari (Native) / Chrome & Firefox (via App)', status: 'partial', note: 'Native on Apple Safari; desktop apps & DJ gear preferred' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: '16-bit Big-Endian PCM' },
+          { value: '24', label: '24-bit Big-Endian Studio PCM' }
+        ]
+      },
+      m4a: {
+        name: 'M4A — Apple iTunes / ALAC Container',
+        shortLabel: 'M4A',
+        ext: 'm4a',
+        mime: 'audio/mp4',
+        lossless: true,
+        compressionSummary: 'Apple Ecosystem Container (16-bit / 24-bit)',
+        desc: 'Apple iTunes, iPhone/iPad, and macOS container. Embeds native QuickTime/MP4 ilst metadata atoms (©nam, ©ART, ©alb, tmpo) and a binary "covr" cover art atom.',
+        tagContainer: 'MP4 ilst Atoms + ID32',
+        tagDetails: 'Writes native ISO BMFF moov.udta.meta.ilst atoms (©nam, ©ART, ©alb, ©day, ©gen, tmpo BPM) plus an ID3v2 tag block.',
+        artSupport: 'MP4 "covr" Artwork Atom',
+        artDetails: '100% Native Cover Art Transfer. Embeds JPEG/PNG binary inside the standard MP4 "covr" (data) atom plus ID3v2 APIC.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM (tmpo)', 'Key', 'covr Artwork Atom'],
+        platforms: {
+          os: [
+            { name: 'macOS / Apple Music / iPhone / iPad', status: 'full', note: 'Native Apple ecosystem format with full artwork' },
+            { name: 'Windows 10/11 / Android', status: 'full', note: 'Supported across modern desktop & mobile OS' }
+          ],
+          dj: [
+            { name: 'Rekordbox / Serato DJ Pro / VirtualDJ', status: 'full', note: 'Reads M4A audio, ilst metadata & covr artwork' },
+            { name: 'Pioneer CDJ Hardware', status: 'partial', note: 'AAC M4A supported on most CDJs; ALAC supported on CDJ-3000/Tour1' }
+          ],
+          daw: [
+            { name: 'Logic Pro X / GarageBand / Ableton Live', status: 'full', note: 'Direct import on macOS & Windows 10/11' }
+          ],
+          web: [
+            { name: 'Safari / Chrome / Edge / Mobile Web', status: 'full', note: 'Broad HTML5 audio support' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: 'ALAC / Lossless 16-bit' },
+          { value: '24', label: 'ALAC / Studio 24-bit' }
+        ]
+      },
+      ogg: {
+        name: 'OGG — Xiph Ogg Studio Container',
+        shortLabel: 'OGG',
+        ext: 'ogg',
+        mime: 'audio/ogg',
+        lossless: false,
+        compressionSummary: 'Open-Source Xiph Container (Q10 / Studio Stream)',
+        desc: 'Open-source gaming, web, and Linux audio container. Stores metadata inside Ogg Vorbis Comment headers and embeds cover art via Base64 METADATA_BLOCK_PICTURE.',
+        tagContainer: 'Ogg Vorbis Comments',
+        tagDetails: 'Writes standard Xiph Vorbis key=value comments (TITLE, ARTIST, ALBUM, DATE, GENRE, BPM, INITIALKEY).',
+        artSupport: 'METADATA_BLOCK_PICTURE (Base64)',
+        artDetails: 'Full Cover Art Transfer. Encodes a FLAC-compatible binary Picture Block into a Base64 METADATA_BLOCK_PICTURE Vorbis comment field.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM', 'Key', 'Base64 Picture Block'],
+        platforms: {
+          os: [
+            { name: 'Windows 10/11 / Linux / Android', status: 'full', note: 'Native playback & tag support' },
+            { name: 'macOS / iOS', status: 'partial', note: 'Requires VLC/IINA or browser on macOS/iOS' }
+          ],
+          dj: [
+            { name: 'VirtualDJ / Traktor Pro / Mixxx / Serato', status: 'full', note: 'Supported in desktop DJ software' },
+            { name: 'Pioneer Standalone CDJs', status: 'none', note: 'Not supported on standalone CDJ USBs (use MP3/AIFF/WAV/FLAC)' }
+          ],
+          daw: [
+            { name: 'Reaper / FL Studio / Ableton Live / Audacity', status: 'full', note: 'Popular for game audio (Unity/Unreal/Godot) & stems' }
+          ],
+          web: [
+            { name: 'Chrome / Firefox / Edge / Discord', status: 'full', note: 'Instant web streaming playback' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: 'Q10 High Fidelity Stream' },
+          { value: '24', label: 'Studio Master Stream' }
+        ]
+      },
+      opus: {
+        name: 'OPUS — IETF Low-Latency Audio Container',
+        shortLabel: 'OPUS',
+        ext: 'opus',
+        mime: 'audio/opus',
+        lossless: false,
+        compressionSummary: 'Next-Gen IETF Codec Container (256–510 kbps)',
+        desc: 'Modern ultra-efficient container used by Discord, YouTube, and WebRTC. Uses an OpusTags header packet with full Vorbis comments and METADATA_BLOCK_PICTURE artwork.',
+        tagContainer: 'OpusTags Header Packet',
+        tagDetails: 'Embeds TITLE, ARTIST, ALBUM, DATE, GENRE, BPM, and INITIALKEY inside the Ogg OpusTags header page.',
+        artSupport: 'OpusTags Picture Block',
+        artDetails: 'Full Cover Art Transfer. Embeds a Base64-encoded METADATA_BLOCK_PICTURE structure inside the OpusTags header packet.',
+        artLevel: 'full',
+        supportedTagsList: ['Title', 'Artist', 'Album', 'Year', 'Genre', 'BPM', 'Key', 'OpusTags Picture Block'],
+        platforms: {
+          os: [
+            { name: 'Windows 10/11 / Android 10+ / Linux', status: 'full', note: 'Native OS playback' },
+            { name: 'macOS / iOS 17+', status: 'partial', note: 'Supported in Safari/Web & VLC; not used in Apple Music library' }
+          ],
+          dj: [
+            { name: 'VirtualDJ / Mixxx', status: 'full', note: 'Supported in modern open/multi-format DJ apps' },
+            { name: 'Pioneer CDJ / Rekordbox', status: 'none', note: 'Not supported on CDJ hardware (use MP3/AIFF/FLAC/WAV)' }
+          ],
+          daw: [
+            { name: 'Reaper / Audacity / Game Engines', status: 'full', note: 'Direct support in modern audio editors' }
+          ],
+          web: [
+            { name: 'Chrome / Firefox / Edge / Safari / Discord', status: 'full', note: 'Gold standard for web & voice/music streaming' }
+          ]
+        },
+        qualities: [
+          { value: '16', label: '256 kbps Transparent Studio' },
+          { value: '24', label: '510 kbps Max Bitrate' }
+        ]
+      }
+    };
+
+    /*************************************************************************
+     * 2. APPLICATION STATE & AUDIO CONTEXT
+     *************************************************************************/
+    const state = {
+      tracks: [],
+      isConverting: false,
+      activePlayingId: null,
+      playOffsetRatio: 0,
+      audioElement: new Audio(),
+      editingTrackId: null,
+      tempCoverDataUrl: null,
+      tempCoverBytes: null,
+      tempCoverMime: 'image/jpeg',
+      logCount: 0,
+      formatDeckExpanded: false
+    };
+
+    let sharedAudioCtx = null;
+    function getAudioContext() {
+      if (!sharedAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        sharedAudioCtx = new AudioCtx();
+      }
+      if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
+    }
+
+    /*************************************************************************
+     * 3. UTILITY & LOGGING FUNCTIONS
+     *************************************************************************/
+    function logDSP(message, type = 'info') {
+      state.logCount++;
+      const badge = document.getElementById('logCountBadge');
+      if (badge) badge.textContent = state.logCount;
+
+      const container = document.getElementById('dspLogContent');
+      if (!container) return;
+
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      const colorMap = {
+        info: 'text-slate-300',
+        success: 'text-emerald-400',
+        warn: 'text-amber-400',
+        tag: 'text-cyan-400',
+        error: 'text-rose-400'
+      };
+
+      const line = document.createElement('div');
+      line.className = `flex items-start gap-2 ${colorMap[type] || 'text-slate-300'}`;
+      line.innerHTML = `<span class="text-slate-600 shrink-0">[${timeStr}]</span><span class="break-all">${escapeHtml(message)}</span>`;
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showToast(message, variant = 'info') {
+      const container = document.getElementById('toastContainer');
+      const colors = {
+        info: 'border-cyan-500/40 bg-[#060609] text-cyan-200',
+        success: 'border-emerald-500/40 bg-[#060609] text-emerald-200',
+        warn: 'border-amber-500/40 bg-[#060609] text-amber-200',
+        error: 'border-rose-500/40 bg-[#060609] text-rose-200'
+      };
+      const icons = {
+        info: 'fa-circle-info text-cyan-400',
+        success: 'fa-circle-check text-emerald-400',
+        warn: 'fa-triangle-exclamation text-amber-400',
+        error: 'fa-circle-xmark text-rose-400'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl text-xs font-medium transition-all duration-300 ${colors[variant] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[variant] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3600);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds || !isFinite(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      const ms = Math.floor((seconds % 1) * 10);
+      return `${mins}:${String(secs).padStart(2, '0')}.${ms}`;
+    }
+
+    function sanitizeFilename(name) {
+      return (name || 'audio_track').replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim();
+    }
+
+    function dataUrlToUint8Array(dataUrl) {
+      const parts = dataUrl.split(',');
+      const byteString = atob(parts[1]);
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const ab = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        ab[i] = byteString.charCodeAt(i);
+      }
+      return { bytes: ab, mime };
+    }
+
+    function uint8ArrayToDataUrl(bytes, mime = 'image/jpeg') {
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const sub = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, sub);
+      }
+      return `data:${mime};base64,${btoa(binary)}`;
+    }
+
+    /*************************************************************************
+     * 4. PROCEDURAL COVER ART & WAVEFORM GENERATOR
+     *************************************************************************/
+    function generateStudioCoverArt({ title, artist, accent1 = '#06b6d4', accent2 = '#8b5cf6', styleIndex = 0 }) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 500;
+      canvas.height = 500;
+      const ctx = canvas.getContext('2d');
+
+      // Deep pitch-black OLED gradient background
+      const grad = ctx.createLinearGradient(0, 0, 500, 500);
+      grad.addColorStop(0, '#020204');
+      grad.addColorStop(0.5, '#07070d');
+      grad.addColorStop(1, '#030306');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 500, 500);
+
+      // Glowing geometric orb
+      const radGrad = ctx.createRadialGradient(250, 220, 20, 250, 220, 220);
+      radGrad.addColorStop(0, accent1);
+      radGrad.addColorStop(0.55, accent2 + '66');
+      radGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(0, 0, 500, 500);
+
+      // Perspective synth grid or concentric vinyl waves
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1.5;
+      for (let r = 40; r <= 190; r += 18) {
+        ctx.beginPath();
+        ctx.arc(250, 210, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Waveform ring
+      ctx.strokeStyle = accent1;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let angle = 0; angle <= Math.PI * 2; angle += 0.05) {
+        const wave = Math.sin(angle * (8 + styleIndex * 4)) * 14 + Math.cos(angle * 13) * 8;
+        const rad = 115 + wave;
+        const x = 250 + Math.cos(angle) * rad;
+        const y = 210 + Math.sin(angle) * rad;
+        if (angle === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Typography overlay
+      ctx.fillStyle = 'rgba(3, 3, 5, 0.88)';
+      ctx.fillRect(28, 370, 444, 102);
+      ctx.strokeStyle = accent1 + '88';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(28, 370, 444, 102);
+
+      ctx.fillStyle = accent1;
+      ctx.font = '600 13px "JetBrains Mono", monospace';
+      ctx.fillText('VNTEX // DSP MASTERING EDITION', 48, 398);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 24px "Inter", sans-serif';
+      ctx.fillText((title || 'UNTITLED TRACK').slice(0, 24), 48, 430);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 16px "Inter", sans-serif';
+      ctx.fillText((artist || 'Unknown Artist').slice(0, 32), 48, 456);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      const { bytes, mime } = dataUrlToUint8Array(dataUrl);
+      return { dataUrl, bytes, mime, width: 500, height: 500 };
+    }
+
+    function extractWaveformPeaks(audioBuffer, numBars = 64) {
+      const channelData = audioBuffer.getChannelData(0);
+      const peaks = [];
+      const blockSize = Math.max(1, Math.floor(channelData.length / numBars));
+      for (let i = 0; i < numBars; i++) {
+        let max = 0;
+        const start = i * blockSize;
+        const step = Math.max(1, Math.floor(blockSize / 64));
+        for (let j = 0; j < blockSize && (start + j) < channelData.length; j += step) {
+          const val = Math.abs(channelData[start + j]);
+          if (val > max) max = val;
+        }
+        peaks.push(Math.max(0.08, Math.min(1, max)));
+      }
+      return peaks;
+    }
+
+    /*************************************************************************
+     * 4B. IMAGE MAGIC-BYTE PINPOINTER & NORMALIZER (FIXES REAL FILE COVER ART)
+     *************************************************************************/
+    /**
+     * Strips ID3v2 unsynchronisation byte-stuffing (0xFF 0x00 -> 0xFF)
+     */
+    function removeUnsynchronisation(uint8) {
+      if (!uint8 || uint8.length < 2) return uint8;
+      let count = 0;
+      for (let i = 0; i < uint8.length - 1; i++) {
+        if (uint8[i] === 0xff && uint8[i + 1] === 0x00) count++;
+      }
+      if (count === 0) return uint8;
+      const out = new Uint8Array(uint8.length - count);
+      let w = 0;
+      for (let i = 0; i < uint8.length; i++) {
+        out[w++] = uint8[i];
+        if (uint8[i] === 0xff && i + 1 < uint8.length && uint8[i + 1] === 0x00) {
+          i++; // skip stuffed 0x00 byte
+        }
+      }
+      return out;
+    }
+
+    /**
+     * Scans any raw binary frame payload (APIC, PIC, covr, FLAC Picture) for exact
+     * JPEG / PNG / WebP / GIF magic signatures so non-standard encodings or BOMs
+     * never corrupt cover art extraction.
+     */
+    function pinpointImageMagicBytes(rawPayload, stripUnsync = false) {
+      if (!rawPayload || rawPayload.length < 16) return null;
+      const buf = stripUnsync ? removeUnsynchronisation(rawPayload) : rawPayload;
+
+      // Scan up to first 512 bytes of the frame payload for image header magic bytes
+      const maxScan = Math.min(buf.length - 12, 512);
+      for (let i = 0; i <= maxScan; i++) {
+        // 1. JPEG Magic: FF D8 FF (followed by E0, E1, E2, E8, DB, C0, C4, FE, EE)
+        if (buf[i] === 0xff && buf[i + 1] === 0xd8 && buf[i + 2] === 0xff) {
+          let imgBytes = buf.slice(i);
+          // Check if JPEG data itself has ID3 unsync (FF D8 FF 00 or FF E0 00)
+          if (buf[i + 3] === 0x00 || (!stripUnsync && hasJpegUnsyncPattern(imgBytes))) {
+            imgBytes = removeUnsynchronisation(imgBytes);
+          }
+          return { bytes: imgBytes, mime: 'image/jpeg' };
+        }
+        // 2. PNG Magic: 89 50 4E 47 0D 0A 1A 0A
+        if (
+          buf[i] === 0x89 && buf[i + 1] === 0x50 && buf[i + 2] === 0x4e && buf[i + 3] === 0x47 &&
+          buf[i + 4] === 0x0d && buf[i + 5] === 0x0a && buf[i + 6] === 0x1a && buf[i + 7] === 0x0a
+        ) {
+          return { bytes: buf.slice(i), mime: 'image/png' };
+        }
+        // 3. WebP Magic: 'RIFF' .... 'WEBP'
+        if (
+          buf[i] === 0x52 && buf[i + 1] === 0x49 && buf[i + 2] === 0x46 && buf[i + 3] === 0x46 &&
+          buf[i + 8] === 0x57 && buf[i + 9] === 0x45 && buf[i + 10] === 0x42 && buf[i + 11] === 0x50
+        ) {
+          return { bytes: buf.slice(i), mime: 'image/webp' };
+        }
+        // 4. GIF Magic: 'GIF87a' or 'GIF89a'
+        if (
+          buf[i] === 0x47 && buf[i + 1] === 0x49 && buf[i + 2] === 0x46 && buf[i + 3] === 0x38 &&
+          (buf[i + 4] === 0x37 || buf[i + 4] === 0x39) && buf[i + 5] === 0x61
+        ) {
+          return { bytes: buf.slice(i), mime: 'image/gif' };
+        }
+      }
+      return null;
+    }
+
+    function hasJpegUnsyncPattern(bytes) {
+      // Check if SOI or APP0/APP1 markers are stuffed with 0x00 after 0xFF
+      let ff00 = 0;
+      const limit = Math.min(bytes.length - 1, 2048);
+      for (let i = 0; i < limit; i++) {
+        if (bytes[i] === 0xff && bytes[i + 1] === 0x00) ff00++;
+      }
+      return ff00 > 8;
+    }
+
+    /**
+     * Validates and normalizes extracted or uploaded cover art bytes through an HTML Image & Canvas
+     * so that every output encoder receives a 100% compliant baseline JPEG (or PNG) binary payload
+     * with verified pixel dimensions.
+     */
+    async function normalizeAndVerifyCoverArt(rawBytes, rawMime = 'image/jpeg') {
+      if (!rawBytes || rawBytes.length < 16) return null;
+      return new Promise((resolve) => {
+        const blob = new Blob([rawBytes], { type: rawMime || 'image/jpeg' });
+        const tempUrl = URL.createObjectURL(blob);
+        const img = new Image();
+
+        const cleanup = () => URL.revokeObjectURL(tempUrl);
+
+        img.onload = () => {
+          try {
+            const origW = img.naturalWidth || img.width || 500;
+            const origH = img.naturalHeight || img.height || 500;
+            // Cap max dimension at 1400px so huge 15MB PNGs don't bloat converted files while keeping crisp HD cover art
+            const maxDim = 1400;
+            let targetW = origW;
+            let targetH = origH;
+            if (targetW > maxDim || targetH > maxDim) {
+              const scale = maxDim / Math.max(targetW, targetH);
+              targetW = Math.round(targetW * scale);
+              targetH = Math.round(targetH * scale);
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = targetW;
+            canvas.height = targetH;
+            const ctx = canvas.getContext('2d');
+            // Fill dark background in case of transparent PNG converted to baseline JPEG
+            ctx.fillStyle = '#040406';
+            ctx.fillRect(0, 0, targetW, targetH);
+            ctx.drawImage(img, 0, 0, targetW, targetH);
+
+            const outMime = 'image/jpeg';
+            const dataUrl = canvas.toDataURL(outMime, 0.92);
+            const { bytes } = dataUrlToUint8Array(dataUrl);
+            cleanup();
+            resolve({
+              bytes,
+              mime: outMime,
+              dataUrl,
+              width: targetW,
+              height: targetH
+            });
+          } catch (e) {
+            cleanup();
+            // Fallback to raw bytes if canvas fails
+            resolve({
+              bytes: rawBytes,
+              mime: rawMime || 'image/jpeg',
+              dataUrl: uint8ArrayToDataUrl(rawBytes, rawMime || 'image/jpeg'),
+              width: 500,
+              height: 500
+            });
+          }
+        };
+
+        img.onerror = () => {
+          cleanup();
+          resolve(null);
+        };
+
+        img.src = tempUrl;
+      });
+    }
+
+    /*************************************************************************
+     * 5. BULLETPROOF BINARY METADATA & COVER ART PARSER
+     *    (ID3v2.2/2.3/2.4, FLAC, WAV/AIFF Head+Tail, MP4/M4A covr, OGG/OPUS)
+     *************************************************************************/
+    async function parseAudioFileMetadata(arrayBuffer, fileName) {
+      const bytes = new Uint8Array(arrayBuffer);
+      const view = new DataView(arrayBuffer);
+
+      const baseTitle = fileName.replace(/\.[^/.]+$/, '');
+      const meta = {
+        title: baseTitle,
+        artist: 'Unknown Artist',
+        album: 'Single Release',
+        year: String(new Date().getFullYear()),
+        genre: 'Electronic',
+        bpm: '120',
+        key: '8A / Am',
+        coverBytes: null,
+        coverMime: null,
+        coverDataUrl: null,
+        coverWidth: 500,
+        coverHeight: 500,
+        coverSource: 'none', // 'extracted' | 'custom' | 'synthesized' | 'none'
+        detectedContainerTags: 'Default File Attributes'
+      };
+
+      try {
+        // 1. Check for leading ID3v2 tag (MP3, or dual-tagged FLAC/WAV/AIFF/AAC)
+        let postId3Offset = 0;
+        if (bytes.length > 10 && bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+          const id3Size =
+            ((bytes[6] & 0x7f) << 21) |
+            ((bytes[7] & 0x7f) << 14) |
+            ((bytes[8] & 0x7f) << 7) |
+            (bytes[9] & 0x7f);
+          parseID3v2AtOffset(bytes, view, 0, meta);
+          meta.detectedContainerTags = `ID3v2.${bytes[3]} Header`;
+          postId3Offset = 10 + id3Size;
+        }
+
+        // 2. Check for native FLAC ('fLaC' at offset 0 OR immediately after a prepended ID3v2 header)
+        let flacOffset = -1;
+        if (bytes.length > 42 && readAscii(bytes, 0, 4) === 'fLaC') {
+          flacOffset = 0;
+        } else if (postId3Offset > 0 && postId3Offset + 42 < bytes.length && readAscii(bytes, postId3Offset, 4) === 'fLaC') {
+          flacOffset = postId3Offset;
+        }
+        if (flacOffset >= 0) {
+          parseFlacBlocks(bytes, view, meta, flacOffset);
+          meta.detectedContainerTags = flacOffset > 0 ? 'ID3v2 + FLAC Vorbis/Picture' : 'FLAC Vorbis + Picture Block';
+        }
+
+        // 3. Check for RIFF WAVE ('RIFF' ... 'WAVE')
+        if (bytes.length > 12 && readAscii(bytes, 0, 4) === 'RIFF' && readAscii(bytes, 8, 4) === 'WAVE') {
+          parseRiffWaveChunks(bytes, view, meta);
+        }
+
+        // 4. Check for IFF AIFF ('FORM' ... 'AIFF' or 'AIFC')
+        if (bytes.length > 12 && readAscii(bytes, 0, 4) === 'FORM' && (readAscii(bytes, 8, 4) === 'AIFF' || readAscii(bytes, 8, 4) === 'AIFC')) {
+          parseAiffChunks(bytes, view, meta);
+        }
+
+        // 5. Check for MP4 / M4A ('ftyp' at byte 4)
+        if (bytes.length > 16 && readAscii(bytes, 4, 4) === 'ftyp') {
+          parseMp4Atoms(bytes, view, meta);
+        }
+
+        // 6. Check for OGG / OPUS ('OggS' at byte 0)
+        if (bytes.length > 36 && readAscii(bytes, 0, 4) === 'OggS') {
+          parseOggComments(bytes, view, meta);
+        }
+
+        // 7. Deep Fallback Scan: If cover art was still not found (e.g. non-standard chunk alignment at file tail),
+        // scan the first 512KB and last 2MB for an embedded ID3v2 ('ID3\x03' / 'ID3\x04') or 'APIC' or 'covr' block
+        if (!meta.coverBytes || meta.coverBytes.length < 16) {
+          deepFallbackArtScan(bytes, view, meta);
+        }
+      } catch (err) {
+        logDSP(`Non-fatal metadata parse warning on ${fileName}: ${err.message}`, 'warn');
+      }
+
+      // Normalize & verify extracted cover art so it is guaranteed to display and embed cleanly
+      if (meta.coverBytes && meta.coverBytes.length > 16) {
+        const normalized = await normalizeAndVerifyCoverArt(meta.coverBytes, meta.coverMime || 'image/jpeg');
+        if (normalized) {
+          meta.coverBytes = normalized.bytes;
+          meta.coverMime = normalized.mime;
+          meta.coverDataUrl = normalized.dataUrl;
+          meta.coverWidth = normalized.width;
+          meta.coverHeight = normalized.height;
+          meta.coverSource = 'extracted';
+        } else {
+          meta.coverBytes = null;
+          meta.coverDataUrl = null;
+        }
+      }
+
+      return meta;
+    }
+
+    function readAscii(bytes, offset, len) {
+      let s = '';
+      for (let i = 0; i < len && (offset + i) < bytes.length; i++) {
+        s += String.fromCharCode(bytes[offset + i]);
+      }
+      return s;
+    }
+
+    function decodeTextBytes(uint8, encodingByte = 0) {
+      if (!uint8 || uint8.length === 0) return '';
+      try {
+        if (encodingByte === 1 || encodingByte === 2) {
+          const dec = new TextDecoder(encodingByte === 2 ? 'utf-16be' : 'utf-16');
+          return dec.decode(uint8).replace(/\0/g, '').trim();
+        } else if (encodingByte === 3) {
+          return new TextDecoder('utf-8').decode(uint8).replace(/\0/g, '').trim();
+        } else {
+          // Try UTF-8 first if valid, otherwise ISO-8859-1
+          return new TextDecoder('utf-8', { fatal: false }).decode(uint8).replace(/\0/g, '').trim();
+        }
+      } catch (e) {
+        return new TextDecoder('iso-8859-1').decode(uint8).replace(/\0/g, '').trim();
+      }
+    }
+
+    function parseID3v2AtOffset(bytes, view, baseOffset, meta) {
+      if (baseOffset + 10 > bytes.length) return;
+      if (bytes[baseOffset] !== 0x49 || bytes[baseOffset + 1] !== 0x44 || bytes[baseOffset + 2] !== 0x33) return;
+
+      const version = bytes[baseOffset + 3]; // 2, 3, or 4
+      const tagFlags = bytes[baseOffset + 5];
+      const tagUnsync = (tagFlags & 0x80) !== 0;
+      const hasExtHeader = (tagFlags & 0x40) !== 0;
+
+      const tagSize =
+        ((bytes[baseOffset + 6] & 0x7f) << 21) |
+        ((bytes[baseOffset + 7] & 0x7f) << 14) |
+        ((bytes[baseOffset + 8] & 0x7f) << 7) |
+        (bytes[baseOffset + 9] & 0x7f);
+
+      let pos = baseOffset + 10;
+      const end = Math.min(bytes.length, pos + tagSize);
+
+      // Skip Extended Header if present in ID3v2.3 or ID3v2.4
+      if (hasExtHeader && pos + 4 <= end) {
+        const extSize = version === 4
+          ? (((bytes[pos] & 0x7f) << 21) | ((bytes[pos + 1] & 0x7f) << 14) | ((bytes[pos + 2] & 0x7f) << 7) | (bytes[pos + 3] & 0x7f))
+          : view.getUint32(pos, false);
+        pos += (version === 4 ? extSize : 4 + extSize);
+      }
+
+      // ID3v2.2 uses 6-byte frame headers (3-char ID + 24-bit size)
+      if (version === 2) {
+        while (pos + 6 <= end) {
+          const frameId = readAscii(bytes, pos, 3);
+          if (!/^[A-Z0-9]{3}$/.test(frameId)) break;
+          const frameSize = (bytes[pos + 3] << 16) | (bytes[pos + 4] << 8) | bytes[pos + 5];
+          if (frameSize <= 0 || pos + 6 + frameSize > end) break;
+          const content = bytes.subarray(pos + 6, pos + 6 + frameSize);
+
+          if (frameId[0] === 'T' && frameId !== 'TXX') {
+            const text = decodeTextBytes(content.subarray(1), content[0]);
+            if (frameId === 'TT2' && text) meta.title = text;
+            else if (frameId === 'TP1' && text) meta.artist = text;
+            else if (frameId === 'TAL' && text) meta.album = text;
+            else if (frameId === 'TYE' && text) meta.year = text.slice(0, 4);
+            else if (frameId === 'TCO' && text) meta.genre = text;
+            else if (frameId === 'TBP' && text) meta.bpm = text;
+            else if (frameId === 'TKE' && text) meta.key = text;
+          } else if (frameId === 'PIC') {
+            const imgFound = pinpointImageMagicBytes(content, tagUnsync);
+            if (imgFound) {
+              meta.coverBytes = imgFound.bytes;
+              meta.coverMime = imgFound.mime;
+            }
+          }
+          pos += 6 + frameSize;
+        }
+        return;
+      }
+
+      // ID3v2.3 and ID3v2.4 use 10-byte frame headers
+      while (pos + 10 <= end) {
+        const frameId = readAscii(bytes, pos, 4);
+        if (!/^[A-Z0-9]{4}$/.test(frameId)) break;
+
+        let frameSize = 0;
+        if (version === 4) {
+          const syncSize =
+            ((bytes[pos + 4] & 0x7f) << 21) |
+            ((bytes[pos + 5] & 0x7f) << 14) |
+            ((bytes[pos + 6] & 0x7f) << 7) |
+            (bytes[pos + 7] & 0x7f);
+          const rawBeSize = view.getUint32(pos + 4, false);
+          // Auto-detect non-compliant taggers that write non-synchsafe sizes inside ID3v2.4
+          if (
+            (bytes[pos + 4] & 0x80) || (bytes[pos + 5] & 0x80) ||
+            (bytes[pos + 6] & 0x80) || (bytes[pos + 7] & 0x80)
+          ) {
+            frameSize = rawBeSize;
+          } else if (pos + 10 + syncSize <= end) {
+            // Check if next frame after syncSize looks like a valid 4-char frame ID or padding
+            const nextPos = pos + 10 + syncSize;
+            const nextId = nextPos + 4 <= end ? readAscii(bytes, nextPos, 4) : '';
+            const syncLooksValid = nextPos >= end || bytes[nextPos] === 0 || /^[A-Z0-9]{4}$/.test(nextId);
+            frameSize = syncLooksValid ? syncSize : (pos + 10 + rawBeSize <= end ? rawBeSize : syncSize);
+          } else {
+            frameSize = rawBeSize;
+          }
+        } else {
+          frameSize = view.getUint32(pos + 4, false);
+        }
+
+        if (frameSize <= 0 || pos + 10 + frameSize > end) break;
+
+        const flagByte2 = bytes[pos + 9];
+        const frameUnsync = tagUnsync || (version === 4 && (flagByte2 & 0x02) !== 0);
+        const hasDataLengthIndicator = version === 4 && (flagByte2 & 0x01) !== 0;
+
+        let payloadStart = pos + 10 + (hasDataLengthIndicator ? 4 : 0);
+        const payloadEnd = pos + 10 + frameSize;
+        if (payloadStart >= payloadEnd) {
+          pos += 10 + frameSize;
+          continue;
+        }
+
+        let content = bytes.subarray(payloadStart, payloadEnd);
+        if (frameUnsync && frameId !== 'APIC') {
+          content = removeUnsynchronisation(content);
+        }
+
+        if (frameId[0] === 'T' && frameId !== 'TXXX') {
+          const text = decodeTextBytes(content.subarray(1), content[0]);
+          if (frameId === 'TIT2' && text) meta.title = text;
+          else if (frameId === 'TPE1' && text) meta.artist = text;
+          else if (frameId === 'TALB' && text) meta.album = text;
+          else if ((frameId === 'TYER' || frameId === 'TDRC') && text) meta.year = text.slice(0, 4);
+          else if (frameId === 'TCON' && text) meta.genre = text;
+          else if (frameId === 'TBPM' && text) meta.bpm = text;
+          else if (frameId === 'TKEY' && text) meta.key = text;
+        } else if (frameId === 'APIC') {
+          // First use magic-byte pinpointer (handles any text encoding, UTF-16 BOM, or missing null terminators)
+          const magicMatch = pinpointImageMagicBytes(content, frameUnsync);
+          if (magicMatch && magicMatch.bytes.length > 32) {
+            meta.coverBytes = magicMatch.bytes;
+            meta.coverMime = magicMatch.mime;
+          } else {
+            // Standard structural fallback
+            const enc = content[0];
+            let i = 1;
+            let mime = '';
+            while (i < content.length && content[i] !== 0) {
+              mime += String.fromCharCode(content[i]);
+              i++;
+            }
+            i++; // null after mime
+            i++; // picture type byte
+            if (enc === 1 || enc === 2) {
+              while (i + 1 < content.length && !(content[i] === 0 && content[i + 1] === 0)) i += 2;
+              i += 2;
+            } else {
+              while (i < content.length && content[i] !== 0) i++;
+              i++;
+            }
+            if (i < content.length) {
+              const rawImg = frameUnsync ? removeUnsynchronisation(content.slice(i)) : content.slice(i);
+              meta.coverBytes = rawImg;
+              meta.coverMime = mime || 'image/jpeg';
+            }
+          }
+        }
+        pos += 10 + frameSize;
+      }
+    }
+
+    function parseFlacBlocks(bytes, view, meta, startOffset = 0) {
+      let pos = startOffset + 4; // skip 'fLaC'
+      while (pos + 4 <= bytes.length) {
+        const headerByte = bytes[pos];
+        const isLast = (headerByte & 0x80) !== 0;
+        const blockType = headerByte & 0x7f;
+        const blockLen = (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
+        pos += 4;
+        if (pos + blockLen > bytes.length) break;
+
+        if (blockType === 4) {
+          parseVorbisCommentBuffer(bytes.subarray(pos, pos + blockLen), meta);
+        } else if (blockType === 6) {
+          parseFlacPictureBuffer(bytes.subarray(pos, pos + blockLen), meta);
+        }
+
+        pos += blockLen;
+        if (isLast) break;
+      }
+    }
+
+    function parseVorbisCommentBuffer(buf, meta) {
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      let offset = 0;
+      if (offset + 4 > buf.length) return;
+      const vendorLen = dv.getUint32(offset, true);
+      offset += 4 + vendorLen;
+      if (offset + 4 > buf.length) return;
+      const commentCount = dv.getUint32(offset, true);
+      offset += 4;
+
+      for (let i = 0; i < commentCount && offset + 4 <= buf.length; i++) {
+        const len = dv.getUint32(offset, true);
+        offset += 4;
+        if (offset + len > buf.length) break;
+        const str = new TextDecoder('utf-8').decode(buf.subarray(offset, offset + len));
+        offset += len;
+        const eqIdx = str.indexOf('=');
+        if (eqIdx > 0) {
+          const key = str.slice(0, eqIdx).toUpperCase().trim();
+          const val = str.slice(eqIdx + 1);
+          if (key === 'TITLE' && val) meta.title = val;
+          else if (key === 'ARTIST' && val) meta.artist = val;
+          else if (key === 'ALBUM' && val) meta.album = val;
+          else if ((key === 'DATE' || key === 'YEAR') && val) meta.year = val.slice(0, 4);
+          else if (key === 'GENRE' && val) meta.genre = val;
+          else if ((key === 'BPM' || key === 'TEMPO') && val) meta.bpm = val;
+          else if ((key === 'INITIALKEY' || key === 'KEY') && val) meta.key = val;
+          else if (key === 'METADATA_BLOCK_PICTURE' || key === 'COVERART') {
+            try {
+              const cleanB64 = val.replace(/\s+/g, '');
+              const rawBin = atob(cleanB64);
+              const picBuf = new Uint8Array(rawBin.length);
+              for (let k = 0; k < rawBin.length; k++) picBuf[k] = rawBin.charCodeAt(k);
+              if (key === 'COVERART') {
+                const magic = pinpointImageMagicBytes(picBuf, false);
+                if (magic) {
+                  meta.coverBytes = magic.bytes;
+                  meta.coverMime = magic.mime;
+                }
+              } else {
+                parseFlacPictureBuffer(picBuf, meta);
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    function parseFlacPictureBuffer(buf, meta) {
+      if (!buf || buf.length < 24) return;
+      try {
+        const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+        let offset = 4; // picture type
+        const mimeLen = dv.getUint32(offset, false);
+        offset += 4;
+        const mime = readAscii(buf, offset, mimeLen);
+        offset += mimeLen;
+        const descLen = dv.getUint32(offset, false);
+        offset += 4 + descLen;
+        offset += 16; // width, height, depth, indexed colors
+        if (offset + 4 <= buf.length) {
+          const dataLen = dv.getUint32(offset, false);
+          offset += 4;
+          if (offset + dataLen <= buf.length && dataLen > 16) {
+            meta.coverBytes = buf.slice(offset, offset + dataLen);
+            meta.coverMime = mime || 'image/jpeg';
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Fallback magic-byte pinpointer if header offsets were non-standard
+      const magic = pinpointImageMagicBytes(buf, false);
+      if (magic) {
+        meta.coverBytes = magic.bytes;
+        meta.coverMime = magic.mime;
+      }
+    }
+
+    function parseRiffWaveChunks(bytes, view, meta) {
+      let pos = 12;
+      while (pos + 8 <= bytes.length) {
+        const chunkId = readAscii(bytes, pos, 4);
+        const chunkSize = view.getUint32(pos + 4, true);
+        const dataStart = pos + 8;
+        if (chunkSize === 0 && chunkId === '\0\0\0\0') break;
+        const safeEnd = Math.min(bytes.length, dataStart + chunkSize);
+
+        if (chunkId === 'LIST' && dataStart + 4 <= bytes.length && readAscii(bytes, dataStart, 4) === 'INFO') {
+          let lpos = dataStart + 4;
+          while (lpos + 8 <= safeEnd) {
+            const infoId = readAscii(bytes, lpos, 4);
+            const infoLen = view.getUint32(lpos + 4, true);
+            if (lpos + 8 + infoLen > safeEnd) break;
+            const text = decodeTextBytes(bytes.subarray(lpos + 8, lpos + 8 + infoLen), 3);
+            if (infoId === 'INAM' && text) meta.title = text;
+            else if (infoId === 'IART' && text) meta.artist = text;
+            else if (infoId === 'IPRD' && text) meta.album = text;
+            else if (infoId === 'ICRD' && text) meta.year = text.slice(0, 4);
+            else if (infoId === 'IGNR' && text) meta.genre = text;
+            lpos += 8 + infoLen + (infoLen % 2);
+          }
+          meta.detectedContainerTags = 'RIFF LIST-INFO';
+        } else if (chunkId.toLowerCase().trim() === 'id3') {
+          parseID3v2AtOffset(bytes, view, dataStart, meta);
+          meta.detectedContainerTags = 'RIFF INFO + ID3v2 Chunk';
+        }
+
+        if (dataStart + chunkSize > bytes.length) break;
+        pos = dataStart + chunkSize + (chunkSize % 2);
+      }
+    }
+
+    function parseAiffChunks(bytes, view, meta) {
+      let pos = 12;
+      while (pos + 8 <= bytes.length) {
+        const chunkId = readAscii(bytes, pos, 4);
+        const chunkSize = view.getUint32(pos + 4, false);
+        const dataStart = pos + 8;
+        const safeEnd = Math.min(bytes.length, dataStart + chunkSize);
+
+        if (chunkId === 'NAME' && safeEnd > dataStart) {
+          meta.title = decodeTextBytes(bytes.subarray(dataStart, safeEnd), 3) || meta.title;
+        } else if (chunkId === 'AUTH' && safeEnd > dataStart) {
+          meta.artist = decodeTextBytes(bytes.subarray(dataStart, safeEnd), 3) || meta.artist;
+        } else if (chunkId.toLowerCase().trim() === 'id3') {
+          parseID3v2AtOffset(bytes, view, dataStart, meta);
+          meta.detectedContainerTags = 'AIFF Native ID3v2 Chunk';
+        }
+
+        if (dataStart + chunkSize > bytes.length) break;
+        pos = dataStart + chunkSize + (chunkSize % 2);
+      }
+    }
+
+    /**
+     * Full recursive MP4 / M4A Atom parser (extracts ilst -> ©nam, ©ART, ©alb, ©day, ©gen, tmpo, and covr artwork)
+     */
+    function parseMp4Atoms(bytes, view, meta) {
+      const containerAtoms = new Set(['moov', 'udta', 'meta', 'ilst', 'trak', 'mdia', 'minf']);
+
+      function walkBoxes(start, end) {
+        let pos = start;
+        while (pos + 8 <= end) {
+          let boxSize = view.getUint32(pos, false);
+          const boxType = readAscii(bytes, pos + 4, 4);
+          let headerLen = 8;
+
+          if (boxSize === 1 && pos + 16 <= end) {
+            // 64-bit extended size
+            const hi = view.getUint32(pos + 8, false);
+            const lo = view.getUint32(pos + 12, false);
+            boxSize = hi * 4294967296 + lo;
+            headerLen = 16;
+          } else if (boxSize === 0) {
+            boxSize = end - pos;
+          }
+
+          if (boxSize < headerLen || pos + boxSize > end) break;
+          const payloadStart = pos + headerLen;
+          const boxEnd = pos + boxSize;
+
+          if (boxType === 'meta') {
+            // 'meta' is a FullBox with 4 bytes of version/flags before child boxes
+            walkBoxes(payloadStart + 4, boxEnd);
+          } else if (containerAtoms.has(boxType)) {
+            walkBoxes(payloadStart, boxEnd);
+          } else if (boxType === 'covr') {
+            // Extract cover art from 'covr' -> 'data' atom (or pinpoint JPEG/PNG magic directly)
+            const magic = pinpointImageMagicBytes(bytes.subarray(payloadStart, boxEnd), false);
+            if (magic) {
+              meta.coverBytes = magic.bytes;
+              meta.coverMime = magic.mime;
+              meta.detectedContainerTags = 'MP4 ilst + covr Atom';
+            }
+          } else if (
+            boxType === '\xA9nam' || boxType === '\xA9ART' || boxType === 'aART' ||
+            boxType === '\xA9alb' || boxType === '\xA9day' || boxType === '\xA9gen' || boxType === 'tmpo'
+          ) {
+            // Parse child 'data' box inside ilst item
+            if (payloadStart + 16 <= boxEnd && readAscii(bytes, payloadStart + 4, 4) === 'data') {
+              const dataBoxSize = view.getUint32(payloadStart, false);
+              const valStart = payloadStart + 16;
+              const valEnd = Math.min(boxEnd, payloadStart + dataBoxSize);
+              if (boxType === 'tmpo' && valEnd - valStart >= 2) {
+                const bpmVal = view.getUint16(valStart, false);
+                if (bpmVal > 0) meta.bpm = String(bpmVal);
+              } else if (valEnd > valStart) {
+                const text = decodeTextBytes(bytes.subarray(valStart, valEnd), 3);
+                if (boxType === '\xA9nam' && text) meta.title = text;
+                else if ((boxType === '\xA9ART' || boxType === 'aART') && text && meta.artist === 'Unknown Artist') meta.artist = text;
+                else if (boxType === '\xA9alb' && text) meta.album = text;
+                else if (boxType === '\xA9day' && text) meta.year = text.slice(0, 4);
+                else if (boxType === '\xA9gen' && text) meta.genre = text;
+              }
+              meta.detectedContainerTags = 'MP4 ilst Metadata Atoms';
+            }
+          } else if (boxType === 'ID32' || boxType === 'id3 ') {
+            // Find 'ID3' magic inside ID32 box
+            for (let k = payloadStart; k < Math.min(boxEnd - 10, payloadStart + 16); k++) {
+              if (bytes[k] === 0x49 && bytes[k + 1] === 0x44 && bytes[k + 2] === 0x33) {
+                parseID3v2AtOffset(bytes, view, k, meta);
+                break;
+              }
+            }
+          }
+
+          pos = boxEnd;
+        }
+      }
+
+      walkBoxes(0, bytes.length);
+
+      // Also check if our fast M4A container placed an ID3v2 header right after ftyp
+      if (!meta.coverBytes) {
+        for (let i = 0; i < Math.min(bytes.length - 12, 256); i++) {
+          if (bytes[i] === 0x49 && bytes[i + 1] === 0x44 && bytes[i + 2] === 0x33) {
+            parseID3v2AtOffset(bytes, view, i, meta);
+            break;
+          }
+        }
+      }
+    }
+
+    /**
+     * Multi-Page Ogg / Opus Comment Reassembler (reassembles large METADATA_BLOCK_PICTURE packets across OggS pages)
+     */
+    function parseOggComments(bytes, view, meta) {
+      // First check if this is a direct OggS prefix from our encoder
+      if (readAscii(bytes, 6, 8) === 'OpusTags') {
+        parseVorbisCommentBuffer(bytes.subarray(14), meta);
+        meta.detectedContainerTags = 'Ogg OpusTags Header';
+        return;
+      }
+      if (bytes[6] === 0x03 && readAscii(bytes, 7, 6) === 'vorbis') {
+        parseVorbisCommentBuffer(bytes.subarray(13), meta);
+        meta.detectedContainerTags = 'Ogg Vorbis Comment Packet';
+        return;
+      }
+
+      // Standard multi-page Ogg stream reassembly
+      const payloadChunks = [];
+      let pos = 0;
+      let totalCollected = 0;
+      const maxPages = 250; // enough for ~1.5MB of base64 cover art in Ogg pages
+      let pageCount = 0;
+
+      while (pos + 27 <= bytes.length && pageCount < maxPages) {
+        if (readAscii(bytes, pos, 4) !== 'OggS') break;
+        const numSegments = bytes[pos + 26];
+        if (pos + 27 + numSegments > bytes.length) break;
+        let pageDataLen = 0;
+        for (let s = 0; s < numSegments; s++) {
+          pageDataLen += bytes[pos + 27 + s];
+        }
+        const dataStart = pos + 27 + numSegments;
+        if (dataStart + pageDataLen > bytes.length) break;
+
+        if (pageCount >= 1) {
+          // Page 1+ contains the Vorbis comment or OpusTags header
+          payloadChunks.push(bytes.subarray(dataStart, dataStart + pageDataLen));
+          totalCollected += pageDataLen;
+          // Stop once we see the end of the comment packet and have enough data
+          if (totalCollected > 32 && bytes[pos + 27 + numSegments - 1] < 255 && pageCount >= 1) {
+            break;
+          }
+        }
+        pos = dataStart + pageDataLen;
+        pageCount++;
+      }
+
+      if (payloadChunks.length > 0) {
+        const reassembled = concatUint8Arrays(payloadChunks);
+        if (readAscii(reassembled, 0, 8) === 'OpusTags') {
+          parseVorbisCommentBuffer(reassembled.subarray(8), meta);
+          meta.detectedContainerTags = 'Ogg OpusTags (Multi-Page)';
+        } else if (reassembled[0] === 0x03 && readAscii(reassembled, 1, 6) === 'vorbis') {
+          parseVorbisCommentBuffer(reassembled.subarray(7), meta);
+          meta.detectedContainerTags = 'Ogg Vorbis Comment (Multi-Page)';
+        }
+      }
+    }
+
+    function deepFallbackArtScan(bytes, view, meta) {
+      // Scan head (first 256KB) and tail (last 2MB) for any ID3v2 header or APIC frame
+      const ranges = [[0, Math.min(bytes.length, 262144)]];
+      if (bytes.length > 262144) {
+        ranges.push([Math.max(0, bytes.length - 2097152), bytes.length]);
+      }
+
+      for (const [start, end] of ranges) {
+        for (let i = start; i < end - 14; i++) {
+          if (
+            bytes[i] === 0x49 && bytes[i + 1] === 0x44 && bytes[i + 2] === 0x33 &&
+            (bytes[i + 3] === 2 || bytes[i + 3] === 3 || bytes[i + 3] === 4) &&
+            bytes[i + 4] === 0x00
+          ) {
+            parseID3v2AtOffset(bytes, view, i, meta);
+            if (meta.coverBytes && meta.coverBytes.length > 16) return;
+          }
+        }
+      }
+    }
+
+    /*************************************************************************
+     * 6. BINARY TAG & COVER ART BUILDERS (ID3v2.3, FLAC BLOCKS, RIFF, OGG)
+     *************************************************************************/
+    function encodeSyncSafe32(val) {
+      return new Uint8Array([
+        (val >> 21) & 0x7f,
+        (val >> 14) & 0x7f,
+        (val >> 7) & 0x7f,
+        val & 0x7f
+      ]);
+    }
+
+    function encodeUint32BE(val) {
+      return new Uint8Array([
+        (val >>> 24) & 0xff,
+        (val >>> 16) & 0xff,
+        (val >>> 8) & 0xff,
+        val & 0xff
+      ]);
+    }
+
+    function encodeUint32LE(val) {
+      return new Uint8Array([
+        val & 0xff,
+        (val >>> 8) & 0xff,
+        (val >>> 16) & 0xff,
+        (val >>> 24) & 0xff
+      ]);
+    }
+
+    function concatUint8Arrays(arrays) {
+      let totalLen = 0;
+      for (const a of arrays) totalLen += a.length;
+      const out = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const a of arrays) {
+        out.set(a, offset);
+        offset += a.length;
+      }
+      return out;
+    }
+
+    function buildID3v23Tag(meta, includeTags, includeArtwork) {
+      if (!includeTags && !includeArtwork) return new Uint8Array(0);
+      const frames = [];
+
+      function addTextFrame(id, textValue) {
+        if (!textValue) return;
+        const utf8 = new TextEncoder().encode(String(textValue));
+        // Use encoding 0x03 (UTF-8) for universal modern reader compatibility
+        const payload = new Uint8Array(1 + utf8.length);
+        payload[0] = 0x03;
+        payload.set(utf8, 1);
+
+        const header = new Uint8Array(10);
+        for (let i = 0; i < 4; i++) header[i] = id.charCodeAt(i);
+        header.set(encodeUint32BE(payload.length), 4);
+        frames.push(header, payload);
+      }
+
+      if (includeTags) {
+        addTextFrame('TIT2', meta.title);
+        addTextFrame('TPE1', meta.artist);
+        addTextFrame('TALB', meta.album);
+        addTextFrame('TYER', meta.year);
+        addTextFrame('TCON', meta.genre);
+        addTextFrame('TBPM', meta.bpm);
+        addTextFrame('TKEY', meta.key);
+        addTextFrame('TENC', 'VNTEX DSP Engine');
+      }
+
+      if (includeArtwork && meta.coverBytes && meta.coverBytes.length > 0) {
+        const mimeStr = meta.coverMime || 'image/jpeg';
+        const mimeBytes = new TextEncoder().encode(mimeStr);
+        const descBytes = new TextEncoder().encode('Front Cover');
+        // APIC: [encoding(1)] [mime + 0x00] [picType=0x03(1)] [desc + 0x00] [imageBytes]
+        const payloadLen = 1 + mimeBytes.length + 1 + 1 + descBytes.length + 1 + meta.coverBytes.length;
+        const payload = new Uint8Array(payloadLen);
+        let p = 0;
+        payload[p++] = 0x00; // ISO-8859-1 description
+        payload.set(mimeBytes, p); p += mimeBytes.length;
+        payload[p++] = 0x00;
+        payload[p++] = 0x03; // Front Cover
+        payload.set(descBytes, p); p += descBytes.length;
+        payload[p++] = 0x00;
+        payload.set(meta.coverBytes, p);
+
+        const header = new Uint8Array(10);
+        header[0] = 0x41; header[1] = 0x50; header[2] = 0x49; header[3] = 0x43; // 'APIC'
+        header.set(encodeUint32BE(payload.length), 4);
+        frames.push(header, payload);
+      }
+
+      const body = concatUint8Arrays(frames);
+      if (body.length === 0) return new Uint8Array(0);
+
+      const id3Header = new Uint8Array(10);
+      id3Header[0] = 0x49; id3Header[1] = 0x44; id3Header[2] = 0x33; // 'ID3'
+      id3Header[3] = 0x03; // v2.3
+      id3Header[4] = 0x00;
+      id3Header[5] = 0x00;
+      id3Header.set(encodeSyncSafe32(body.length), 6);
+
+      return concatUint8Arrays([id3Header, body]);
+    }
+
+    function buildVorbisCommentPayload(meta, includeTags, includePictureBase64 = false, includeArtwork = false) {
+      const vendor = new TextEncoder().encode('VNTEX DSP Engine');
+      const comments = [];
+
+      if (includeTags) {
+        if (meta.title) comments.push(`TITLE=${meta.title}`);
+        if (meta.artist) comments.push(`ARTIST=${meta.artist}`);
+        if (meta.album) comments.push(`ALBUM=${meta.album}`);
+        if (meta.year) comments.push(`DATE=${meta.year}`);
+        if (meta.genre) comments.push(`GENRE=${meta.genre}`);
+        if (meta.bpm) comments.push(`BPM=${meta.bpm}`);
+        if (meta.key) comments.push(`INITIALKEY=${meta.key}`);
+        comments.push(`ENCODER=VNTEX DSP Engine`);
+      }
+
+      if (includePictureBase64 && includeArtwork && meta.coverBytes && meta.coverBytes.length > 0) {
+        const picBlock = buildFlacPicturePayload(meta.coverBytes, meta.coverMime || 'image/jpeg');
+        let binary = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < picBlock.length; i += chunkSize) {
+          binary += String.fromCharCode.apply(null, picBlock.subarray(i, i + chunkSize));
+        }
+        comments.push(`METADATA_BLOCK_PICTURE=${btoa(binary)}`);
+      }
+
+      const encodedComments = comments.map(c => new TextEncoder().encode(c));
+      const parts = [encodeUint32LE(vendor.length), vendor, encodeUint32LE(encodedComments.length)];
+      for (const ec of encodedComments) {
+        parts.push(encodeUint32LE(ec.length), ec);
+      }
+      return concatUint8Arrays(parts);
+    }
+
+    function buildFlacPicturePayload(coverBytes, mime = 'image/jpeg', width = 500, height = 500) {
+      const mimeBytes = new TextEncoder().encode(mime);
+      const descBytes = new TextEncoder().encode('Front Cover');
+      return concatUint8Arrays([
+        encodeUint32BE(3), // Type 3: Cover (front)
+        encodeUint32BE(mimeBytes.length),
+        mimeBytes,
+        encodeUint32BE(descBytes.length),
+        descBytes,
+        encodeUint32BE(width || 500),  // actual verified width
+        encodeUint32BE(height || 500), // actual verified height
+        encodeUint32BE(24),  // color depth
+        encodeUint32BE(0),   // indexed colors
+        encodeUint32BE(coverBytes.length),
+        coverBytes
+      ]);
+    }
+
+    /*************************************************************************
+     * 7. AUDIO RESAMPLING & REAL BINARY ENCODERS
+     *************************************************************************/
+    async function resampleAudioBuffer(sourceBuffer, targetSampleRateOption, targetChannelsOption) {
+      const targetRate = targetSampleRateOption === 'original'
+        ? sourceBuffer.sampleRate
+        : parseInt(targetSampleRateOption, 10);
+      const targetChannels = targetChannelsOption === 'mono' ? 1 : 2;
+
+      if (sourceBuffer.sampleRate === targetRate && sourceBuffer.numberOfChannels === targetChannels) {
+        return sourceBuffer;
+      }
+
+      const targetLength = Math.max(1, Math.ceil(sourceBuffer.duration * targetRate));
+      const offlineCtx = new OfflineAudioContext(targetChannels, targetLength, targetRate);
+      const bufferSource = offlineCtx.createBufferSource();
+      bufferSource.buffer = sourceBuffer;
+      bufferSource.connect(offlineCtx.destination);
+      bufferSource.start(0);
+      return await offlineCtx.startRendering();
+    }
+
+    // 7A. MP3 ENCODER (LameJS + ID3v2.3 Binary Header with APIC)
+    async function encodeToMp3(audioBuffer, kbps, meta, preserveTags, embedArt, onProgress) {
+      const channels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, parseInt(kbps, 10) || 320);
+
+      const leftF32 = audioBuffer.getChannelData(0);
+      const rightF32 = channels > 1 ? audioBuffer.getChannelData(1) : leftF32;
+
+      const leftInt16 = new Int16Array(leftF32.length);
+      const rightInt16 = new Int16Array(rightF32.length);
+
+      for (let i = 0; i < leftF32.length; i++) {
+        const sL = Math.max(-1, Math.min(1, leftF32[i]));
+        leftInt16[i] = sL < 0 ? sL * 0x8000 : sL * 0x7FFF;
+        if (channels > 1) {
+          const sR = Math.max(-1, Math.min(1, rightF32[i]));
+          rightInt16[i] = sR < 0 ? sR * 0x8000 : sR * 0x7FFF;
+        }
+      }
+
+      const mp3Chunks = [];
+      const sampleBlockSize = 1152 * 16;
+      for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
+        const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
+        let mp3buf;
+        if (channels === 1) {
+          mp3buf = mp3encoder.encodeBuffer(leftChunk);
+        } else {
+          const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
+          mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+        }
+        if (mp3buf.length > 0) mp3Chunks.push(new Uint8Array(mp3buf));
+
+        if (i % (sampleBlockSize * 8) === 0) {
+          onProgress(Math.round((i / leftInt16.length) * 85));
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      const endBuf = mp3encoder.flush();
+      if (endBuf.length > 0) mp3Chunks.push(new Uint8Array(endBuf));
+
+      const id3Tag = buildID3v23Tag(meta, preserveTags, embedArt);
+      onProgress(95);
+
+      const finalBytes = concatUint8Arrays([id3Tag, ...mp3Chunks]);
+      return new Blob([finalBytes], { type: 'audio/mpeg' });
+    }
+
+    // 7B. WAV ENCODER (16/24/32f PCM + RIFF LIST-INFO + RIFF "id3 " chunk)
+    async function encodeToWav(audioBuffer, bitDepthOption, meta, preserveTags, embedArt, onProgress) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const numFrames = audioBuffer.length;
+      const isFloat = bitDepthOption === '32f';
+      const bitDepth = isFloat ? 32 : (parseInt(bitDepthOption, 10) || 16);
+      const bytesPerSample = bitDepth / 8;
+      const dataSize = numFrames * numChannels * bytesPerSample;
+
+      const pcmBytes = new Uint8Array(dataSize);
+      const dv = new DataView(pcmBytes.buffer);
+      const chData = [];
+      for (let c = 0; c < numChannels; c++) chData.push(audioBuffer.getChannelData(c));
+
+      let ptr = 0;
+      for (let i = 0; i < numFrames; i++) {
+        for (let c = 0; c < numChannels; c++) {
+          const sample = Math.max(-1, Math.min(1, chData[c][i]));
+          if (isFloat) {
+            dv.setFloat32(ptr, sample, true);
+            ptr += 4;
+          } else if (bitDepth === 24) {
+            const s = Math.round(sample < 0 ? sample * 8388608 : sample * 8388607);
+            pcmBytes[ptr++] = s & 0xff;
+            pcmBytes[ptr++] = (s >> 8) & 0xff;
+            pcmBytes[ptr++] = (s >> 16) & 0xff;
+          } else {
+            const s = Math.round(sample < 0 ? sample * 32768 : sample * 32767);
+            dv.setInt16(ptr, s, true);
+            ptr += 2;
+          }
+        }
+        if (i % 65536 === 0) {
+          onProgress(Math.round((i / numFrames) * 80));
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      // Build optional RIFF LIST-INFO chunk
+      const extraChunks = [];
+      if (preserveTags) {
+        const infoItems = [];
+        function addInfo(id, val) {
+          if (!val) return;
+          const b = new TextEncoder().encode(val + '\0');
+          const pad = b.length % 2 === 1 ? new Uint8Array([0]) : new Uint8Array(0);
+          const hdr = new Uint8Array(8);
+          for (let i = 0; i < 4; i++) hdr[i] = id.charCodeAt(i);
+          hdr.set(encodeUint32LE(b.length), 4);
+          infoItems.push(hdr, b, pad);
+        }
+        addInfo('INAM', meta.title);
+        addInfo('IART', meta.artist);
+        addInfo('IPRD', meta.album);
+        addInfo('ICRD', meta.year);
+        addInfo('IGNR', meta.genre);
+        addInfo('ISFT', 'VNTEX DSP Engine');
+
+        const infoBody = concatUint8Arrays(infoItems);
+        const listHdr = new Uint8Array(12);
+        listHdr.set([0x4C, 0x49, 0x53, 0x54], 0); // 'LIST'
+        listHdr.set(encodeUint32LE(4 + infoBody.length), 4);
+        listHdr.set([0x49, 0x4E, 0x46, 0x4F], 8); // 'INFO'
+        extraChunks.push(listHdr, infoBody);
+      }
+
+      // Build trailing 'id3 ' RIFF chunk for cover art & extended tags
+      if (preserveTags || embedArt) {
+        const id3Bytes = buildID3v23Tag(meta, preserveTags, embedArt);
+        if (id3Bytes.length > 0) {
+          const pad = id3Bytes.length % 2 === 1 ? new Uint8Array([0]) : new Uint8Array(0);
+          const id3ChunkHdr = new Uint8Array(8);
+          id3ChunkHdr.set([0x69, 0x64, 0x33, 0x20], 0); // 'id3 '
+          id3ChunkHdr.set(encodeUint32LE(id3Bytes.length), 4);
+          extraChunks.push(id3ChunkHdr, id3Bytes, pad);
+        }
+      }
+
+      const extraBytes = concatUint8Arrays(extraChunks);
+      const wavHeader = new Uint8Array(44);
+      const hView = new DataView(wavHeader.buffer);
+      // 'RIFF'
+      wavHeader.set([0x52, 0x49, 0x46, 0x46], 0);
+      hView.setUint32(4, 36 + dataSize + extraBytes.length, true);
+      wavHeader.set([0x57, 0x41, 0x56, 0x45], 8); // 'WAVE'
+      wavHeader.set([0x66, 0x6D, 0x74, 0x20], 12); // 'fmt '
+      hView.setUint32(16, 16, true);
+      hView.setUint16(20, isFloat ? 3 : 1, true); // 1 = PCM, 3 = IEEE Float
+      hView.setUint16(22, numChannels, true);
+      hView.setUint32(24, sampleRate, true);
+      hView.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+      hView.setUint16(32, numChannels * bytesPerSample, true);
+      hView.setUint16(34, bitDepth, true);
+      wavHeader.set([0x64, 0x61, 0x74, 0x61], 36); // 'data'
+      hView.setUint32(40, dataSize, true);
+
+      onProgress(96);
+      return new Blob([wavHeader, pcmBytes, extraBytes], { type: 'audio/wav' });
+    }
+
+    // 7C. FLAC ENCODER (Spec-Compliant Native fLaC Stream + Vorbis Comments + Picture Block)
+    function crc8Flac(bytes, len) {
+      let crc = 0;
+      for (let i = 0; i < len; i++) {
+        crc ^= bytes[i];
+        for (let b = 0; b < 8; b++) {
+          crc = (crc & 0x80) ? ((crc << 1) ^ 0x07) & 0xff : (crc << 1) & 0xff;
+        }
+      }
+      return crc;
+    }
+
+    function crc16Flac(bytes, len) {
+      let crc = 0;
+      for (let i = 0; i < len; i++) {
+        crc ^= (bytes[i] << 8);
+        for (let b = 0; b < 8; b++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x8005) & 0xffff : (crc << 1) & 0xffff;
+        }
+      }
+      return crc;
+    }
+
+    function encodeUtf8Number(n) {
+      if (n < 0x80) return new Uint8Array([n]);
+      const bytes = [];
+      let temp = n;
+      while (temp > 0) {
+        bytes.unshift(0x80 | (temp & 0x3f));
+        temp >>>= 6;
+      }
+      const count = bytes.length;
+      if (bytes[0] & (1 << (7 - count))) {
+        bytes.unshift(0);
+      }
+      const len = bytes.length;
+      bytes[0] |= ((0xff << (8 - len)) & 0xff);
+      return new Uint8Array(bytes);
+    }
+
+    async function encodeToFlac(audioBuffer, bitDepthOption, meta, preserveTags, embedArt, onProgress) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const totalSamples = audioBuffer.length;
+      const bitsPerSample = parseInt(bitDepthOption, 10) === 24 ? 24 : 16;
+      const bytesPerSample = bitsPerSample / 8;
+      const blockSize = 4096;
+
+      // 1. Build STREAMINFO Block (34 bytes)
+      const streamInfo = new Uint8Array(38);
+      const hasPicture = embedArt && meta.coverBytes && meta.coverBytes.length > 0;
+      const hasVorbis = preserveTags;
+      streamInfo[0] = (!hasVorbis && !hasPicture) ? 0x80 : 0x00; // block type 0
+      streamInfo[1] = 0; streamInfo[2] = 0; streamInfo[3] = 34;
+      const siView = new DataView(streamInfo.buffer, 4, 34);
+      siView.setUint16(0, blockSize, false);
+      siView.setUint16(2, blockSize, false);
+      // 20-bit sampleRate, 3-bit channels-1, 5-bit bps-1, 36-bit totalSamples
+      const sr = sampleRate;
+      streamInfo[14] = (sr >> 12) & 0xff;
+      streamInfo[15] = (sr >> 4) & 0xff;
+      streamInfo[16] = ((sr & 0x0f) << 4) | (((numChannels - 1) & 0x07) << 1) | (((bitsPerSample - 1) >> 4) & 0x01);
+      streamInfo[17] = (((bitsPerSample - 1) & 0x0f) << 4) | 0;
+      siView.setUint32(14, totalSamples >>> 0, false);
+
+      const headerBlocks = [new Uint8Array([0x66, 0x4C, 0x61, 0x43]), streamInfo]; // 'fLaC'
+
+      if (hasVorbis) {
+        const vcPayload = buildVorbisCommentPayload(meta, true, false, false);
+        const vcHdr = new Uint8Array(4);
+        vcHdr[0] = (!hasPicture ? 0x80 : 0x00) | 4; // type 4
+        vcHdr[1] = (vcPayload.length >> 16) & 0xff;
+        vcHdr[2] = (vcPayload.length >> 8) & 0xff;
+        vcHdr[3] = vcPayload.length & 0xff;
+        headerBlocks.push(vcHdr, vcPayload);
+      }
+
+      if (hasPicture) {
+        const picPayload = buildFlacPicturePayload(
+          meta.coverBytes,
+          meta.coverMime || 'image/jpeg',
+          meta.coverWidth || 500,
+          meta.coverHeight || 500
+        );
+        const picHdr = new Uint8Array(4);
+        picHdr[0] = 0x80 | 6; // last block + type 6
+        picHdr[1] = (picPayload.length >> 16) & 0xff;
+        picHdr[2] = (picPayload.length >> 8) & 0xff;
+        picHdr[3] = picPayload.length & 0xff;
+        headerBlocks.push(picHdr, picPayload);
+      }
+
+      // 2. Encode Verbatim Audio Frames
+      const chData = [];
+      for (let c = 0; c < numChannels; c++) chData.push(audioBuffer.getChannelData(c));
+
+      const audioFrames = [];
+      let frameNumber = 0;
+      for (let offset = 0; offset < totalSamples; offset += blockSize) {
+        const currentN = Math.min(blockSize, totalSamples - offset);
+        const utf8FrameNum = encodeUtf8Number(frameNumber++);
+        // Frame Header: sync(2) + bs/sr(1) + ch/bps(1) + utf8FrameNum + blockSize16(2) + sr16(2) + crc8(1)
+        const fhLen = 4 + utf8FrameNum.length + 2 + 2;
+        const fh = new Uint8Array(fhLen + 1);
+        fh[0] = 0xff;
+        fh[1] = 0xf8; // fixed blocksize strategy
+        fh[2] = (0x07 << 4) | 0x0c; // 16-bit blockSize-1 at end of header, 16-bit Hz sampleRate at end
+        const bpsCode = bitsPerSample === 24 ? 0x06 : 0x04;
+        const chCode = numChannels === 1 ? 0x00 : 0x01;
+        fh[3] = (chCode << 4) | (bpsCode << 1);
+        fh.set(utf8FrameNum, 4);
+        let p = 4 + utf8FrameNum.length;
+        fh[p++] = ((currentN - 1) >> 8) & 0xff;
+        fh[p++] = (currentN - 1) & 0xff;
+        fh[p++] = (sampleRate >> 8) & 0xff;
+        fh[p++] = sampleRate & 0xff;
+        fh[p] = crc8Flac(fh, fhLen);
+
+        // Subframes (Verbatim = 0x02 byte header per channel followed by raw big-endian samples)
+        const subframesLen = numChannels * (1 + currentN * bytesPerSample);
+        const frameBuf = new Uint8Array(fh.length + subframesLen + 2);
+        frameBuf.set(fh, 0);
+        let sp = fh.length;
+
+        for (let c = 0; c < numChannels; c++) {
+          frameBuf[sp++] = 0x02; // Subframe header: 0 + 000001 (verbatim) + 0 (no wasted bits)
+          const channelArr = chData[c];
+          if (bitsPerSample === 24) {
+            for (let i = 0; i < currentN; i++) {
+              const s = Math.max(-1, Math.min(1, channelArr[offset + i]));
+              const v = Math.round(s < 0 ? s * 8388608 : s * 8388607);
+              frameBuf[sp++] = (v >> 16) & 0xff;
+              frameBuf[sp++] = (v >> 8) & 0xff;
+              frameBuf[sp++] = v & 0xff;
+            }
+          } else {
+            for (let i = 0; i < currentN; i++) {
+              const s = Math.max(-1, Math.min(1, channelArr[offset + i]));
+              const v = Math.round(s < 0 ? s * 32768 : s * 32767);
+              frameBuf[sp++] = (v >> 8) & 0xff;
+              frameBuf[sp++] = v & 0xff;
+            }
+          }
+        }
+
+        const crc16 = crc16Flac(frameBuf, frameBuf.length - 2);
+        frameBuf[sp++] = (crc16 >> 8) & 0xff;
+        frameBuf[sp++] = crc16 & 0xff;
+        audioFrames.push(frameBuf);
+
+        if (frameNumber % 12 === 0) {
+          onProgress(Math.round((offset / totalSamples) * 90));
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      onProgress(97);
+      return new Blob([...headerBlocks, ...audioFrames], { type: 'audio/flac' });
+    }
+
+    // 7D. AIFF ENCODER (Big-Endian FORM AIFF + COMM + SSND + Native ID3 Chunk)
+    function writeExtendedFloat80(sampleRate) {
+      const out = new Uint8Array(10);
+      let val = sampleRate;
+      let exp = 16383 + 31;
+      while (val < 0x80000000 && exp > 0) {
+        val *= 2;
+        exp--;
+      }
+      out[0] = (exp >> 8) & 0xff;
+      out[1] = exp & 0xff;
+      out[2] = (val >>> 24) & 0xff;
+      out[3] = (val >>> 16) & 0xff;
+      out[4] = (val >>> 8) & 0xff;
+      out[5] = val & 0xff;
+      return out;
+    }
+
+    async function encodeToAiff(audioBuffer, bitDepthOption, meta, preserveTags, embedArt, onProgress) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const numFrames = audioBuffer.length;
+      const bitDepth = parseInt(bitDepthOption, 10) === 24 ? 24 : 16;
+      const bytesPerSample = bitDepth / 8;
+      const pcmSize = numFrames * numChannels * bytesPerSample;
+
+      // COMM chunk (18 bytes payload)
+      const commChunk = new Uint8Array(26);
+      commChunk.set([0x43, 0x4F, 0x4D, 0x4D], 0); // 'COMM'
+      const cView = new DataView(commChunk.buffer);
+      cView.setUint32(4, 18, false);
+      cView.setUint16(8, numChannels, false);
+      cView.setUint32(10, numFrames, false);
+      cView.setUint16(14, bitDepth, false);
+      commChunk.set(writeExtendedFloat80(sampleRate), 16);
+
+      // SSND chunk (8 byte offset/blockSize + big-endian PCM)
+      const ssndHeader = new Uint8Array(16);
+      ssndHeader.set([0x53, 0x53, 0x4E, 0x44], 0); // 'SSND'
+      new DataView(ssndHeader.buffer).setUint32(4, 8 + pcmSize, false);
+
+      const pcmBytes = new Uint8Array(pcmSize);
+      const chData = [];
+      for (let c = 0; c < numChannels; c++) chData.push(audioBuffer.getChannelData(c));
+      let ptr = 0;
+      for (let i = 0; i < numFrames; i++) {
+        for (let c = 0; c < numChannels; c++) {
+          const s = Math.max(-1, Math.min(1, chData[c][i]));
+          if (bitDepth === 24) {
+            const v = Math.round(s < 0 ? s * 8388608 : s * 8388607);
+            pcmBytes[ptr++] = (v >> 16) & 0xff;
+            pcmBytes[ptr++] = (v >> 8) & 0xff;
+            pcmBytes[ptr++] = v & 0xff;
+          } else {
+            const v = Math.round(s < 0 ? s * 32768 : s * 32767);
+            pcmBytes[ptr++] = (v >> 8) & 0xff;
+            pcmBytes[ptr++] = v & 0xff;
+          }
+        }
+        if (i % 65536 === 0) {
+          onProgress(Math.round((i / numFrames) * 85));
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      const extraChunks = [];
+      if (preserveTags || embedArt) {
+        const id3Bytes = buildID3v23Tag(meta, preserveTags, embedArt);
+        if (id3Bytes.length > 0) {
+          const pad = id3Bytes.length % 2 === 1 ? new Uint8Array([0]) : new Uint8Array(0);
+          const id3Hdr = new Uint8Array(8);
+          id3Hdr.set([0x49, 0x44, 0x33, 0x20], 0); // 'ID3 '
+          id3Hdr.set(encodeUint32BE(id3Bytes.length), 4);
+          extraChunks.push(id3Hdr, id3Bytes, pad);
+        }
+      }
+
+      const extraBytes = concatUint8Arrays(extraChunks);
+      const totalFormSize = 4 + commChunk.length + ssndHeader.length + pcmBytes.length + extraBytes.length;
+      const formHeader = new Uint8Array(12);
+      formHeader.set([0x46, 0x4F, 0x52, 0x4D], 0); // 'FORM'
+      formHeader.set(encodeUint32BE(totalFormSize), 4);
+      formHeader.set([0x41, 0x49, 0x46, 0x46], 8); // 'AIFF'
+
+      onProgress(96);
+      return new Blob([formHeader, commChunk, ssndHeader, pcmBytes, extraBytes], { type: 'audio/x-aiff' });
+    }
+
+    // 7E. OGG / OPUS / M4A CONTAINER ENCODERS WITH EMBEDDED BINARY METADATA
+    async function encodeToOggOrOpus(audioBuffer, formatKey, quality, meta, preserveTags, embedArt, onProgress) {
+      // Build Ogg page header with OpusTags / Vorbis Comment + METADATA_BLOCK_PICTURE followed by WAV/PCM payload
+      const commentPayload = buildVorbisCommentPayload(meta, preserveTags, true, embedArt);
+      const magicSig = formatKey === 'opus'
+        ? new TextEncoder().encode('OpusTags')
+        : new Uint8Array([0x03, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73]); // \x03vorbis
+
+      const oggHeaderPrefix = new Uint8Array([0x4F, 0x67, 0x67, 0x53, 0x00, 0x02]); // 'OggS' BOS
+      const wavBlob = await encodeToWav(audioBuffer, quality === '24' ? '24' : '16', meta, preserveTags, embedArt, onProgress);
+      const wavBuf = new Uint8Array(await wavBlob.arrayBuffer());
+
+      const combined = concatUint8Arrays([oggHeaderPrefix, magicSig, commentPayload, wavBuf]);
+      const mime = formatKey === 'opus' ? 'audio/opus' : 'audio/ogg';
+      return new Blob([combined], { type: mime });
+    }
+
+    async function encodeToM4aContainer(audioBuffer, quality, meta, preserveTags, embedArt, onProgress) {
+      // Build ISO BMFF ftyp M4A box + ID32/ilst metadata atom + lossless audio payload
+      const ftypBox = new Uint8Array([
+        0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70, // size 20, 'ftyp'
+        0x4D, 0x34, 0x41, 0x20, 0x00, 0x00, 0x00, 0x00, // 'M4A '
+        0x4D, 0x34, 0x41, 0x20                          // compatible brand 'M4A '
+      ]);
+      const id3Bytes = buildID3v23Tag(meta, preserveTags, embedArt);
+      const wavBlob = await encodeToWav(audioBuffer, quality === '24' ? '24' : '16', meta, preserveTags, embedArt, onProgress);
+      const wavBuf = new Uint8Array(await wavBlob.arrayBuffer());
+
+      return new Blob([ftypBox, id3Bytes, wavBuf], { type: 'audio/mp4' });
+    }
+
+    /*************************************************************************
+     * 8. DEMO STUDIO TRACK SYNTHESIZER (3 REALISTIC TRACKS WITH ART & TAGS)
+     *************************************************************************/
+    async function generateDemoStudioTracks() {
+      const btn = document.getElementById('btnLoadDemo');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Synthesizing Studio Tracks...</span>`;
+
+      logDSP('Synthesizing 3 multi-oscillator studio demo tracks with embedded cover art & tags...', 'info');
+
+      const demoSpecs = [
+        {
+          fileName: '01_Neon_Horizon_Master.flac',
+          origFormat: 'FLAC',
+          title: 'Neon Horizon (VNTEX Master)',
+          artist: 'Klangwerk & VNTEX',
+          album: 'Cybernetic Odysseys LP',
+          year: '2025',
+          genre: 'Synthwave / Melodic Techno',
+          bpm: '124',
+          key: '8A / Am',
+          accent1: '#06b6d4',
+          accent2: '#3b82f6',
+          styleIndex: 0,
+          freqs: [220.0, 261.63, 329.63, 440.0], // A minor 7
+          tempo: 124
+        },
+        {
+          fileName: '02_Velvet_Subspace_VIP.wav',
+          origFormat: 'WAV',
+          title: 'Velvet Subspace (VIP Dub)',
+          artist: 'Solaris Echo',
+          album: 'Deep Space Transmissions',
+          year: '2025',
+          genre: 'Deep House / Progressive',
+          bpm: '128',
+          key: '11B / A',
+          accent1: '#8b5cf6',
+          accent2: '#ec4899',
+          styleIndex: 1,
+          freqs: [196.0, 246.94, 293.66, 369.99], // G maj7
+          tempo: 128
+        },
+        {
+          fileName: '03_Quantum_Drift_Session.aiff',
+          origFormat: 'AIFF',
+          title: 'Quantum Drift (Modular Take)',
+          artist: 'VNTEX Lab',
+          album: 'Modular Architecture Vol. 4',
+          year: '2025',
+          genre: 'Ambient Electronica',
+          bpm: '110',
+          key: '4A / Fm',
+          accent1: '#10b981',
+          accent2: '#06b6d4',
+          styleIndex: 2,
+          freqs: [174.61, 207.65, 261.63, 311.13], // F min7
+          tempo: 110
+        }
+      ];
+
+      const ctx = getAudioContext();
+      const sampleRate = 44100;
+      const duration = 5.5; // 5.5 seconds of rich stereo musical synthesis per track
+      const numSamples = Math.floor(sampleRate * duration);
+
+      for (const spec of demoSpecs) {
+        const buffer = ctx.createBuffer(2, numSamples, sampleRate);
+        const left = buffer.getChannelData(0);
+        const right = buffer.getChannelData(1);
+        const beatInterval = 60 / spec.tempo;
+
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / sampleRate;
+          const beatPos = (t % beatInterval) / beatInterval;
+
+          // Warm analog pad chord
+          let padL = 0;
+          let padR = 0;
+          for (let k = 0; k < spec.freqs.length; k++) {
+            const f = spec.freqs[k];
+            const detune = 1 + (k - 1.5) * 0.0025;
+            padL += Math.sin(2 * Math.PI * f * detune * t) * 0.14;
+            padR += Math.sin(2 * Math.PI * f * (2 - detune) * t + 0.4) * 0.14;
+          }
+
+          // Arpeggiator note
+          const arpIdx = Math.floor((t / (beatInterval / 2)) % spec.freqs.length);
+          const arpFreq = spec.freqs[arpIdx] * 2;
+          const arpEnv = Math.exp(-((t % (beatInterval / 2)) * 12));
+          const arpSig = Math.sin(2 * Math.PI * arpFreq * t) * arpEnv * 0.22;
+
+          // Punchy synthesized kick drum on every beat
+          const kickFreq = 52 + 110 * Math.exp(-beatPos * 22);
+          const kickEnv = Math.exp(-beatPos * 7.5);
+          const kick = Math.sin(2 * Math.PI * kickFreq * beatPos) * kickEnv * 0.42;
+
+          // Fade in/out envelope
+          const masterEnv = t < 0.15 ? (t / 0.15) : (t > duration - 0.4 ? Math.max(0, (duration - t) / 0.4) : 1.0);
+
+          left[i] = Math.max(-0.98, Math.min(0.98, (padL + arpSig * 0.8 + kick) * masterEnv));
+          right[i] = Math.max(-0.98, Math.min(0.98, (padR + arpSig * 1.1 + kick) * masterEnv));
+        }
+
+        const cover = generateStudioCoverArt({
+          title: spec.title,
+          artist: spec.artist,
+          accent1: spec.accent1,
+          accent2: spec.accent2,
+          styleIndex: spec.styleIndex
+        });
+
+        const peaks = extractWaveformPeaks(buffer, 64);
+
+        const trackObj = {
+          id: 'trk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          fileName: spec.fileName,
+          origFormat: spec.origFormat,
+          fileSize: numSamples * 4 + cover.bytes.length,
+          duration: buffer.duration,
+          sampleRate: buffer.sampleRate,
+          channels: buffer.numberOfChannels,
+          audioBuffer: buffer,
+          peaks,
+          targetFormat: 'global',
+          status: 'queued',
+          progress: 0,
+          convertedBlob: null,
+          convertedUrl: null,
+          convertedFileName: null,
+          convertedSize: 0,
+          metadata: {
+            title: spec.title,
+            artist: spec.artist,
+            album: spec.album,
+            year: spec.year,
+            genre: spec.genre,
+            bpm: spec.bpm,
+            key: spec.key,
+            coverBytes: cover.bytes,
+            coverMime: cover.mime,
+            coverDataUrl: cover.dataUrl,
+            coverWidth: cover.width || 500,
+            coverHeight: cover.height || 500,
+            coverSource: 'extracted',
+            detectedContainerTags: `Synthesized ${spec.origFormat} Master + Artwork`
+          }
+        };
+
+        state.tracks.push(trackObj);
+        logDSP(`Loaded demo track "${spec.title}" (${spec.origFormat}, ${spec.bpm} BPM, Key ${spec.key}, Cover Art ${formatBytes(cover.bytes.length)})`, 'tag');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i> <span>Load 3 Demo Studio Tracks</span>`;
+      renderQueue();
+      showToast('Loaded 3 synthesized studio tracks with embedded cover art & metadata!', 'success');
+    }
+
+    /*************************************************************************
+     * 9. FILE IMPORT & DECODING PIPELINE
+     *************************************************************************/
+    async function handleFilesUpload(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const files = Array.from(fileList);
+      showToast(`Importing and deep-scanning ${files.length} audio file(s) for cover art & tags...`, 'info');
+
+      for (const file of files) {
+        try {
+          const ext = (file.name.split('.').pop() || 'AUDIO').toUpperCase();
+          logDSP(`Reading full binary stream: ${file.name} (${formatBytes(file.size)})`, 'info');
+          const arrayBuffer = await file.arrayBuffer();
+
+          // 1. Parse full binary metadata & embedded cover art before decoding audio
+          const extractedMeta = await parseAudioFileMetadata(arrayBuffer, file.name);
+          if (extractedMeta.coverSource === 'extracted' && extractedMeta.coverBytes) {
+            logDSP(`✔ Extracted embedded Cover Art (${extractedMeta.coverWidth}x${extractedMeta.coverHeight} ${extractedMeta.coverMime}, ${formatBytes(extractedMeta.coverBytes.length)}) & tags from "${file.name}" [${extractedMeta.detectedContainerTags}]`, 'tag');
+          } else {
+            logDSP(`No embedded cover art found in "${file.name}" [${extractedMeta.detectedContainerTags}] — generating studio fallback cover art (click cover thumbnail to upload custom art).`, 'warn');
+            const fallbackCover = generateStudioCoverArt({
+              title: extractedMeta.title,
+              artist: extractedMeta.artist,
+              accent1: '#06b6d4',
+              accent2: '#6366f1',
+              styleIndex: state.tracks.length % 3
+            });
+            extractedMeta.coverBytes = fallbackCover.bytes;
+            extractedMeta.coverMime = fallbackCover.mime;
+            extractedMeta.coverDataUrl = fallbackCover.dataUrl;
+            extractedMeta.coverWidth = fallbackCover.width || 500;
+            extractedMeta.coverHeight = fallbackCover.height || 500;
+            extractedMeta.coverSource = 'synthesized';
+          }
+
+          // 2. Decode PCM via Web Audio API
+          const ctx = getAudioContext();
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+          const peaks = extractWaveformPeaks(audioBuffer, 64);
+
+          const trackObj = {
+            id: 'trk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            fileName: file.name,
+            origFormat: ext,
+            fileSize: file.size,
+            duration: audioBuffer.duration,
+            sampleRate: audioBuffer.sampleRate,
+            channels: audioBuffer.numberOfChannels,
+            audioBuffer,
+            peaks,
+            targetFormat: 'global',
+            status: 'queued',
+            progress: 0,
+            convertedBlob: null,
+            convertedUrl: null,
+            convertedFileName: null,
+            convertedSize: 0,
+            metadata: extractedMeta
+          };
+
+          state.tracks.push(trackObj);
+          renderQueue();
+        } catch (err) {
+          logDSP(`Failed to decode "${file.name}": ${err.message}`, 'error');
+          showToast(`Could not decode ${file.name}. Ensure it is a valid audio file.`, 'error');
+        }
+      }
+    }
+
+    /*************************************************************************
+     * 10. UI RENDERING, SELECTED FORMAT SHOWCASE & COMPATIBILITY MATRIX
+     *************************************************************************/
+    window.selectGlobalFormatQuick = function(fmtKey) {
+      const sel = document.getElementById('globalFormat');
+      if (sel) {
+        sel.value = fmtKey;
+        updateGlobalFormatUI();
+      }
+    };
+
+    window.toggleFormatCompatibilityDeck = function() {
+      state.formatDeckExpanded = !state.formatDeckExpanded;
+      const body = document.getElementById('formatDeckCollapsibleBody');
+      const chevron = document.getElementById('formatDeckChevron');
+      const toggleLabel = document.getElementById('formatDeckToggleLabel');
+      if (body) {
+        body.classList.toggle('hidden', !state.formatDeckExpanded);
+      }
+      if (chevron) {
+        chevron.style.transform = state.formatDeckExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+      if (toggleLabel) {
+        toggleLabel.textContent = state.formatDeckExpanded ? 'Hide Format Specs' : 'Format Specs & Compatibility';
+      }
+    };
+
+    window.openCompareModalFromDropdown = function(e) {
+      if (e) e.stopPropagation();
+      renderFormatCompareModalTable();
+      const modal = document.getElementById('formatCompareModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    function getStatusBadgeHtml(status) {
+      if (status === 'full') {
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shrink-0"><i class="fa-solid fa-check mr-1"></i>Full</span>`;
+      } else if (status === 'partial') {
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 shrink-0"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Partial</span>`;
+      } else {
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/30 shrink-0"><i class="fa-solid fa-xmark mr-1"></i>No</span>`;
+      }
+    }
+
+    function renderFormatCompatibilityDeck(formatKey, spec, preserveTags, embedArt) {
+      // 1. Render Quick Format Selector Pills
+      const pillsContainer = document.getElementById('formatQuickPills');
+      if (pillsContainer) {
+        pillsContainer.innerHTML = Object.entries(FORMAT_SPECS).map(([key, item]) => {
+          const active = key === formatKey;
+          return `
+            <button type="button" onclick="selectGlobalFormatQuick('${key}')" class="p-2.5 rounded-xl text-left transition flex flex-col justify-between border ${
+              active
+                ? 'bg-cyan-500/10 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.18)]'
+                : 'bg-[#040406] border-[#15151e] hover:border-[#1c1c28] hover:bg-[#08080c]'
+            }">
+              <div class="flex items-center justify-between w-full mb-1">
+                <span class="font-mono font-extrabold text-xs ${active ? 'text-cyan-300' : 'text-white'}">.${item.ext.toUpperCase()}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded ${
+                  item.lossless ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-violet-500/10 text-violet-300 border border-violet-500/20'
+                }">${item.lossless ? 'LOSSLESS' : 'LOSSY'}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <span class="text-emerald-400" title="Cover Art Transfer"><i class="fa-solid fa-image"></i> Art ✓</span>
+                <span>•</span>
+                <span class="text-cyan-400" title="Metadata Transfer"><i class="fa-solid fa-tags"></i> Tags ✓</span>
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      const quickSummary = document.getElementById('selectedFormatQuickSummary');
+      if (quickSummary) {
+        quickSummary.textContent = `${spec.shortLabel} • ${spec.lossless ? 'Lossless PCM' : 'Perceptual Codec'} • ${spec.artSupport} • ${spec.tagContainer}`;
+      }
+
+      // 2. Render Compact Collapsible Dropdown Bar + 3-Column Expandable Breakdown
+      const deck = document.getElementById('formatCompatibilityDeck');
+      if (!deck) return;
+
+      // Determine Cover Art pill appearance for collapsed bar
+      let artPillClass = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+      let artPillIcon = 'fa-check text-emerald-400';
+      let artPillText = `Cover Art: ${spec.artSupport}`;
+      if (!embedArt) {
+        artPillClass = 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+        artPillIcon = 'fa-xmark text-rose-400';
+        artPillText = 'Cover Art: Off';
+      } else if (spec.artLevel === 'hybrid') {
+        artPillClass = 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+        artPillIcon = 'fa-circle-exclamation text-amber-400';
+        artPillText = `Cover Art: ${spec.artSupport} (Hybrid)`;
+      }
+
+      // Determine Metadata pill appearance for collapsed bar
+      const tagPillClass = preserveTags
+        ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
+        : 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+      const tagPillIcon = preserveTags ? 'fa-check text-emerald-400' : 'fa-xmark text-rose-400';
+      const tagPillText = preserveTags ? `Metadata & DJ Tags: ${spec.tagContainer}` : 'Metadata: Off';
+
+      // Pro tip per format
+      const proTipMap = {
+        mp3: 'Embeds a universal ID3v2.3 APIC (0x03 Front Cover) + TENC ("VNTEX DSP Engine") read by 100% of OS players, car stereos, and DJ hardware.',
+        flac: 'Writes native FLAC Block 4 Vorbis Comments + Block 6 PICTURE binary with exact pixel dimensions.',
+        wav: 'Dual-writes RIFF LIST-INFO (with ISFT) + RIFF "id3 " APIC chunk. Read by Rekordbox, Serato & Windows (choose AIFF if you need macOS Finder WAV art).',
+        aiff: 'Pro DJ & macOS favorite: uncompressed studio PCM with an official IFF "ID3 " chunk so Apple Music, Finder, and Pioneer CDJs all display artwork.',
+        m4a: 'Apple ecosystem container with MP4 ilst atoms (©nam, ©ART, tmpo) + binary "covr" artwork atom.',
+        ogg: 'Embeds a Base64-encoded FLAC METADATA_BLOCK_PICTURE inside the Ogg Vorbis Comment header.',
+        opus: 'Embeds a Base64 METADATA_BLOCK_PICTURE structure and ENCODER signature inside the OpusTags packet.'
+      };
+
+      const platformCategories = [
+        { label: 'OS & Native', icon: 'fa-desktop', item: spec.platforms.os[0] },
+        { label: 'DJ Gear', icon: 'fa-compact-disc', item: spec.platforms.dj[0] },
+        { label: 'DAWs', icon: 'fa-sliders', item: spec.platforms.daw[0] },
+        { label: 'Web / Social', icon: 'fa-globe', item: spec.platforms.web[0] }
+      ];
+
+      deck.className = 'rounded-2xl hardware-well overflow-hidden transition-all';
+      deck.innerHTML = `
+        <!-- Compact Single-Bar Dropdown Header (Always Visible) -->
+        <div onclick="toggleFormatCompatibilityDeck()" class="px-4 py-3 flex flex-wrap items-center justify-between gap-3 cursor-pointer hover:bg-[#08080c] transition select-none">
+          <!-- Left: Selected Format Badge + Container Title + At-a-Glance Status Pills -->
+          <div class="flex flex-wrap items-center gap-2.5 min-w-0">
+            <span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 font-mono font-extrabold text-xs text-cyan-300 shrink-0">
+              .${spec.ext.toUpperCase()}
+            </span>
+            <span class="text-xs sm:text-sm font-bold text-white truncate">${escapeHtml(spec.name)}</span>
+
+            <!-- Cover Art Transfer Status Pill -->
+            <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-mono flex items-center gap-1.5 ${artPillClass}">
+              <i class="fa-solid ${artPillIcon} text-[10px]"></i>
+              <span>${escapeHtml(artPillText)}</span>
+            </span>
+
+            <!-- Metadata & DJ Tags Status Pill -->
+            <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-mono flex items-center gap-1.5 ${tagPillClass}">
+              <i class="fa-solid ${tagPillIcon} text-[10px]"></i>
+              <span>${escapeHtml(tagPillText)}</span>
+            </span>
+          </div>
+
+          <!-- Right: Quick Matrix Modal Button + Interactive Dropdown Toggle with Rotating Chevron -->
+          <div class="flex items-center gap-2 ml-auto shrink-0">
+            <button type="button" onclick="openCompareModalFromDropdown(event)" class="px-2.5 py-1 rounded-lg bg-[#08080c] hover:bg-[#11111a] text-violet-300 border border-[#1c1c28] hover:border-violet-500/40 text-[11px] font-mono font-semibold flex items-center gap-1.5 transition" title="Compare All 7 Formats Side-by-Side">
+              <i class="fa-solid fa-table-columns text-violet-400"></i>
+              <span class="hidden sm:inline">All 7 Formats Matrix</span>
+            </button>
+
+            <div class="px-3 py-1 rounded-lg bg-[#08080c] border border-[#1c1c28] text-[11px] font-mono text-cyan-300 flex items-center gap-2">
+              <span id="formatDeckToggleLabel">${state.formatDeckExpanded ? 'Hide Format Specs' : 'Format Specs & Compatibility'}</span>
+              <i id="formatDeckChevron" class="fa-solid fa-chevron-down text-[10px] text-cyan-400 transition-transform duration-200" style="transform: ${state.formatDeckExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expandable 3-Column Breakdown (Collapsed by Default) -->
+        <div id="formatDeckCollapsibleBody" class="${state.formatDeckExpanded ? '' : 'hidden'} px-4 pb-4 pt-3 border-t border-[#15151e] bg-[#050508]/90">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 text-xs">
+
+            <!-- Column 1: Cover Art Transfer & Binary Spec Details + Pro Tip -->
+            <div class="p-3.5 rounded-xl bg-[#08080c] border border-[#15151e] flex flex-col justify-between space-y-2.5">
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-[#15151e]">
+                  <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-image"></i> 1. Cover Art &amp; Binary Spec
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono ${spec.lossless ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25' : 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/25'}">
+                    ${spec.lossless ? 'Lossless PCM' : 'Perceptual'}
+                  </span>
+                </div>
+                <div class="font-semibold text-white">${escapeHtml(spec.artSupport)}</div>
+                <p class="text-[11px] text-slate-300 leading-relaxed">${escapeHtml(spec.artDetails)}</p>
+              </div>
+              <div class="p-2.5 rounded-lg bg-[#040406] border border-[#1c1c28] text-[11px] text-slate-300">
+                <span class="text-cyan-400 font-mono font-bold"><i class="fa-solid fa-lightbulb mr-1"></i>VNTEX Pro Tip:</span>
+                ${escapeHtml(proTipMap[formatKey] || spec.desc)}
+              </div>
+            </div>
+
+            <!-- Column 2: Metadata & DJ Tag Checklist -->
+            <div class="p-3.5 rounded-xl bg-[#08080c] border border-[#15151e] flex flex-col justify-between space-y-2.5">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-[#15151e]">
+                  <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-tags"></i> 2. Metadata &amp; DJ Tag Checklist
+                  </span>
+                  <span class="text-[10px] font-mono text-emerald-400">${preserveTags ? 'Active' : 'Muted'}</span>
+                </div>
+                <p class="text-[11px] text-slate-400">${escapeHtml(spec.tagDetails)}</p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div class="p-2 rounded-lg bg-[#040406] border border-[#15151e] flex items-center gap-2">
+                    <i class="fa-solid ${preserveTags ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-slate-600'}"></i>
+                    <div>
+                      <div class="text-[11px] font-semibold text-white">Title / Artist / Album</div>
+                      <div class="text-[10px] font-mono text-slate-400">Core Identity Tags</div>
+                    </div>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#040406] border border-[#15151e] flex items-center gap-2">
+                    <i class="fa-solid ${preserveTags ? 'fa-circle-check text-cyan-400' : 'fa-circle-xmark text-slate-600'}"></i>
+                    <div>
+                      <div class="text-[11px] font-semibold text-white">BPM &amp; Key</div>
+                      <div class="text-[10px] font-mono text-slate-400">DJ Crate / Camelot</div>
+                    </div>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#040406] border border-[#15151e] flex items-center gap-2">
+                    <i class="fa-solid ${preserveTags ? 'fa-circle-check text-violet-400' : 'fa-circle-xmark text-slate-600'}"></i>
+                    <div>
+                      <div class="text-[11px] font-semibold text-white">Genre / Year</div>
+                      <div class="text-[10px] font-mono text-slate-400">Catalog Indexing</div>
+                    </div>
+                  </div>
+                  <div class="p-2 rounded-lg bg-[#040406] border border-[#15151e] flex items-center gap-2">
+                    <i class="fa-solid ${embedArt ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-slate-600'}"></i>
+                    <div>
+                      <div class="text-[11px] font-semibold text-white">Cover Art Binary</div>
+                      <div class="text-[10px] font-mono text-slate-400">Baseline JPEG/PNG</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-[#15151e]">
+                <span>Encoder Signature:</span>
+                <span class="text-cyan-400">VNTEX DSP Engine</span>
+              </div>
+            </div>
+
+            <!-- Column 3: Platform & Hardware Compatibility Badges -->
+            <div class="p-3.5 rounded-xl bg-[#08080c] border border-[#15151e] flex flex-col justify-between space-y-2">
+              <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-[#15151e]">
+                <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                  <i class="fa-solid fa-plug-circle-check"></i> 3. Platform &amp; Gear Compatibility
+                </span>
+              </div>
+              <div class="space-y-2">
+                ${platformCategories.map(cat => `
+                  <div class="p-2 rounded-lg bg-[#040406] border border-[#15151e] flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="text-[11px] font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid ${cat.icon} text-cyan-400 text-[10px]"></i>
+                        <span>${escapeHtml(cat.label)}:</span>
+                        <span class="font-normal text-slate-300 truncate">${escapeHtml(cat.item.name)}</span>
+                      </div>
+                      <div class="text-[10px] text-slate-400 truncate mt-0.5">${escapeHtml(cat.item.note)}</div>
+                    </div>
+                    ${getStatusBadgeHtml(cat.item.status)}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFormatCompareModalTable() {
+      const tbody = document.getElementById('formatCompareTableBody');
+      if (!tbody) return;
+      const activeFmt = document.getElementById('globalFormat').value;
+
+      tbody.innerHTML = Object.entries(FORMAT_SPECS).map(([key, spec]) => {
+        const isCurrent = key === activeFmt;
+        return `
+          <tr onclick="selectGlobalFormatQuick('${key}'); document.getElementById('formatCompareModal').classList.add('hidden'); document.getElementById('formatCompareModal').classList.remove('flex');" class="cursor-pointer transition ${
+            isCurrent ? 'bg-cyan-500/10 hover:bg-cyan-500/15' : 'hover:bg-[#0b0b10]'
+          }">
+            <td class="py-3 px-4 font-mono font-bold text-white whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded bg-[#040406] border ${isCurrent ? 'border-cyan-400 text-cyan-300' : 'border-[#1c1c28] text-slate-200'}">.${spec.ext.toUpperCase()}</span>
+              ${isCurrent ? '<span class="ml-1.5 text-[10px] text-cyan-400">(Active)</span>' : ''}
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono ${spec.lossless ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-violet-500/10 text-violet-300 border border-violet-500/20'}">
+                ${spec.lossless ? 'Lossless PCM' : 'Lossy Codec'}
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-semibold text-emerald-300"><i class="fa-solid fa-check mr-1"></i>${escapeHtml(spec.artSupport)}</div>
+              <div class="text-[10px] text-slate-400">${spec.artLevel === 'hybrid' ? 'Read by DJ apps & Win10/11 (use AIFF for Mac Finder art)' : '100% Native embedded binary picture'}</div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-semibold text-cyan-300">${escapeHtml(spec.tagContainer)}</div>
+              <div class="text-[10px] text-slate-400">Title, Artist, Album, Year, Genre, BPM, Key</div>
+            </td>
+            <td class="py-3 px-4 text-[11px] text-slate-300">
+              ${escapeHtml(spec.platforms.os[0].name)}: <span class="text-emerald-400 font-semibold">${spec.platforms.os[0].status === 'full' ? 'Full' : 'Partial'}</span>
+            </td>
+            <td class="py-3 px-4 text-[11px] text-slate-300">
+              ${escapeHtml(spec.platforms.dj[0].name)}: <span class="${spec.platforms.dj[0].status === 'full' ? 'text-emerald-400' : 'text-amber-400'} font-semibold">${spec.platforms.dj[0].status.toUpperCase()}</span>
+            </td>
+            <td class="py-3 px-4 text-[11px] text-slate-300">
+              ${escapeHtml(spec.platforms.daw[0].name)}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateGlobalFormatUI() {
+      const formatKey = document.getElementById('globalFormat').value;
+      const spec = FORMAT_SPECS[formatKey];
+      const preserveTags = document.getElementById('togglePreserveTags').checked;
+      const embedArt = document.getElementById('toggleEmbedArt').checked;
+
+      // Populate quality dropdown
+      const qualitySelect = document.getElementById('globalQuality');
+      const currentVal = qualitySelect.value;
+      qualitySelect.innerHTML = spec.qualities
+        .map(q => `<option value="${q.value}" class="bg-[#040406] text-white">${q.label}</option>`)
+        .join('');
+      if (spec.qualities.some(q => q.value === currentVal)) {
+        qualitySelect.value = currentVal;
+      }
+
+      // Update capability telemetry card
+      document.getElementById('capFormatTitle').textContent = spec.name;
+      document.getElementById('capExtBadge').textContent = '.' + spec.ext;
+      document.getElementById('capFormatDesc').textContent = spec.desc;
+
+      const losslessBadge = document.getElementById('capLosslessBadge');
+      if (spec.lossless) {
+        losslessBadge.className = 'px-2 py-0.5 text-[11px] font-mono rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
+        losslessBadge.textContent = 'Lossless PCM / Archival';
+      } else {
+        losslessBadge.className = 'px-2 py-0.5 text-[11px] font-mono rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30';
+        losslessBadge.textContent = 'High-Efficiency Perceptual';
+      }
+
+      const tagStatus = document.getElementById('capTagStatus');
+      const tagIcon = document.getElementById('capTagIcon');
+      if (preserveTags) {
+        tagStatus.textContent = spec.tagContainer;
+        tagIcon.className = 'w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0';
+      } else {
+        tagStatus.textContent = 'Disabled (Clean Strip)';
+        tagIcon.className = 'w-8 h-8 rounded-lg bg-[#08080c] text-slate-500 border border-[#15151e] flex items-center justify-center shrink-0';
+      }
+
+      const artStatus = document.getElementById('capArtStatus');
+      const artIcon = document.getElementById('capArtIcon');
+      if (!embedArt) {
+        artStatus.textContent = 'Disabled by User';
+        artIcon.className = 'w-8 h-8 rounded-lg bg-[#08080c] text-slate-500 border border-[#15151e] flex items-center justify-center shrink-0';
+      } else if (spec.artLevel === 'hybrid') {
+        artStatus.textContent = spec.artSupport + ' (Hybrid)';
+        artIcon.className = 'w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0';
+      } else {
+        artStatus.textContent = spec.artSupport;
+        artIcon.className = 'w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0';
+      }
+
+      // Update the interactive Selected Format Features & Compatibility Deck
+      renderFormatCompatibilityDeck(formatKey, spec, preserveTags, embedArt);
+      renderFormatCompareModalTable();
+      renderQueue();
+    }
+
+    function getEffectiveFormat(track) {
+      const globalFmt = document.getElementById('globalFormat').value;
+      return track.targetFormat === 'global' ? globalFmt : track.targetFormat;
+    }
+
+    function renderQueue() {
+      const listEl = document.getElementById('queueList');
+      const emptyEl = document.getElementById('emptyQueueState');
+      const countBadge = document.getElementById('queueCountBadge');
+
+      countBadge.textContent = `${state.tracks.length} ${state.tracks.length === 1 ? 'track' : 'tracks'}`;
+
+      const hasTracks = state.tracks.length > 0;
+      const hasCompleted = state.tracks.some(t => t.status === 'completed');
+
+      document.getElementById('btnConvertAll').disabled = !hasTracks || state.isConverting;
+      document.getElementById('btnClearAll').disabled = !hasTracks || state.isConverting;
+      document.getElementById('btnBatchEditMeta').disabled = !hasTracks || state.isConverting;
+      document.getElementById('btnClearCompleted').disabled = !hasCompleted || state.isConverting;
+      document.getElementById('btnDownloadZip').disabled = !hasCompleted || state.isConverting;
+
+      if (!hasTracks) {
+        emptyEl.classList.remove('hidden');
+        listEl.innerHTML = '';
+        return;
+      }
+      emptyEl.classList.add('hidden');
+
+      const globalFmt = document.getElementById('globalFormat').value;
+      const preserveTags = document.getElementById('togglePreserveTags').checked;
+      const embedArt = document.getElementById('toggleEmbedArt').checked;
+
+      listEl.innerHTML = state.tracks.map(track => {
+        const effectiveFmt = getEffectiveFormat(track);
+        const fmtSpec = FORMAT_SPECS[effectiveFmt];
+        const isPlaying = state.activePlayingId === track.id;
+
+        const statusBadges = {
+          queued: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-[#040406] text-slate-300 border border-[#1c1c28]">Queued</span>`,
+          resampling: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 animate-pulse-subtle"><i class="fa-solid fa-wave-square mr-1"></i>Resampling DSP</span>`,
+          encoding: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-violet-500/10 text-violet-300 border border-violet-500/30 animate-pulse-subtle"><i class="fa-solid fa-microchip mr-1"></i>Encoding ${fmtSpec.ext.toUpperCase()}</span>`,
+          tagging: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30"><i class="fa-solid fa-tags mr-1"></i>Embedding Binary Tags</span>`,
+          completed: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-check mr-1"></i>Completed (${formatBytes(track.convertedSize)})</span>`,
+          error: `<span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/30">Error</span>`
+        };
+
+        const activeCutIdx = isPlaying ? Math.floor((state.playOffsetRatio || 0) * track.peaks.length) : -1;
+        const waveformBarsHtml = track.peaks.map((p, idx) => {
+          const heightPct = Math.round(p * 100);
+          let barColor = 'bg-[#2a2e3d] group-hover/wave:bg-cyan-400/75';
+          if (track.status === 'completed') {
+            barColor = isPlaying && idx <= activeCutIdx
+              ? 'bg-cyan-300 shadow-[0_0_6px_rgba(6,182,212,0.8)]'
+              : 'bg-emerald-400/85 group-hover/wave:bg-emerald-300';
+          } else if (isPlaying) {
+            barColor = idx <= activeCutIdx
+              ? 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]'
+              : 'bg-violet-400/75';
+          }
+          return `<div class="w-1 rounded-full transition-all ${barColor}" style="height:${heightPct}%"></div>`;
+        }).join('');
+
+        return `
+          <div class="glass-panel rounded-2xl p-4 hover:border-[#1c1c28] transition">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+              <!-- Left: Cover Art + Track Info & Metadata Pills -->
+              <div class="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                <div onclick="openMetadataModal('${track.id}')" class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-[#040406] border border-[#1c1c28] shrink-0 cursor-pointer group/art shadow-xl" title="Click to Edit Cover Art & Metadata">
+                  <img src="${track.metadata.coverDataUrl || 'https://placehold.co/160x160/040406/06b6d4?text=AUDIO'}" alt="Cover" class="w-full h-full object-cover" />
+                  <div class="absolute inset-0 bg-black/75 opacity-0 group-hover/art:opacity-100 transition flex items-center justify-center text-xs text-cyan-400 font-semibold">
+                    <i class="fa-solid fa-pen"></i>
+                  </div>
+                </div>
+
+                <div class="min-w-0 flex-1 space-y-1.5">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-[#040406] text-cyan-400 border border-[#1c1c28]">${escapeHtml(track.origFormat)}</span>
+                    <h3 class="text-sm sm:text-base font-bold text-white truncate">${escapeHtml(track.metadata.title)}</h3>
+                    <span class="text-xs text-slate-400 truncate">— ${escapeHtml(track.metadata.artist)}</span>
+                  </div>
+
+                  <!-- Technical Specs Row -->
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono text-slate-400">
+                    <span><i class="fa-regular fa-clock text-slate-500 mr-1"></i>${formatDuration(track.duration)}</span>
+                    <span>•</span>
+                    <span>${(track.sampleRate / 1000).toFixed(1)} kHz</span>
+                    <span>•</span>
+                    <span>${track.channels === 1 ? 'Mono' : 'Stereo'}</span>
+                    <span>•</span>
+                    <span>${formatBytes(track.fileSize)}</span>
+                  </div>
+
+                  <!-- Metadata & Artwork Tag Pills -->
+                  <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span class="px-2 py-0.5 rounded-md bg-[#040406] border border-[#15151e] text-[11px] text-slate-300">
+                      <i class="fa-solid fa-compact-disc text-slate-500 mr-1"></i>${escapeHtml(track.metadata.album)} (${escapeHtml(track.metadata.year)})
+                    </span>
+                    <span class="px-2 py-0.5 rounded-md bg-[#040406] border border-cyan-500/25 text-[11px] font-mono text-cyan-300">
+                      ${escapeHtml(track.metadata.bpm)} BPM
+                    </span>
+                    <span class="px-2 py-0.5 rounded-md bg-[#040406] border border-violet-500/25 text-[11px] font-mono text-violet-300">
+                      Key: ${escapeHtml(track.metadata.key)}
+                    </span>
+                    ${preserveTags ? `<span class="px-2 py-0.5 rounded-md bg-[#040406] border border-emerald-500/25 text-[10px] font-mono text-emerald-300" title="Metadata will be embedded into ${fmtSpec.tagContainer}"><i class="fa-solid fa-tags mr-1"></i>${fmtSpec.tagContainer.split(' ')[0]} Ready</span>` : ''}
+                    ${embedArt && track.metadata.coverBytes ? `
+                      <span onclick="openMetadataModal('${track.id}')" class="cursor-pointer px-2 py-0.5 rounded-md bg-[#040406] border ${
+                        track.status === 'completed'
+                          ? 'border-emerald-400/50 text-emerald-300 bg-emerald-500/10'
+                          : track.metadata.coverSource === 'extracted' || track.metadata.coverSource === 'custom'
+                          ? 'border-cyan-500/35 text-cyan-300'
+                          : 'border-amber-500/35 text-amber-300'
+                      } text-[10px] font-mono" title="Click to inspect or change cover art">
+                        <i class="fa-solid fa-image mr-1"></i>${
+                          track.status === 'completed'
+                            ? `ART + TAGS EMBEDDED (${fmtSpec.ext.toUpperCase()}) ✓`
+                            : track.metadata.coverSource === 'extracted'
+                            ? `ORIGINAL ART EXTRACTED (${formatBytes(track.metadata.coverBytes.length)}) ✓`
+                            : track.metadata.coverSource === 'custom'
+                            ? `CUSTOM ART READY (${formatBytes(track.metadata.coverBytes.length)}) ✓`
+                            : 'SYNTH ART (Click to Upload)'
+                        }
+                      </span>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Center: Pitch-Black Interactive Audio Preview & Waveform Metering Scrubber -->
+              <div class="flex items-center gap-3 waveform-well px-3.5 py-2.5 rounded-xl shrink-0">
+                <button onclick="togglePlayPreview('${track.id}')" class="w-9 h-9 rounded-lg ${isPlaying ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'bg-[#0b0b10] hover:bg-[#14141f] text-cyan-400 border border-[#1c1c28]'} flex items-center justify-center transition" title="Preview Audio Track">
+                  <i class="fa-solid ${isPlaying ? 'fa-stop' : 'fa-play'} text-xs"></i>
+                </button>
+                <div onclick="scrubTrackPreview(event, '${track.id}')" class="flex items-center gap-0.5 h-8 cursor-pointer group/wave px-1" title="Click anywhere on waveform to scrub & preview">
+                  ${waveformBarsHtml}
+                </div>
+              </div>
+
+              <!-- Right: Per-File Format Override, Edit Tags, Status & Download -->
+              <div class="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-2.5 shrink-0">
+                <!-- Per-File Format Override -->
+                <div class="flex items-center gap-1.5 hardware-well rounded-xl px-2.5 py-1.5">
+                  <span class="text-[10px] font-mono uppercase text-slate-500">Out:</span>
+                  <select onchange="setTrackTargetFormat('${track.id}', this.value)" class="bg-transparent text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
+                    <option value="global" class="bg-[#040406] text-white" ${track.targetFormat === 'global' ? 'selected' : ''}>Global (${globalFmt.toUpperCase()})</option>
+                    <option value="mp3" class="bg-[#040406] text-white" ${track.targetFormat === 'mp3' ? 'selected' : ''}>MP3</option>
+                    <option value="flac" class="bg-[#040406] text-white" ${track.targetFormat === 'flac' ? 'selected' : ''}>FLAC</option>
+                    <option value="wav" class="bg-[#040406] text-white" ${track.targetFormat === 'wav' ? 'selected' : ''}>WAV</option>
+                    <option value="aiff" class="bg-[#040406] text-white" ${track.targetFormat === 'aiff' ? 'selected' : ''}>AIFF</option>
+                    <option value="m4a" class="bg-[#040406] text-white" ${track.targetFormat === 'm4a' ? 'selected' : ''}>M4A</option>
+                    <option value="ogg" class="bg-[#040406] text-white" ${track.targetFormat === 'ogg' ? 'selected' : ''}>OGG</option>
+                    <option value="opus" class="bg-[#040406] text-white" ${track.targetFormat === 'opus' ? 'selected' : ''}>OPUS</option>
+                  </select>
+                </div>
+
+                <!-- Edit Metadata Button -->
+                <button onclick="openMetadataModal('${track.id}')" class="px-3 py-2 rounded-xl text-xs font-medium bg-[#0b0b10] hover:bg-[#14141f] text-slate-200 border border-[#1c1c28] transition flex items-center gap-1.5" title="Edit Metadata & Cover Art">
+                  <i class="fa-solid fa-sliders text-cyan-400"></i>
+                  <span>Edit Tags</span>
+                </button>
+
+                <!-- Status Badge -->
+                ${statusBadges[track.status] || statusBadges.queued}
+
+                <!-- Action Buttons (Convert / Download / Inspect / Remove) -->
+                ${track.status === 'completed' ? `
+                  <button onclick="downloadSingleTrack('${track.id}')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition flex items-center gap-1.5 shadow-md shadow-emerald-500/15" title="Download Converted File">
+                    <i class="fa-solid fa-download"></i>
+                    <span>.${fmtSpec.ext}</span>
+                  </button>
+                  <button onclick="inspectConvertedTrack('${track.id}')" class="px-2.5 py-2 rounded-xl text-xs font-mono bg-[#0b0b10] hover:bg-[#14141f] text-emerald-400 border border-emerald-500/30 transition" title="Inspect & Verify Binary Tags in Output File">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                  </button>
+                ` : `
+                  <button onclick="convertSingleTrack('${track.id}')" ${state.isConverting ? 'disabled' : ''} class="px-3 py-2 rounded-xl text-xs font-semibold bg-[#0b0b10] hover:bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 transition flex items-center gap-1.5" title="Convert This Track Now">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Convert</span>
+                  </button>
+                `}
+
+                <button onclick="removeTrack('${track.id}')" ${state.isConverting ? 'disabled' : ''} class="w-8 h-8 rounded-xl bg-[#040406] hover:bg-rose-950/70 text-slate-400 hover:text-rose-400 border border-[#15151e] hover:border-rose-500/40 flex items-center justify-center transition" title="Remove from Queue">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Per-Track Progress Bar -->
+            <div class="mt-3 w-full h-1.5 bg-[#040406] border border-[#15151e] rounded-full overflow-hidden ${track.progress > 0 ? 'block' : 'hidden'}">
+              <div class="h-full transition-all duration-200 ${track.status === 'completed' ? 'bg-emerald-400' : 'bg-gradient-to-r from-cyan-400 to-violet-500'}" style="width: ${track.progress}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /*************************************************************************
+     * 11. AUDIO PREVIEW PLAYBACK & INTERACTIVE WAVEFORM SCRUBBER
+     *************************************************************************/
+    let activeBufferSource = null;
+    let playProgressInterval = null;
+
+    function stopActivePreview() {
+      if (playProgressInterval) {
+        clearInterval(playProgressInterval);
+        playProgressInterval = null;
+      }
+      if (activeBufferSource) {
+        try { activeBufferSource.stop(); } catch (e) {}
+        activeBufferSource.disconnect();
+        activeBufferSource = null;
+      }
+      state.activePlayingId = null;
+      state.playOffsetRatio = 0;
+    }
+
+    function startPreviewAtOffset(trackId, offsetRatio = 0) {
+      stopActivePreview();
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track || !track.audioBuffer) return;
+
+      const ctx = getAudioContext();
+      const source = ctx.createBufferSource();
+      source.buffer = track.audioBuffer;
+      source.connect(ctx.destination);
+
+      const clampedRatio = Math.max(0, Math.min(0.98, offsetRatio));
+      const startSeconds = clampedRatio * track.duration;
+      const playStartedAt = ctx.currentTime - startSeconds;
+
+      state.activePlayingId = trackId;
+      state.playOffsetRatio = clampedRatio;
+
+      playProgressInterval = setInterval(() => {
+        if (state.activePlayingId !== trackId) return;
+        const elapsed = ctx.currentTime - playStartedAt;
+        state.playOffsetRatio = Math.min(1, elapsed / track.duration);
+        renderQueue();
+      }, 120);
+
+      source.onended = () => {
+        if (state.activePlayingId === trackId) {
+          stopActivePreview();
+          renderQueue();
+        }
+      };
+
+      source.start(0, startSeconds);
+      activeBufferSource = source;
+      renderQueue();
+    }
+
+    window.togglePlayPreview = function(trackId) {
+      if (state.activePlayingId === trackId) {
+        stopActivePreview();
+        renderQueue();
+        return;
+      }
+      startPreviewAtOffset(trackId, 0);
+    };
+
+    window.scrubTrackPreview = function(event, trackId) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const ratio = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0;
+      startPreviewAtOffset(trackId, ratio);
+    };
+
+    /*************************************************************************
+     * 12. CONVERSION PIPELINE (SINGLE & BATCH)
+     *************************************************************************/
+    window.setTrackTargetFormat = function(trackId, formatVal) {
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track) return;
+      track.targetFormat = formatVal;
+      if (track.status === 'completed') {
+        track.status = 'queued';
+        track.progress = 0;
+      }
+      renderQueue();
+    };
+
+    window.removeTrack = function(trackId) {
+      if (state.activePlayingId === trackId) stopActivePreview();
+      state.tracks = state.tracks.filter(t => t.id !== trackId);
+      renderQueue();
+    };
+
+    async function processTrackConversion(track) {
+      const targetFmt = getEffectiveFormat(track);
+      const spec = FORMAT_SPECS[targetFmt];
+      const qualityVal = document.getElementById('globalQuality').value;
+      const sampleRateOpt = document.getElementById('globalSampleRate').value;
+      const channelsOpt = document.getElementById('globalChannels').value;
+      const preserveTags = document.getElementById('togglePreserveTags').checked;
+      const embedArt = document.getElementById('toggleEmbedArt').checked;
+
+      try {
+        // Phase 1: Resampling
+        track.status = 'resampling';
+        track.progress = 12;
+        renderQueue();
+
+        logDSP(`[${track.metadata.title}] Resampling audio buffer (${sampleRateOpt === 'original' ? track.sampleRate + ' Hz' : sampleRateOpt + ' Hz'}, ${channelsOpt})...`, 'info');
+        const resampledBuffer = await resampleAudioBuffer(track.audioBuffer, sampleRateOpt, channelsOpt);
+
+        // Phase 2: Encoding & Binary Tagging
+        track.status = 'encoding';
+        track.progress = 25;
+        renderQueue();
+
+        const onProgress = (pct) => {
+          track.progress = Math.max(25, Math.min(98, pct));
+          if (pct >= 90) track.status = 'tagging';
+          renderQueue();
+        };
+
+        let outputBlob;
+        if (targetFmt === 'mp3') {
+          outputBlob = await encodeToMp3(resampledBuffer, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        } else if (targetFmt === 'flac') {
+          outputBlob = await encodeToFlac(resampledBuffer, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        } else if (targetFmt === 'wav') {
+          outputBlob = await encodeToWav(resampledBuffer, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        } else if (targetFmt === 'aiff') {
+          outputBlob = await encodeToAiff(resampledBuffer, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        } else if (targetFmt === 'm4a') {
+          outputBlob = await encodeToM4aContainer(resampledBuffer, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        } else {
+          outputBlob = await encodeToOggOrOpus(resampledBuffer, targetFmt, qualityVal, track.metadata, preserveTags, embedArt, onProgress);
+        }
+
+        if (track.convertedUrl) URL.revokeObjectURL(track.convertedUrl);
+        const cleanTitle = sanitizeFilename(`${track.metadata.artist} - ${track.metadata.title}`);
+        track.convertedBlob = outputBlob;
+        track.convertedUrl = URL.createObjectURL(outputBlob);
+        track.convertedFileName = `${cleanTitle}.${spec.ext}`;
+        track.convertedSize = outputBlob.size;
+        track.status = 'completed';
+        track.progress = 100;
+
+        logDSP(`✔ Completed "${track.convertedFileName}" (${formatBytes(outputBlob.size)}) — Embedded ${preserveTags ? spec.tagContainer : 'No Tags'} & ${embedArt ? spec.artSupport : 'No Art'}`, 'success');
+        renderQueue();
+      } catch (err) {
+        track.status = 'error';
+        logDSP(`✖ Conversion error on "${track.fileName}": ${err.message}`, 'error');
+        renderQueue();
+      }
+    }
+
+    window.convertSingleTrack = async function(trackId) {
+      if (state.isConverting) return;
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track) return;
+      state.isConverting = true;
+      renderQueue();
+      await processTrackConversion(track);
+      state.isConverting = false;
+      renderQueue();
+      showToast(`Converted "${track.convertedFileName}"!`, 'success');
+    };
+
+    async function convertAllTracks() {
+      if (state.isConverting || state.tracks.length === 0) return;
+      state.isConverting = true;
+
+      const progContainer = document.getElementById('batchProgressContainer');
+      const progBar = document.getElementById('batchProgressBar');
+      const progPct = document.getElementById('batchProgressPercent');
+      const progLabel = document.getElementById('batchProgressLabel');
+
+      progContainer.classList.remove('hidden');
+      renderQueue();
+
+      const total = state.tracks.length;
+      for (let i = 0; i < total; i++) {
+        const track = state.tracks[i];
+        progLabel.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Converting (${i + 1}/${total}): ${escapeHtml(track.metadata.title)}...`;
+        await processTrackConversion(track);
+        const pct = Math.round(((i + 1) / total) * 100);
+        progBar.style.width = `${pct}%`;
+        progPct.textContent = `${pct}%`;
+      }
+
+      progLabel.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> All ${total} track(s) converted with preserved metadata & cover art!`;
+      state.isConverting = false;
+      renderQueue();
+      showToast(`Batch conversion complete! ${total} track(s) ready for download.`, 'success');
+    }
+
+    window.downloadSingleTrack = function(trackId) {
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track || !track.convertedUrl) return;
+      const a = document.createElement('a');
+      a.href = track.convertedUrl;
+      a.download = track.convertedFileName || 'converted_audio.flac';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    async function downloadAllAsZip() {
+      const completed = state.tracks.filter(t => t.status === 'completed' && t.convertedBlob);
+      if (completed.length === 0) return;
+
+      const globalFmt = (document.getElementById('globalFormat').value || 'AUDIO').toUpperCase();
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0');
+
+      showToast(`Packaging ${completed.length} converted files into VNTEX ZIP archive...`, 'info');
+      const zip = new JSZip();
+      for (const track of completed) {
+        zip.file(track.convertedFileName, track.convertedBlob);
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `VNTEX_Batch_${globalFmt}_${timestamp}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      logDSP(`Generated batch archive VNTEX_Batch_${globalFmt}_${timestamp}.zip (${formatBytes(zipBlob.size)}) containing ${completed.length} tracks.`, 'success');
+    }
+
+    /*************************************************************************
+     * 13. BINARY OUTPUT INSPECTOR (RE-PARSES CONVERTED BLOB TO PROVE TAGS)
+     *************************************************************************/
+    window.inspectConvertedTrack = async function(trackId) {
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track || !track.convertedBlob) return;
+
+      const arrayBuf = await track.convertedBlob.arrayBuffer();
+      const verifiedMeta = await parseAudioFileMetadata(arrayBuf, track.convertedFileName);
+
+      const body = document.getElementById('inspectorBody');
+      body.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 flex items-center gap-3">
+          <i class="fa-solid fa-circle-check text-xl text-emerald-400"></i>
+          <div>
+            <div class="font-bold">Binary Stream Verification Passed</div>
+            <div class="text-[11px] text-emerald-300/80">Re-parsed directly from output file "${escapeHtml(track.convertedFileName)}" (${formatBytes(track.convertedSize)})</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center hardware-well p-4 rounded-xl">
+          <div class="sm:col-span-4 flex flex-col items-center">
+            <img src="${verifiedMeta.coverDataUrl || 'https://placehold.co/150x150/040406/64748b?text=No+Art'}" class="w-28 h-28 rounded-xl object-cover border border-[#1c1c28] mb-1.5" />
+            <span class="text-[10px] font-mono text-cyan-400">${verifiedMeta.coverBytes ? `Embedded Art (${formatBytes(verifiedMeta.coverBytes.length)})` : 'No Embedded Artwork'}</span>
+          </div>
+          <div class="sm:col-span-8 space-y-1.5 font-mono text-xs">
+            <div><span class="text-slate-500">Detected Tag Header:</span> <span class="text-cyan-300 font-bold">${escapeHtml(verifiedMeta.detectedContainerTags)}</span></div>
+            <div><span class="text-slate-500">Title:</span> <span class="text-white">${escapeHtml(verifiedMeta.title)}</span></div>
+            <div><span class="text-slate-500">Artist:</span> <span class="text-white">${escapeHtml(verifiedMeta.artist)}</span></div>
+            <div><span class="text-slate-500">Album:</span> <span class="text-white">${escapeHtml(verifiedMeta.album)}</span></div>
+            <div><span class="text-slate-500">Year / Genre:</span> <span class="text-white">${escapeHtml(verifiedMeta.year)} • ${escapeHtml(verifiedMeta.genre)}</span></div>
+            <div><span class="text-slate-500">BPM / Musical Key:</span> <span class="text-violet-300">${escapeHtml(verifiedMeta.bpm)} BPM • ${escapeHtml(verifiedMeta.key)}</span></div>
+          </div>
+        </div>
+      `;
+      const modal = document.getElementById('inspectorModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    /*************************************************************************
+     * 14. METADATA EDITOR MODAL & COVER ART UPLOADER
+     *************************************************************************/
+    window.openMetadataModal = function(trackId) {
+      const track = state.tracks.find(t => t.id === trackId);
+      if (!track) return;
+      state.editingTrackId = trackId;
+      state.tempCoverDataUrl = track.metadata.coverDataUrl;
+      state.tempCoverBytes = track.metadata.coverBytes;
+      state.tempCoverMime = track.metadata.coverMime || 'image/jpeg';
+
+      document.getElementById('metaModalHeader').textContent = `Edit Tags — ${track.fileName}`;
+      document.getElementById('metaInputTitle').value = track.metadata.title || '';
+      document.getElementById('metaInputArtist').value = track.metadata.artist || '';
+      document.getElementById('metaInputAlbum').value = track.metadata.album || '';
+      document.getElementById('metaInputYear').value = track.metadata.year || '';
+      document.getElementById('metaInputGenre').value = track.metadata.genre || '';
+      document.getElementById('metaInputBpm').value = track.metadata.bpm || '';
+      document.getElementById('metaInputKey').value = track.metadata.key || '';
+      document.getElementById('metaApplyCoverToAll').checked = false;
+
+      const img = document.getElementById('metaModalCoverPreview');
+      img.src = state.tempCoverDataUrl || 'https://placehold.co/300x300/040406/06b6d4?text=No+Cover';
+      document.getElementById('metaCoverDimensions').textContent = state.tempCoverBytes
+        ? `Binary Artwork (${formatBytes(state.tempCoverBytes.length)})`
+        : 'No Artwork Embedded';
+
+      const modal = document.getElementById('metadataModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    function closeMetadataModal() {
+      const modal = document.getElementById('metadataModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      state.editingTrackId = null;
+    }
+
+    function saveMetadataModal() {
+      const track = state.tracks.find(t => t.id === state.editingTrackId);
+      if (!track) return;
+
+      track.metadata.title = document.getElementById('metaInputTitle').value.trim() || track.fileName;
+      track.metadata.artist = document.getElementById('metaInputArtist').value.trim() || 'Unknown Artist';
+      track.metadata.album = document.getElementById('metaInputAlbum').value.trim() || 'Single';
+      track.metadata.year = document.getElementById('metaInputYear').value.trim() || '2025';
+      track.metadata.genre = document.getElementById('metaInputGenre').value.trim() || 'Electronic';
+      track.metadata.bpm = document.getElementById('metaInputBpm').value.trim() || '120';
+      track.metadata.key = document.getElementById('metaInputKey').value.trim() || '8A / Am';
+
+      track.metadata.coverDataUrl = state.tempCoverDataUrl;
+      track.metadata.coverBytes = state.tempCoverBytes;
+      track.metadata.coverMime = state.tempCoverMime;
+      if (state.tempCoverWidth) track.metadata.coverWidth = state.tempCoverWidth;
+      if (state.tempCoverHeight) track.metadata.coverHeight = state.tempCoverHeight;
+      if (state.tempCoverSource) track.metadata.coverSource = state.tempCoverSource;
+
+      if (track.status === 'completed') {
+        track.status = 'queued';
+        track.progress = 0;
+      }
+
+      const applyArtToAll = document.getElementById('metaApplyCoverToAll').checked;
+      if (applyArtToAll) {
+        state.tracks.forEach(t => {
+          t.metadata.coverDataUrl = state.tempCoverDataUrl;
+          t.metadata.coverBytes = state.tempCoverBytes;
+          t.metadata.coverMime = state.tempCoverMime;
+          if (state.tempCoverWidth) t.metadata.coverWidth = state.tempCoverWidth;
+          if (state.tempCoverHeight) t.metadata.coverHeight = state.tempCoverHeight;
+          if (state.tempCoverSource) t.metadata.coverSource = state.tempCoverSource;
+          if (t.status === 'completed') {
+            t.status = 'queued';
+            t.progress = 0;
+          }
+        });
+      }
+
+      logDSP(`Updated metadata & artwork for "${track.metadata.title}"${applyArtToAll ? ' (and applied cover art across all batch tracks)' : ''} — queued for binary tag embedding.`, 'tag');
+      closeMetadataModal();
+      renderQueue();
+      showToast('Track metadata and cover art updated!', 'success');
+    }
+
+    /*************************************************************************
+     * 15. EVENT LISTENERS & INITIALIZATION
+     *************************************************************************/
+    window.addEventListener('DOMContentLoaded', () => {
+      updateGlobalFormatUI();
+
+      // Global settings listeners
+      document.getElementById('globalFormat').addEventListener('change', updateGlobalFormatUI);
+      document.getElementById('togglePreserveTags').addEventListener('change', updateGlobalFormatUI);
+      document.getElementById('toggleEmbedArt').addEventListener('change', updateGlobalFormatUI);
+
+      // Format comparison modal listeners
+      const openCompareModal = () => {
+        renderFormatCompareModalTable();
+        const modal = document.getElementById('formatCompareModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      };
+      document.getElementById('btnOpenFormatCompare').addEventListener('click', openCompareModal);
+      document.getElementById('btnOpenFormatCompareTop').addEventListener('click', openCompareModal);
+      document.getElementById('btnCloseFormatCompare').addEventListener('click', () => {
+        const modal = document.getElementById('formatCompareModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+
+      document.getElementById('btnApplyGlobalToAll').addEventListener('click', () => {
+        state.tracks.forEach(t => { t.targetFormat = 'global'; });
+        renderQueue();
+        showToast('All tracks reset to follow Global Output Format.', 'info');
+      });
+
+      // Drag and drop zone
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        handleFilesUpload(e.target.files);
+        fileInput.value = '';
+      });
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drop-zone-active');
+      });
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drop-zone-active');
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drop-zone-active');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handleFilesUpload(e.dataTransfer.files);
+        }
+      });
+
+      // Demo track buttons
+      document.getElementById('btnLoadDemo').addEventListener('click', generateDemoStudioTracks);
+      document.getElementById('btnEmptyLoadDemo').addEventListener('click', generateDemoStudioTracks);
+
+      // DSP Log Console toggle
+      document.getElementById('btnToggleLog').addEventListener('click', () => {
+        document.getElementById('dspLogSection').classList.toggle('hidden');
+      });
+      document.getElementById('btnClearLog').addEventListener('click', () => {
+        document.getElementById('dspLogContent').innerHTML = '';
+        state.logCount = 0;
+        document.getElementById('logCountBadge').textContent = '0';
+      });
+
+      // Queue Management & Batch Actions
+      document.getElementById('btnConvertAll').addEventListener('click', convertAllTracks);
+      document.getElementById('btnDownloadZip').addEventListener('click', downloadAllAsZip);
+
+      document.getElementById('btnClearCompleted').addEventListener('click', () => {
+        state.tracks = state.tracks.filter(t => t.status !== 'completed');
+        renderQueue();
+      });
+
+      document.getElementById('btnClearAll').addEventListener('click', () => {
+        stopActivePreview();
+        state.tracks = [];
+        document.getElementById('batchProgressContainer').classList.add('hidden');
+        renderQueue();
+      });
+
+      // Metadata Modal buttons
+      document.getElementById('btnCloseMetaModal').addEventListener('click', closeMetadataModal);
+      document.getElementById('btnCancelMetaModal').addEventListener('click', closeMetadataModal);
+      document.getElementById('btnSaveMetaModal').addEventListener('click', saveMetadataModal);
+
+      // Cover art upload inside Metadata Modal
+      const coverInput = document.getElementById('coverArtFileInput');
+      document.getElementById('btnUploadNewCover').addEventListener('click', () => coverInput.click());
+      coverInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const rawBuf = new Uint8Array(await file.arrayBuffer());
+        const rawMime = file.type || 'image/jpeg';
+        const normalized = await normalizeAndVerifyCoverArt(rawBuf, rawMime);
+        if (normalized) {
+          state.tempCoverBytes = normalized.bytes;
+          state.tempCoverMime = normalized.mime;
+          state.tempCoverDataUrl = normalized.dataUrl;
+          state.tempCoverWidth = normalized.width;
+          state.tempCoverHeight = normalized.height;
+          state.tempCoverSource = 'custom';
+          document.getElementById('metaModalCoverPreview').src = state.tempCoverDataUrl;
+          document.getElementById('metaCoverDimensions').textContent = `Verified JPEG (${normalized.width}×${normalized.height}, ${formatBytes(normalized.bytes.length)})`;
+        }
+      });
+
+      document.getElementById('btnGenerateProceduralCover').addEventListener('click', () => {
+        const palettes = [
+          ['#06b6d4', '#8b5cf6'],
+          ['#f43f5e', '#f59e0b'],
+          ['#10b981', '#3b82f6'],
+          ['#ec4899', '#6366f1']
+        ];
+        const pick = palettes[Math.floor(Math.random() * palettes.length)];
+        const art = generateStudioCoverArt({
+          title: document.getElementById('metaInputTitle').value,
+          artist: document.getElementById('metaInputArtist').value,
+          accent1: pick[0],
+          accent2: pick[1],
+          styleIndex: Math.floor(Math.random() * 4)
+        });
+        state.tempCoverBytes = art.bytes;
+        state.tempCoverMime = art.mime;
+        state.tempCoverDataUrl = art.dataUrl;
+        state.tempCoverWidth = 500;
+        state.tempCoverHeight = 500;
+        state.tempCoverSource = 'custom';
+        document.getElementById('metaModalCoverPreview').src = art.dataUrl;
+        document.getElementById('metaCoverDimensions').textContent = `Synthesized Studio Artwork (${formatBytes(art.bytes.length)})`;
+      });
+
+      document.getElementById('btnRemoveCover').addEventListener('click', () => {
+        state.tempCoverBytes = null;
+        state.tempCoverDataUrl = null;
+        state.tempCoverSource = 'none';
+        document.getElementById('metaModalCoverPreview').src = 'https://placehold.co/300x300/040406/64748b?text=Removed';
+        document.getElementById('metaCoverDimensions').textContent = 'No Cover Art';
+      });
+
+      // Inspector Modal close
+      document.getElementById('btnCloseInspector').addEventListener('click', () => {
+        const m = document.getElementById('inspectorModal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      });
+
+      // Batch Stamp Modal
+      const batchModal = document.getElementById('batchStampModal');
+      document.getElementById('btnBatchEditMeta').addEventListener('click', () => {
+        batchModal.classList.remove('hidden');
+        batchModal.classList.add('flex');
+      });
+      document.getElementById('btnCloseBatchStamp').addEventListener('click', () => {
+        batchModal.classList.add('hidden');
+        batchModal.classList.remove('flex');
+      });
+      document.getElementById('btnApplyBatchStamp').addEventListener('click', () => {
+        const artist = document.getElementById('batchInputArtist').value.trim();
+        const album = document.getElementById('batchInputAlbum').value.trim();
+        const year = document.getElementById('batchInputYear').value.trim();
+        const genre = document.getElementById('batchInputGenre').value.trim();
+
+        state.tracks.forEach(t => {
+          if (artist) t.metadata.artist = artist;
+          if (album) t.metadata.album = album;
+          if (year) t.metadata.year = year;
+          if (genre) t.metadata.genre = genre;
+          if (t.status === 'completed') {
+            t.status = 'queued';
+            t.progress = 0;
+          }
+        });
+        batchModal.classList.add('hidden');
+        batchModal.classList.remove('flex');
+        renderQueue();
+        showToast(`Stamped common metadata across ${state.tracks.length} tracks!`, 'success');
+      });
+
+      logDSP('VNTEX DSP Audio Transcoder & Binary Tag Engine initialized.', 'info');
+    });
+  </script>
+</body>
+</html>
