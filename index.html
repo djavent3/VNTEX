@@ -110,6 +110,11 @@
       box-shadow: 0 0 12px var(--accent-glow);
     }
 
+    .verified-badge-icon {
+      color: #00f2fe;
+      filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45));
+    }
+
     input[type="color"] {
       -webkit-appearance: none;
       border: none;
@@ -152,9 +157,10 @@
             <span class="hidden sm:inline text-[10px] font-mono-tech text-[var(--text-secondary)]">(Rig • Automation • Themes)</span>
           </button>
 
-          <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
+          <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
             <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
             <span id="headerAccountLabel">Sign In</span>
+            <i id="headerVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[11px] hidden" title="Verified VNTEX Producer"></i>
           </button>
         </div>
 
@@ -176,8 +182,8 @@
           <h1 class="text-base sm:text-lg font-extrabold text-[var(--text-primary)]">
             Drop Audio Files Here or Click to Browse
           </h1>
-          <p class="text-xs text-[var(--text-secondary)]">
-            MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Automatic Cover Art &amp; Metadata Preservation
+          <p id="dropzoneStatusText" class="text-xs text-[var(--text-secondary)]">
+            MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Auto DSP BPM &amp; Key Detection + Cover Art
           </p>
         </div>
 
@@ -196,7 +202,8 @@
         <div class="flex flex-wrap items-center justify-between gap-2.5">
           
           <div class="flex flex-wrap items-center gap-2 flex-1">
-            <div class="hardware-well px-3 py-2 flex items-center gap-2">
+            <!-- Quick Preset -->
+            <div class="hardware-well px-2.5 py-2 flex items-center gap-1.5">
               <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Preset:</span>
               <select id="presetSelect" class="bg-transparent text-xs font-bold text-[var(--text-primary)] focus:outline-none cursor-pointer">
                 <option value="cdj-rekordbox" class="bg-[#08080c] text-white">💽 CDJ / Rekordbox (320k MP3)</option>
@@ -207,7 +214,8 @@
               </select>
             </div>
 
-            <div class="hardware-well px-3 py-2 flex items-center gap-2">
+            <!-- Output Format -->
+            <div class="hardware-well px-2.5 py-2 flex items-center gap-1.5">
               <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Format:</span>
               <select id="formatSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
                 <option value="mp3" class="bg-[#08080c] text-white">.MP3</option>
@@ -220,11 +228,22 @@
               </select>
             </div>
 
-            <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Advanced Quality & Sample Rate">
+            <!-- Key Notation Mode (Camelot vs Standard) -->
+            <div class="hardware-well px-2.5 py-2 flex items-center gap-1.5" title="Switch Musical Key Display & Export Notation">
+              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Key:</span>
+              <select id="keyModeSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+                <option value="camelot" class="bg-[#08080c] text-white">Camelot (8A / 11B)</option>
+                <option value="standard" class="bg-[#08080c] text-white">Standard (Am / C)</option>
+              </select>
+            </div>
+
+            <!-- Advanced DSP & BPM Range Drawer Toggle -->
+            <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="BPM Detection Range, Bitrate & Sample Rate">
               <i class="fa-solid fa-sliders"></i>
             </button>
           </div>
 
+          <!-- Convert Batch + ZIP -->
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button id="downloadZipBtn" type="button" disabled class="hardware-well px-3.5 py-2.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 disabled:opacity-30 hover:border-[var(--accent-primary)] transition">
               <i class="fa-solid fa-file-zipper text-[var(--accent-primary)]"></i>
@@ -239,8 +258,20 @@
 
         </div>
 
-        <!-- Collapsible Granular Settings Row -->
-        <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <!-- Collapsible Granular DSP & BPM Detection Settings Row -->
+        <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs">
+          
+          <!-- BPM Detection Range Selector -->
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--accent-primary)] mb-1">BPM Detection Range</label>
+            <select id="bpmRangeSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="70-140">70–140 (Hip-Hop / Trap)</option>
+              <option value="95-160" selected>95–160 (House / Club / Pop)</option>
+              <option value="120-195">120–195 (DnB / Hard / Footwork)</option>
+              <option value="60-200">60–200 (Wide / Open Format)</option>
+            </select>
+          </div>
+
           <div id="bitrateWrapper">
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bitrate</label>
             <select id="bitrateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
@@ -284,13 +315,19 @@
               <option value="strip-all">Strip Metadata</option>
             </select>
           </div>
+
         </div>
       </section>
 
       <!-- 3. TRACK QUEUE -->
       <section id="queueSection" class="studio-panel p-4 space-y-3 hidden">
-        <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-2.5 text-xs font-mono-tech">
-          <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-hairline)] pb-2.5 text-xs font-mono-tech">
+          <div class="flex items-center gap-3">
+            <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
+            <button id="reanalyzeAllBpmKeyBtn" type="button" class="hardware-well px-2.5 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Re-run DSP BPM & Key analyzer using the current BPM Range">
+              <i class="fa-solid fa-wave-square mr-1"></i>Re-Analyze BPM &amp; Keys
+            </button>
+          </div>
           <button id="clearQueueBtn" type="button" class="text-[11px] text-rose-400 hover:underline">
             Clear Queue
           </button>
@@ -318,9 +355,6 @@
             <span id="adminRoleHeaderBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
               LOCKED
             </span>
-            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              ● FIREBASE: vntex-e24a5
-            </span>
           </div>
         </div>
 
@@ -341,6 +375,10 @@
             <span id="pendingApprovalsBadge" class="px-1.5 py-0.2 rounded bg-amber-400 text-black font-extrabold text-[10px]">0</span>
           </button>
 
+          <button id="openAdminPasswordsModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-amber-300 hover:border-amber-400/60 transition" title="Configure Unique Admin & Master Owner Passwords">
+            <i class="fa-solid fa-user-lock mr-1"></i>Admin Passwords
+          </button>
+
           <button id="openDeviceConfigModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50 transition">
             <i class="fa-solid fa-sliders mr-1"></i>Device Presets
           </button>
@@ -357,15 +395,15 @@
       </div>
     </header>
 
-    <!-- 1. BLANK ADMIN PASSCODE LOCK GATE -->
+    <!-- 1. BLANK ADMIN PASSCODE LOCK GATE (SUPPORTS CUSTOM ADMIN & OWNER PASSWORDS) -->
     <div id="adminPinGate" class="max-w-md mx-auto mt-20 p-6 studio-panel text-center space-y-4">
       <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
         <i class="fa-solid fa-lock"></i>
       </div>
       <div class="space-y-1">
         <h2 class="text-base font-bold text-white">Admin Console Authentication</h2>
-        <p class="text-xs text-gray-400 leading-relaxed">
-          Enter <code class="text-cyan-400 font-mono-tech">VNTEX-ADMIN</code> for Standard Admin access, or <code class="text-amber-400 font-mono-tech">VNTEX-OWNER</code> for Master Owner sign-off privileges.
+        <p id="adminGateSubtext" class="text-xs text-gray-400 leading-relaxed">
+          Enter your unique <strong>Standard Admin</strong> passcode or <strong>Master Owner</strong> passcode to unlock the console.
         </p>
       </div>
       <form id="adminUnlockForm" class="flex gap-2" autocomplete="off">
@@ -374,14 +412,14 @@
           type="password"
           value=""
           autocomplete="new-password"
-          placeholder="Enter passcode..."
+          placeholder="Enter Admin or Owner password..."
           class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center text-white"
         />
         <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs hover:brightness-110 transition">
           Sign In
         </button>
       </form>
-      <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid passcode. Try VNTEX-ADMIN or VNTEX-OWNER.</p>
+      <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid Admin or Master Owner password.</p>
     </div>
 
     <!-- 2. UNLOCKED ADMIN DASHBOARD -->
@@ -391,7 +429,7 @@
         <div class="studio-panel p-4">
           <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Users</div>
           <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400 mt-1">0</div>
-          <div id="kpiVerifiedSub" class="text-[10px] font-mono-tech text-emerald-400 mt-0.5">0 Email Verified</div>
+          <div id="kpiVerifiedSub" class="text-[10px] font-mono-tech text-emerald-400 mt-0.5">0 Badged Producers</div>
         </div>
         <div class="studio-panel p-4">
           <div class="font-mono-tech text-[10px] uppercase text-gray-400">Signed-In Conversions</div>
@@ -424,7 +462,7 @@
         </div>
 
         <div class="text-[11px] font-mono-tech text-gray-400">
-          Click any user profile to inspect activity or modify permissions.
+          Click any user profile to assign a Verified Badge, inspect activity, or edit permissions.
         </div>
       </div>
 
@@ -438,7 +476,8 @@
             </div>
 
             <select id="adminUserTierFilter" class="hardware-well px-3 py-1.5 text-xs font-mono-tech">
-              <option value="all">All Access Tiers</option>
+              <option value="all">All Users</option>
+              <option value="badged">Verified Badge Only</option>
               <option value="paid">Paid Pro Only</option>
               <option value="free">Free Tier Only</option>
               <option value="admin">Admins Only</option>
@@ -462,12 +501,12 @@
             <table class="w-full text-left border-collapse font-mono-tech text-xs">
               <thead>
                 <tr class="border-b border-[#181824] text-gray-400 bg-[#040406]">
-                  <th class="py-3 px-4">User</th>
-                  <th class="py-3 px-4">Security / Verified</th>
+                  <th class="py-3 px-4">User &amp; Badge</th>
+                  <th class="py-3 px-4">Auth Status</th>
                   <th class="py-3 px-4">Access Tier</th>
                   <th class="py-3 px-4">System Role</th>
                   <th class="py-3 px-4">Conversions</th>
-                  <th class="py-3 px-4 text-right">Profile</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody id="adminUsersListBody" class="divide-y divide-[#181824] text-gray-200"></tbody>
@@ -513,7 +552,7 @@
                 <tr class="border-b border-[#181824] text-gray-400">
                   <th class="py-2.5 px-3">Timestamp</th>
                   <th class="py-2.5 px-3">Signed-In User</th>
-                  <th class="py-2.5 px-3">Track</th>
+                  <th class="py-2.5 px-3">Track (BPM / Key)</th>
                   <th class="py-2.5 px-3">Output Spec</th>
                   <th class="py-2.5 px-3">Device Rig</th>
                   <th class="py-2.5 px-3">File Size</th>
@@ -529,12 +568,67 @@
   </div>
 
   <!-- ==========================================================================
+       ADMIN MODAL D: DUAL UNIQUE ADMIN & OWNER PASSWORD MANAGER
+       ========================================================================== -->
+  <div id="adminPasswordsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="studio-panel w-full max-w-lg overflow-hidden border border-amber-400/40">
+      <div class="px-5 py-4 border-b border-[#181824] flex items-center justify-between bg-[#040406]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-lock text-amber-400"></i>
+          <div>
+            <h3 class="text-sm font-bold text-white">Admin &amp; Master Owner Password Configuration</h3>
+            <p class="text-[11px] text-gray-400">Set two distinct custom passwords for Standard Admins vs. Master Owner.</p>
+          </div>
+        </div>
+        <button id="closeAdminPasswordsModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <div id="adminPasswordRoleLockNotice" class="hidden hardware-well p-3.5 border-l-2 border-l-rose-400 text-rose-300 font-mono-tech text-[11px]">
+          Only the <strong>Master Owner</strong> can modify Admin API passwords. Switch your active role to Master Owner or sign in with your Master Owner password.
+        </div>
+
+        <form id="customAdminPasswordsForm" class="space-y-4">
+          <div class="hardware-well p-3.5 space-y-2 border-l-2 border-l-cyan-400">
+            <label class="block font-mono-tech uppercase text-[10px] text-cyan-400">
+              1. Standard Admin Password (Team / Moderators)
+            </label>
+            <p class="text-[11px] text-gray-400">
+              Unlocks `#admin` in Standard Admin mode (can view activity, grant Verified Badges, and edit standard user tiers, but cannot override Owner Locks).
+            </p>
+            <input id="newStandardAdminPassInput" type="password" required minlength="6" placeholder="Enter new Standard Admin password" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech" />
+          </div>
+
+          <div class="hardware-well p-3.5 space-y-2 border-l-2 border-l-amber-400">
+            <label class="block font-mono-tech uppercase text-[10px] text-amber-400">
+              2. Master Owner Password (Your Private Key)
+            </label>
+            <p class="text-[11px] text-gray-400">
+              Unlocks `#admin` with full Master Owner authority (approves locked permission requests, promotes admins, and manages passwords).
+            </p>
+            <input id="newMasterOwnerPassInput" type="password" required minlength="6" placeholder="Enter new Master Owner password" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech" />
+          </div>
+
+          <div id="adminPassSaveToast" class="text-xs font-mono-tech text-emerald-400"></div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs hover:brightness-110 transition">
+              Save Both Unique Passwords
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
        REUSABLE PRODUCTION AUTH MODAL (LIVE FIREBASE + SHA-256 FALLBACK)
        ========================================================================== -->
   <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
       
-      <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-shield-halved text-[var(--accent-primary)] text-xs"></i>
@@ -545,10 +639,8 @@
         </button>
       </div>
 
-      <!-- STATE 1: LOGGED OUT (SEPARATE SIGN IN & CREATE ACCOUNT TABS) -->
+      <!-- STATE 1: LOGGED OUT -->
       <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
-        
-        <!-- Mode Switcher Tabs -->
         <div class="grid grid-cols-2 gap-2 p-1 hardware-well">
           <button id="authTabSignInBtn" type="button" class="tab-pill active py-2 font-mono-tech font-bold text-xs">
             Sign In
@@ -558,7 +650,6 @@
           </button>
         </div>
 
-        <!-- Live Google OAuth Button -->
         <button id="googleOAuthBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2.5 hover:bg-gray-100 transition shadow">
           <i class="fa-brands fa-google text-rose-500 text-sm"></i>
           <span>Continue with Google</span>
@@ -570,10 +661,9 @@
           <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
         </div>
 
-        <!-- Alert / Error Banner -->
         <div id="authAlertBox" class="hidden hardware-well p-3 border-l-2 border-l-rose-500 text-rose-400 font-mono-tech text-[11px] leading-relaxed"></div>
 
-        <!-- FORM A: SIGN IN (EXISTING ACCOUNTS ONLY) -->
+        <!-- FORM A: SIGN IN -->
         <form id="signInForm" class="space-y-3" autocomplete="on">
           <div>
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
@@ -593,7 +683,7 @@
           </button>
         </form>
 
-        <!-- FORM B: CREATE ACCOUNT (ENFORCED PASSWORD COMPLEXITY) -->
+        <!-- FORM B: CREATE ACCOUNT -->
         <form id="signUpForm" class="hidden space-y-3" autocomplete="off">
           <div>
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Name</label>
@@ -615,7 +705,6 @@
               </button>
             </div>
 
-            <!-- 4-Bar Strength Meter -->
             <div class="grid grid-cols-4 gap-1.5 pt-2">
               <div id="pwBar1" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
               <div id="pwBar2" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
@@ -629,7 +718,6 @@
             <input id="signUpConfirmInput" type="password" required placeholder="Re-enter password" class="hardware-well w-full px-3 py-2 text-xs" />
           </div>
 
-          <!-- Mandatory Security Checklist -->
           <div class="hardware-well p-3 space-y-1 font-mono-tech text-[10px]">
             <div class="text-[var(--text-secondary)] uppercase mb-1">Password Security Requirements:</div>
             <div id="reqLength" class="text-[var(--text-muted)]">○ At least 8 characters</div>
@@ -643,10 +731,9 @@
             Create Account &amp; Send Verification Email
           </button>
         </form>
-
       </div>
 
-      <!-- STATE 2: EMAIL VERIFICATION GATE (BLOCKS UNVERIFIED ACCOUNTS) -->
+      <!-- STATE 2: EMAIL VERIFICATION GATE -->
       <div id="emailVerificationPanel" class="hidden p-5 space-y-4 text-xs">
         <div class="w-11 h-11 rounded-xl hardware-well mx-auto flex items-center justify-center text-[var(--accent-primary)] text-lg">
           <i class="fa-solid fa-envelope-circle-check"></i>
@@ -659,12 +746,10 @@
 
         <div id="verificationAlertBox" class="hidden hardware-well p-3 border-l-2 border-l-amber-400 text-amber-300 font-mono-tech text-[11px]"></div>
 
-        <!-- Primary Action: Check Live Firebase Email Verification Status -->
         <button id="firebaseCheckVerifiedBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
           I've Clicked the Verification Link in My Email
         </button>
 
-        <!-- Fallback 6-Digit Code Form (Used if Firebase Email/Password provider isn't enabled yet) -->
         <div id="standaloneOtpWrapper" class="hidden space-y-2.5 pt-2 border-t border-[var(--border-hairline)]">
           <div class="hardware-well p-2.5 font-mono-tech text-[11px] text-center">
             Instant Backup Code: <strong id="generatedOtpCodeDisplay" class="text-[var(--accent-primary)] tracking-widest"></strong>
@@ -691,9 +776,10 @@
       <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
         <div class="hardware-well p-3.5 flex items-center justify-between">
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
               <span id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></span>
-              <span id="accountModalTierPill" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
+              <i id="accountModalVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-xs hidden" title="Verified VNTEX Producer"></i>
+              <span id="accountModalTierPill" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 ml-1">PAID PRO</span>
             </div>
             <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5"></div>
             <div class="text-[10px] font-mono-tech text-emerald-400 mt-1 flex items-center gap-1">
@@ -728,6 +814,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 id="inspectUserName" class="text-sm font-bold text-white"></h3>
+              <i id="inspectUserVerifiedIcon" class="fa-solid fa-certificate verified-badge-icon text-xs hidden" title="Verified Producer Badge"></i>
               <span id="inspectUserTierBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
               <span id="inspectUserRoleBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">USER</span>
             </div>
@@ -740,7 +827,7 @@
             1. User Activity
           </button>
           <button type="button" data-user-modal-tab="permissions" class="user-modal-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
-            2. Permissions &amp; Locks
+            2. Badges &amp; Permissions
           </button>
           <button id="closeAdminUserInspectorBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
             <i class="fa-solid fa-xmark"></i>
@@ -771,7 +858,7 @@
               <thead>
                 <tr class="border-b border-[#181824] text-gray-400 bg-[#08080c]">
                   <th class="py-2.5 px-3">Timestamp</th>
-                  <th class="py-2.5 px-3">Track</th>
+                  <th class="py-2.5 px-3">Track (BPM / Key)</th>
                   <th class="py-2.5 px-3">Format &amp; Spec</th>
                   <th class="py-2.5 px-3">Target Rig</th>
                   <th class="py-2.5 px-3">Size</th>
@@ -786,10 +873,26 @@
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <h4 class="font-mono-tech uppercase text-[11px] text-cyan-400">
-                Standard Account &amp; Feature Permissions (Admin Editable)
+                Verification Badge &amp; Standard Permissions (Admin Editable)
               </h4>
               <span class="text-[10px] font-mono-tech text-gray-400">Changes apply immediately</span>
             </div>
+
+            <!-- Highlighted Verified Producer Badge Toggle -->
+            <label class="hardware-well p-4 flex items-center justify-between cursor-pointer border-l-2 border-l-cyan-400">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-cyan-400/10 border border-cyan-400/40 flex items-center justify-center">
+                  <i class="fa-solid fa-certificate verified-badge-icon text-base"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>Verified Producer / Artist Badge</span>
+                  </div>
+                  <div class="text-[11px] text-gray-400">Displays the official cyan verification badge next to this user's name across VNTEX.</div>
+                </div>
+              </div>
+              <input id="permVerifiedBadgeCheck" type="checkbox" class="w-5 h-5 accent-cyan-400" />
+            </label>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="hardware-well p-3.5 flex items-center justify-between">
@@ -1143,7 +1246,7 @@
           <input id="editArtistInput" type="text" placeholder="Artist" class="hardware-well px-3 py-2 text-xs" />
           <input id="editAlbumInput" type="text" placeholder="Album" class="hardware-well px-3 py-2 text-xs" />
           <input id="editBpmInput" type="text" placeholder="BPM" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
-          <input id="editKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
+          <input id="editKeyInput" type="text" placeholder="Key (8A or Am)" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
         </div>
       </div>
       <div class="px-5 py-3 border-t border-[var(--border-hairline)] flex justify-end gap-2 bg-[var(--bg-void)]">
@@ -1154,7 +1257,238 @@
 
   <script>
     /**************************************************************************
-     * 1. LIVE FIREBASE CONFIGURATION (vntex-e24a5) & AUTH ENGINE
+     * 1. DSP BPM & MUSICAL KEY ANALYZER ENGINE (VNTEXAudioAnalyzer)
+     *    - Stage 1 (BPM): 150Hz Biquad Low-Pass Filter via OfflineAudioContext
+     *      + Onset Energy Flux Envelope + Bounded Autocorrelation / Comb Folding
+     *    - Stage 2 (Key): 12-Bin Pitch-Class Chromagram (C2-B5 Goertzel Bank)
+     *      + Krumhansl-Schmuckler 24-Key Profile Pearson Correlation
+     *    - Bidirectional Camelot (8A/11B) <-> Standard (Am/A) Key Mapper
+     **************************************************************************/
+    const VNTEXAudioAnalyzer = {
+      // Canonical Krumhansl-Schmuckler Major & Minor Tonal Hierarchy Profiles
+      KS_MAJOR: [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
+      KS_MINOR: [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17],
+      PITCH_NAMES: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+
+      // Complete 24-Key Mapping Table (Pitch Class + Scale -> Standard & Camelot)
+      KEY_TABLE: [
+        { pc: 0,  mode: 'major', standard: 'C',   camelot: '8B'  },
+        { pc: 1,  mode: 'major', standard: 'Db',  camelot: '3B'  },
+        { pc: 2,  mode: 'major', standard: 'D',   camelot: '10B' },
+        { pc: 3,  mode: 'major', standard: 'Eb',  camelot: '5B'  },
+        { pc: 4,  mode: 'major', standard: 'E',   camelot: '12B' },
+        { pc: 5,  mode: 'major', standard: 'F',   camelot: '7B'  },
+        { pc: 6,  mode: 'major', standard: 'F#',  camelot: '2B'  },
+        { pc: 7,  mode: 'major', standard: 'G',   camelot: '9B'  },
+        { pc: 8,  mode: 'major', standard: 'Ab',  camelot: '4B'  },
+        { pc: 9,  mode: 'major', standard: 'A',   camelot: '11B' },
+        { pc: 10, mode: 'major', standard: 'Bb',  camelot: '6B'  },
+        { pc: 11, mode: 'major', standard: 'B',   camelot: '1B'  },
+        { pc: 0,  mode: 'minor', standard: 'Cm',  camelot: '5A'  },
+        { pc: 1,  mode: 'minor', standard: 'C#m', camelot: '12A' },
+        { pc: 2,  mode: 'minor', standard: 'Dm',  camelot: '7A'  },
+        { pc: 3,  mode: 'minor', standard: 'Ebm', camelot: '2A'  },
+        { pc: 4,  mode: 'minor', standard: 'Em',  camelot: '9A'  },
+        { pc: 5,  mode: 'minor', standard: 'Fm',  camelot: '4A'  },
+        { pc: 6,  mode: 'minor', standard: 'F#m', camelot: '11A' },
+        { pc: 7,  mode: 'minor', standard: 'Gm',  camelot: '6A'  },
+        { pc: 8,  mode: 'minor', standard: 'G#m', camelot: '1A'  },
+        { pc: 9,  mode: 'minor', standard: 'Am',  camelot: '8A'  },
+        { pc: 10, mode: 'minor', standard: 'Bbm', camelot: '3A'  },
+        { pc: 11, mode: 'minor', standard: 'Bm',  camelot: '10A' }
+      ],
+
+      formatKeyString(camelotOrStd, targetMode = 'camelot') {
+        const raw = String(camelotOrStd || '').trim().toUpperCase();
+        if (!raw) return targetMode === 'camelot' ? '8A' : 'Am';
+        const match = this.KEY_TABLE.find(
+          (k) => k.camelot.toUpperCase() === raw || k.standard.toUpperCase() === raw
+        );
+        if (!match) return camelotOrStd;
+        return targetMode === 'camelot' ? match.camelot : match.standard;
+      },
+
+      // High-Accuracy Low-Pass Onset Autocorrelation BPM Detector
+      async detectBPM(audioBuffer, minBPM = 95, maxBPM = 160) {
+        try {
+          const analysisRate = 11025; // Downsample for fast, high-precision low-end analysis
+          const maxSliceDuration = Math.min(32, audioBuffer.duration);
+          const startOffset = audioBuffer.duration > 40 ? audioBuffer.duration * 0.25 : 0;
+          const frameCount = Math.max(1024, Math.floor(maxSliceDuration * analysisRate));
+
+          const offlineCtx = new OfflineAudioContext(1, frameCount, analysisRate);
+          const src = offlineCtx.createBufferSource();
+          src.buffer = audioBuffer;
+
+          // 150 Hz Low-Pass BiquadFilter isolates kick drum & sub-bass transients
+          const lowpass = offlineCtx.createBiquadFilter();
+          lowpass.type = 'lowpass';
+          lowpass.frequency.value = 150;
+          lowpass.Q.value = 0.707;
+
+          src.connect(lowpass);
+          lowpass.connect(offlineCtx.destination);
+          src.start(0, startOffset, maxSliceDuration);
+
+          const filteredBuffer = await offlineCtx.startRendering();
+          const samples = filteredBuffer.getChannelData(0);
+
+          // Compute RMS Energy Envelope at ~86.13 Hz (hop = 128 samples)
+          const hopSize = 128;
+          const envRate = analysisRate / hopSize;
+          const numFrames = Math.floor(samples.length / hopSize);
+          const onsetEnv = new Float32Array(numFrames);
+
+          let prevEnergy = 0;
+          for (let i = 0; i < numFrames; i++) {
+            let sumSq = 0;
+            const base = i * hopSize;
+            for (let j = 0; j < hopSize; j++) {
+              const s = samples[base + j];
+              sumSq += s * s;
+            }
+            const rms = Math.sqrt(sumSq / hopSize);
+            // Half-wave rectified first-order difference (captures beat attacks)
+            const diff = Math.max(0, rms - prevEnergy);
+            onsetEnv[i] = diff;
+            prevEnergy = rms;
+          }
+
+          // Autocorrelation across candidate lags (from 55 BPM to 205 BPM)
+          const minLag = Math.max(2, Math.floor((60 * envRate) / 205));
+          const maxLag = Math.min(numFrames - 2, Math.ceil((60 * envRate) / 55));
+          const acf = new Float32Array(maxLag + 1);
+
+          for (let lag = minLag; lag <= maxLag; lag++) {
+            let sum = 0;
+            const limit = numFrames - lag;
+            for (let i = 0; i < limit; i++) {
+              sum += onsetEnv[i] * onsetEnv[i + lag];
+            }
+            acf[lag] = sum / limit;
+          }
+
+          // Fold and score candidate BPMs strictly inside [minBPM, maxBPM]
+          let bestBpm = Math.round((minBPM + maxBPM) / 2);
+          let bestScore = -1;
+
+          for (let bpmCandidate = minBPM; bpmCandidate <= maxBPM; bpmCandidate += 0.5) {
+            const exactLag = (60 * envRate) / bpmCandidate;
+            const lagIdx = Math.round(exactLag);
+            if (lagIdx < minLag || lagIdx > maxLag) continue;
+
+            // Combine fundamental beat lag with 2x and 0.5x harmonic pulse reinforcement
+            let score = acf[lagIdx];
+            if (lagIdx * 2 <= maxLag) score += 0.45 * acf[lagIdx * 2];
+            if (Math.round(lagIdx / 2) >= minLag) score += 0.25 * acf[Math.round(lagIdx / 2)];
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestBpm = Math.round(bpmCandidate);
+            }
+          }
+
+          return String(Math.max(minBPM, Math.min(maxBPM, bestBpm)));
+        } catch (err) {
+          console.warn('BPM analysis fallback:', err);
+          return '128';
+        }
+      },
+
+      // Krumhansl-Schmuckler 24-Key Chromagram Detector
+      detectMusicalKey(audioBuffer) {
+        try {
+          const sr = audioBuffer.sampleRate;
+          const ch0 = audioBuffer.getChannelData(0);
+          const totalLen = ch0.length;
+          const chroma = new Float64Array(12);
+
+          // Sample 14 harmonic windows across the middle 70% of the track
+          const numWindows = 14;
+          const winSize = Math.min(4096, Math.floor(totalLen / 4));
+          if (winSize < 512) return { camelot: '8A', standard: 'Am' };
+
+          // Precompute target frequencies for 12 pitch classes across Octaves 2, 3, 4, 5
+          const targetFreqs = [];
+          for (let pc = 0; pc < 12; pc++) {
+            const freqsForPc = [];
+            for (let octave = 2; octave <= 5; octave++) {
+              const midiNote = (octave + 1) * 12 + pc;
+              const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+              if (freq < sr * 0.45) freqsForPc.push(freq);
+            }
+            targetFreqs.push(freqsForPc);
+          }
+
+          // Goertzel magnitude evaluation across windows
+          for (let w = 0; w < numWindows; w++) {
+            const ratio = 0.15 + (0.7 * w) / Math.max(1, numWindows - 1);
+            const startIdx = Math.min(totalLen - winSize, Math.floor(totalLen * ratio));
+
+            for (let pc = 0; pc < 12; pc++) {
+              const freqs = targetFreqs[pc];
+              for (let fIdx = 0; fIdx < freqs.length; fIdx++) {
+                const freq = freqs[fIdx];
+                const k = Math.round((winSize * freq) / sr);
+                const omega = (2 * Math.PI * k) / winSize;
+                const coeff = 2 * Math.cos(omega);
+                let q1 = 0, q2 = 0;
+
+                for (let n = 0; n < winSize; n++) {
+                  // Hann window weighting to prevent spectral leakage
+                  const hann = 0.5 * (1 - Math.cos((2 * Math.PI * n) / (winSize - 1)));
+                  const q0 = coeff * q1 - q2 + ch0[startIdx + n] * hann;
+                  q2 = q1;
+                  q1 = q0;
+                }
+                const magSq = q1 * q1 + q2 * q2 - q1 * q2 * coeff;
+                chroma[pc] += Math.sqrt(Math.max(0, magSq));
+              }
+            }
+          }
+
+          // Correlate 12-bin Chroma Vector against all 24 Krumhansl-Schmuckler Key Profiles
+          const pearsonCorrelation = (vecA, vecB) => {
+            let sumA = 0, sumB = 0;
+            for (let i = 0; i < 12; i++) { sumA += vecA[i]; sumB += vecB[i]; }
+            const meanA = sumA / 12, meanB = sumB / 12;
+            let num = 0, denA = 0, denB = 0;
+            for (let i = 0; i < 12; i++) {
+              const da = vecA[i] - meanA;
+              const db = vecB[i] - meanB;
+              num += da * db;
+              denA += da * da;
+              denB += db * db;
+            }
+            return denA && denB ? num / Math.sqrt(denA * denB) : 0;
+          };
+
+          let bestKeyObj = this.KEY_TABLE[21]; // Default 8A / Am
+          let bestCorr = -Infinity;
+
+          for (const entry of this.KEY_TABLE) {
+            const baseProfile = entry.mode === 'major' ? this.KS_MAJOR : this.KS_MINOR;
+            const rotatedProfile = new Float64Array(12);
+            for (let i = 0; i < 12; i++) {
+              rotatedProfile[i] = baseProfile[(i - entry.pc + 12) % 12];
+            }
+            const r = pearsonCorrelation(chroma, rotatedProfile);
+            if (r > bestCorr) {
+              bestCorr = r;
+              bestKeyObj = entry;
+            }
+          }
+
+          return { camelot: bestKeyObj.camelot, standard: bestKeyObj.standard };
+        } catch (err) {
+          console.warn('Key analysis fallback:', err);
+          return { camelot: '8A', standard: 'Am' };
+        }
+      }
+    };
+
+    /**************************************************************************
+     * 2. LIVE FIREBASE CONFIGURATION (vntex-e24a5) & AUTH ENGINE
      **************************************************************************/
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A",
@@ -1193,7 +1527,6 @@
         }
       },
 
-      // Evaluates password against 5 strict security rules
       evaluatePasswordPolicy(password, confirmPassword = '') {
         const pw = String(password || '');
         const rules = {
@@ -1208,7 +1541,6 @@
         return { rules, score, allValid };
       },
 
-      // Salted SHA-256 Hash via Web Crypto API
       async hashPassword(password, salt) {
         const encoder = new TextEncoder();
         const data = encoder.encode(`${salt}::VNTEX_PEPPER_2026::${password}`);
@@ -1267,18 +1599,19 @@
     };
 
     /**************************************************************************
-     * 2. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
+     * 3. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
      **************************************************************************/
     const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v6',
-      USERS_REGISTRY: 'vntex_users_registry_v6',
-      LIBRARY: 'vntex_cloud_library_v6',
-      HISTORY: 'vntex_download_history_v6',
-      DEVICE_PRESETS: 'vntex_device_presets_v6',
-      ACTIVE_DEVICE: 'vntex_active_device_v6',
-      CUSTOM_PALETTES: 'vntex_custom_palettes_v6',
-      ACTIVE_PALETTE: 'vntex_active_palette_v6',
-      APPROVAL_QUEUE: 'vntex_master_approvals_v6'
+      USER: 'vntex_auth_user_v7',
+      USERS_REGISTRY: 'vntex_users_registry_v7',
+      LIBRARY: 'vntex_cloud_library_v7',
+      HISTORY: 'vntex_download_history_v7',
+      DEVICE_PRESETS: 'vntex_device_presets_v7',
+      ACTIVE_DEVICE: 'vntex_active_device_v7',
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v7',
+      ACTIVE_PALETTE: 'vntex_active_palette_v7',
+      APPROVAL_QUEUE: 'vntex_master_approvals_v7',
+      ADMIN_PASS_HASHES: 'vntex_admin_pass_hashes_v7'
     };
 
     const DEFAULT_DEVICE_PROFILES = [
@@ -1324,6 +1657,7 @@
       customPalettes: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PALETTES) || '[]'),
       activePalette: JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVE_PALETTE) || 'null'),
       approvalRequests: JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVAL_QUEUE) || '[]'),
+      adminPassHashes: JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_PASS_HASHES) || 'null'),
       activeDeviceId: localStorage.getItem(STORAGE_KEYS.ACTIVE_DEVICE) || 'none',
       activePreset: 'cdj-rekordbox',
       outputFormat: 'mp3',
@@ -1332,6 +1666,8 @@
       sampleRate: 44100,
       channels: 2,
       artworkMode: 'preserve-normalize',
+      bpmRange: '95-160',
+      keyMode: 'camelot', // 'camelot' or 'standard'
       filenameTemplate: '[Artist] - [Title]',
       tracks: [],
       editingTrackId: null,
@@ -1356,11 +1692,13 @@
       localStorage.setItem(STORAGE_KEYS.CUSTOM_PALETTES, JSON.stringify(state.customPalettes));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_PALETTE, JSON.stringify(state.activePalette));
       localStorage.setItem(STORAGE_KEYS.APPROVAL_QUEUE, JSON.stringify(state.approvalRequests));
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS_HASHES, JSON.stringify(state.adminPassHashes));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_DEVICE, state.activeDeviceId);
     }
 
     function ensureUserPermissionsStruct(u) {
       if (u.emailVerified === undefined) u.emailVerified = true;
+      if (u.verifiedBadge === undefined) u.verifiedBadge = false;
       if (!u.permissions) {
         u.permissions = {
           tier: 'paid',
@@ -1380,7 +1718,44 @@
     }
 
     /**************************************************************************
-     * 3. ROUTE HANDLER (#admin VS USER APP)
+     * 4. DUAL CUSTOM ADMIN PASSWORDS ENGINE
+     **************************************************************************/
+    async function verifyAdminConsolePassword(enteredPassword) {
+      const clean = String(enteredPassword || '').trim();
+      if (!clean) return null;
+
+      // If custom passwords have been configured by Master Owner, check their SHA-256 hashes
+      if (state.adminPassHashes && state.adminPassHashes.salt) {
+        const enteredHash = await VNTEXAuthEngine.hashPassword(clean, state.adminPassHashes.salt);
+        if (enteredHash === state.adminPassHashes.ownerHash) return 'owner';
+        if (enteredHash === state.adminPassHashes.adminHash) return 'admin';
+        return null;
+      }
+
+      // Initial first-time setup defaults (until Master Owner sets custom passwords)
+      if (clean === 'VNTEX-OWNER') return 'owner';
+      if (clean === 'VNTEX-ADMIN') return 'admin';
+      return null;
+    }
+
+    async function saveCustomAdminPasswords(newAdminPass, newOwnerPass) {
+      const salt = VNTEXAuthEngine.generateSalt();
+      const adminHash = await VNTEXAuthEngine.hashPassword(newAdminPass.trim(), salt);
+      const ownerHash = await VNTEXAuthEngine.hashPassword(newOwnerPass.trim(), salt);
+      state.adminPassHashes = {
+        salt,
+        adminHash,
+        ownerHash,
+        updatedAt: new Date().toISOString()
+      };
+      saveState();
+      if (VNTEXAuthEngine.firestoreDb) {
+        VNTEXAuthEngine.firestoreDb.collection('vntex_config').doc('admin_credentials').set(state.adminPassHashes).catch(() => {});
+      }
+    }
+
+    /**************************************************************************
+     * 5. ROUTE HANDLER (#admin VS USER APP)
      **************************************************************************/
     function checkRouteMode() {
       const isAdminRoute = window.location.hash.toLowerCase() === '#admin';
@@ -1393,6 +1768,12 @@
         if (!state.adminUnlocked) {
           const pinInput = document.getElementById('adminPinInput');
           if (pinInput) pinInput.value = '';
+          const subtext = document.getElementById('adminGateSubtext');
+          if (state.adminPassHashes) {
+            subtext.innerHTML = 'Enter your custom <strong>Standard Admin</strong> password or <strong>Master Owner</strong> password.';
+          } else {
+            subtext.innerHTML = 'Default initial passcodes: <code class="text-cyan-400 font-mono-tech">VNTEX-ADMIN</code> or <code class="text-amber-400 font-mono-tech">VNTEX-OWNER</code>. Use the <strong>Admin Passwords</strong> button once inside to set your own unique passwords.';
+          }
           document.getElementById('adminPinGate').classList.remove('hidden');
           document.getElementById('adminDashboardContent').classList.add('hidden');
           document.getElementById('adminHeaderToolbar').classList.add('hidden');
@@ -1406,7 +1787,7 @@
     }
 
     /**************************************************************************
-     * 4. ADMIN CONSOLE (USERS MONITOR, ACTIVITY & OWNER LOCKS)
+     * 6. ADMIN CONSOLE (USERS MONITOR, VERIFIED BADGES, ACTIVITY & LOCKS)
      **************************************************************************/
     function renderAdminDashboard() {
       if (!state.adminUnlocked) return;
@@ -1426,12 +1807,12 @@
 
       const authHistory = state.downloadHistory.filter((h) => h.userEmail && h.userEmail !== 'guest@local.studio');
       const users = state.usersRegistry.map(ensureUserPermissionsStruct);
-      const verifiedCount = users.filter((u) => u.emailVerified).length;
+      const badgedCount = users.filter((u) => u.verifiedBadge).length;
       const paidCount = users.filter((u) => u.permissions.tier === 'paid').length;
       const pendingApprovals = state.approvalRequests.filter((r) => r.status === 'pending');
 
       document.getElementById('kpiUsers').textContent = String(users.length);
-      document.getElementById('kpiVerifiedSub').textContent = `${verifiedCount} Email Verified`;
+      document.getElementById('kpiVerifiedSub').textContent = `${badgedCount} Verified Badge(s)`;
       document.getElementById('kpiConversions').textContent = String(authHistory.length);
       document.getElementById('kpiPaidUsers').textContent = String(paidCount);
       document.getElementById('kpiPendingLocks').textContent = String(pendingApprovals.length);
@@ -1451,6 +1832,7 @@
           (u.email || '').toLowerCase().includes(q);
         const matchesTier =
           tierFilter === 'all' ||
+          (tierFilter === 'badged' && u.verifiedBadge) ||
           (tierFilter === 'paid' && u.permissions.tier === 'paid') ||
           (tierFilter === 'free' && u.permissions.tier === 'free') ||
           (tierFilter === 'admin' && u.permissions.isAdmin);
@@ -1478,8 +1860,11 @@
       listBody.innerHTML = filtered.map((u) => {
         const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
         const isPaid = u.permissions.tier === 'paid';
+        const badgeIcon = u.verifiedBadge
+          ? `<i class="fa-solid fa-certificate verified-badge-icon ml-1.5" title="Verified Producer Badge"></i>`
+          : '';
         const verifiedHtml = u.emailVerified
-          ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Verified (${escapeHtml(u.provider || 'Firebase')})</span>`
+          ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>${escapeHtml(u.provider || 'Firebase')}</span>`
           : `<span class="text-amber-400"><i class="fa-solid fa-clock mr-1"></i>Unverified</span>`;
         const tierBadge = isPaid
           ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px]">PAID PRO</span>`
@@ -1491,14 +1876,17 @@
         return `
           <tr class="hover:bg-[#0e0e16] cursor-pointer transition" data-open-user="${escapeHtml(u.email)}">
             <td class="py-3 px-4">
-              <div class="font-bold text-white">${escapeHtml(u.displayName)}</div>
+              <div class="font-bold text-white flex items-center">${escapeHtml(u.displayName)}${badgeIcon}</div>
               <div class="text-[11px] text-gray-400">${escapeHtml(u.email)}</div>
             </td>
             <td class="py-3 px-4 text-[11px]">${verifiedHtml}</td>
             <td class="py-3 px-4">${tierBadge}</td>
             <td class="py-3 px-4">${roleBadge}</td>
             <td class="py-3 px-4 font-bold text-white">${userConvs} file(s)</td>
-            <td class="py-3 px-4 text-right">
+            <td class="py-3 px-4 text-right space-x-1.5">
+              <button type="button" data-quick-badge="${escapeHtml(u.email)}" class="hardware-well px-2.5 py-1 text-[10px] ${u.verifiedBadge ? 'text-cyan-400 border-cyan-400/40' : 'text-gray-400'} hover:border-cyan-400" title="Toggle Verified Producer Badge">
+                <i class="fa-solid fa-certificate mr-1"></i>${u.verifiedBadge ? 'Badged' : '+ Badge'}
+              </button>
               <button type="button" class="hardware-well px-3 py-1 text-[11px] text-cyan-400 hover:border-cyan-400">
                 Inspect →
               </button>
@@ -1511,6 +1899,9 @@
         const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
         const initials = (u.displayName || 'U').slice(0, 2).toUpperCase();
         const isPaid = u.permissions.tier === 'paid';
+        const badgeIcon = u.verifiedBadge
+          ? `<i class="fa-solid fa-certificate verified-badge-icon ml-1" title="Verified Producer Badge"></i>`
+          : '';
 
         return `
           <div data-open-user="${escapeHtml(u.email)}" class="studio-panel p-4 hover:border-cyan-400/60 cursor-pointer transition flex flex-col justify-between gap-4">
@@ -1520,7 +1911,7 @@
                   ${escapeHtml(initials)}
                 </div>
                 <div>
-                  <div class="font-bold text-sm text-white">${escapeHtml(u.displayName)}</div>
+                  <div class="font-bold text-sm text-white flex items-center">${escapeHtml(u.displayName)}${badgeIcon}</div>
                   <div class="font-mono-tech text-[11px] text-gray-400">${escapeHtml(u.email)}</div>
                 </div>
               </div>
@@ -1531,8 +1922,8 @@
 
             <div class="hardware-well p-2.5 grid grid-cols-2 gap-2 font-mono-tech text-[11px]">
               <div>
-                <div class="text-[9px] uppercase text-gray-500">Security</div>
-                <div class="${u.emailVerified ? 'text-emerald-400' : 'text-amber-400'} font-bold">${u.emailVerified ? '✓ Verified' : '⏳ Pending'}</div>
+                <div class="text-[9px] uppercase text-gray-500">Badge Status</div>
+                <div class="${u.verifiedBadge ? 'text-cyan-400' : 'text-gray-400'} font-bold">${u.verifiedBadge ? '✓ Verified Badge' : 'Standard'}</div>
               </div>
               <div>
                 <div class="text-[9px] uppercase text-gray-500">Conversions</div>
@@ -1547,6 +1938,21 @@
           </div>
         `;
       }).join('');
+
+      // Quick Badge Toggle button in table
+      document.querySelectorAll('[data-quick-badge]').forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const email = btn.getAttribute('data-quick-badge');
+          const user = state.usersRegistry.find((x) => x.email.toLowerCase() === email.toLowerCase());
+          if (!user) return;
+          user.verifiedBadge = !user.verifiedBadge;
+          syncActiveUserIfMatching(user);
+          saveState();
+          updateAccountAndGatingUI();
+          renderAdminDashboard();
+        };
+      });
 
       document.querySelectorAll('[data-open-user]').forEach((el) => {
         el.onclick = () => openAdminUserInspector(el.getAttribute('data-open-user'));
@@ -1608,7 +2014,7 @@
             <tr>
               <td class="py-2.5 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
               <td class="py-2.5 px-3 font-bold text-cyan-400">${escapeHtml(h.userEmail)}</td>
-              <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+              <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)} <span class="text-cyan-400 text-[10px]">(${escapeHtml(h.bpm || '128')} BPM • ${escapeHtml(h.key || '8A')})</span></td>
               <td class="py-2.5 px-3 text-emerald-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
               <td class="py-2.5 px-3 text-gray-300">${escapeHtml(h.targetDevice)}</td>
               <td class="py-2.5 px-3">${formatBytes(h.fileSize)}</td>
@@ -1625,6 +2031,7 @@
       document.getElementById('inspectUserAvatar').textContent = (user.displayName || 'U').slice(0, 2).toUpperCase();
       document.getElementById('inspectUserName').textContent = user.displayName;
       document.getElementById('inspectUserEmail').textContent = user.email;
+      document.getElementById('inspectUserVerifiedIcon').classList.toggle('hidden', !user.verifiedBadge);
 
       const isPaid = user.permissions.tier === 'paid';
       const tierEl = document.getElementById('inspectUserTierBadge');
@@ -1646,13 +2053,14 @@
         : userLogs.map((h) => `
             <tr>
               <td class="py-2 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
-              <td class="py-2 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+              <td class="py-2 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)} (${escapeHtml(h.bpm)} BPM • ${escapeHtml(h.key)})</td>
               <td class="py-2 px-3 text-cyan-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
               <td class="py-2 px-3 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
               <td class="py-2 px-3">${formatBytes(h.fileSize)}</td>
             </tr>
           `).join('');
 
+      document.getElementById('permVerifiedBadgeCheck').checked = !!user.verifiedBadge;
       document.getElementById('permTierSelect').value = user.permissions.tier;
       document.getElementById('permAutomationCheck').checked = !!user.permissions.automation;
       document.getElementById('permPalettesCheck').checked = !!user.permissions.palettes;
@@ -1754,6 +2162,7 @@
       if (state.user && state.user.email.toLowerCase() === updatedUserRecord.email.toLowerCase()) {
         state.user.permissions = { ...updatedUserRecord.permissions };
         state.user.emailVerified = updatedUserRecord.emailVerified;
+        state.user.verifiedBadge = updatedUserRecord.verifiedBadge;
       }
     }
 
@@ -1837,7 +2246,7 @@
     }
 
     /**************************************************************************
-     * 5. STUDIO HUB DEVICE DROPDOWN & ADMIN DEVICE PRESET MANAGER
+     * 7. STUDIO HUB DEVICE DROPDOWN & ADMIN DEVICE PRESET MANAGER
      **************************************************************************/
     function renderStudioHubDeviceDropdown() {
       const sel = document.getElementById('studioHubDeviceDropdown');
@@ -1923,10 +2332,9 @@
     }
 
     /**************************************************************************
-     * 6. AUTHENTICATED-ONLY TELEMETRY & USER GATING
+     * 8. AUTHENTICATED-ONLY TELEMETRY & USER GATING
      **************************************************************************/
     function recordConversionTelemetry(track, blobSize, ext) {
-      // STRICT RULE: Only record conversions when user is signed in AND email-verified
       if (!isUserFullyVerified(state.user)) {
         return;
       }
@@ -1969,7 +2377,6 @@
 
       saveState();
 
-      // Mirror to Firestore if available
       if (VNTEXAuthEngine.firestoreDb) {
         VNTEXAuthEngine.firestoreDb.collection('vntex_history').add(logEntry).catch(() => {});
         VNTEXAuthEngine.firestoreDb.collection('vntex_library').doc(masterKey).set(master, { merge: true }).catch(() => {});
@@ -1982,6 +2389,8 @@
       const lockIcon = document.getElementById('studioHubLockIcon');
       const accountLabel = document.getElementById('headerAccountLabel');
       const accountIcon = document.getElementById('headerAccountIcon');
+      const headerBadge = document.getElementById('headerVerifiedBadge');
+      const modalBadge = document.getElementById('accountModalVerifiedBadge');
       const rigBadge = document.getElementById('activeRigBadge');
 
       const loggedOutPanel = document.getElementById('loggedOutPanel');
@@ -1993,6 +2402,8 @@
         lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
         accountIcon.className = 'fa-regular fa-user text-[var(--accent-primary)] text-[11px]';
         accountLabel.textContent = 'Sign In';
+        headerBadge.classList.add('hidden');
+        modalBadge.classList.add('hidden');
         rigBadge.classList.add('hidden');
 
         loggedOutPanel.classList.remove('hidden');
@@ -2003,11 +2414,12 @@
 
       ensureUserPermissionsStruct(state.user);
 
-      // If signed in but email is NOT verified yet, show the verification gate
       if (!state.user.emailVerified) {
         lockIcon.className = 'fa-solid fa-envelope-circle-check text-[11px] text-amber-400';
         accountIcon.className = 'fa-solid fa-clock text-amber-400 text-[11px]';
         accountLabel.textContent = 'Verify Email';
+        headerBadge.classList.add('hidden');
+        modalBadge.classList.add('hidden');
         rigBadge.classList.add('hidden');
 
         loggedOutPanel.classList.add('hidden');
@@ -2025,7 +2437,10 @@
         return;
       }
 
-      // Fully Authenticated & Email Verified
+      // Sync latest badge state from registry
+      const regMatch = state.usersRegistry.find((u) => u.email.toLowerCase() === state.user.email.toLowerCase());
+      if (regMatch) state.user.verifiedBadge = !!regMatch.verifiedBadge;
+
       const userMasters = Object.values(state.cloudLibrary).filter(
         (m) => !m.ownerEmail || m.ownerEmail.toLowerCase() === state.user.email.toLowerCase()
       );
@@ -2034,6 +2449,9 @@
       lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
       accountIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-[11px]';
       accountLabel.textContent = state.user.displayName;
+
+      headerBadge.classList.toggle('hidden', !state.user.verifiedBadge);
+      modalBadge.classList.toggle('hidden', !state.user.verifiedBadge);
 
       loggedOutPanel.classList.add('hidden');
       verifyPanel.classList.add('hidden');
@@ -2058,7 +2476,7 @@
     }
 
     /**************************************************************************
-     * 7. CUSTOM UI PALETTE ENGINE & CLOUD CRATE RENDERER
+     * 9. CUSTOM UI PALETTE ENGINE & CLOUD CRATE RENDERER
      **************************************************************************/
     function applyPaletteColors(p) {
       if (!p) return;
@@ -2151,7 +2569,7 @@
     }
 
     /**************************************************************************
-     * 8. BINARY ARTWORK & AUDIO TRANSCODING ENGINE
+     * 10. BINARY ARTWORK & AUDIO TRANSCODING ENGINE
      **************************************************************************/
     async function generateProceduralCoverArt(title = 'UNTITLED', artist = 'VNTEX', key = '8A', bpm = '128') {
       const canvas = document.createElement('canvas');
@@ -2198,12 +2616,13 @@
         album: 'VNTEX Session',
         year: '2026',
         genre: 'Electronic',
-        bpm: '128',
-        key: '8A',
+        bpm: '',
+        key: '',
+        camelotKey: '8A',
+        standardKey: 'Am',
         trackNum: ''
       };
-      const cover = extractedCover || await generateProceduralCoverArt(tags.title, tags.artist, tags.key, tags.bpm);
-      return { tags, cover };
+      return { tags, extractedCover };
     }
 
     function encodeSynchsafeInt32(val) {
@@ -2338,7 +2757,7 @@
     }
 
     /**************************************************************************
-     * 9. WAVEFORM & QUEUE RENDERER
+     * 11. WAVEFORM & QUEUE RENDERER
      **************************************************************************/
     function computeWaveformPeaks(audioBuffer, numBars = 80) {
       const ch0 = audioBuffer.getChannelData(0);
@@ -2435,7 +2854,7 @@
             </div>
             <div class="min-w-0 flex-1">
               <div class="font-bold text-xs text-[var(--text-primary)] truncate">${escapeHtml(t.tags.title)}</div>
-              <div class="text-[11px] text-[var(--text-secondary)] truncate">${escapeHtml(t.tags.artist)} • <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">${escapeHtml(t.tags.bpm)} BPM • ${escapeHtml(t.tags.key)}</span></div>
+              <div class="text-[11px] text-[var(--text-secondary)] truncate">${escapeHtml(t.tags.artist)} • <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">${escapeHtml(t.tags.bpm)} BPM • KEY ${escapeHtml(t.tags.key)}</span></div>
             </div>
           </div>
 
@@ -2588,20 +3007,44 @@
       document.getElementById('sampleRateSelect').value = String(state.sampleRate);
       document.getElementById('channelSelect').value = String(state.channels);
       document.getElementById('artworkModeSelect').value = state.artworkMode;
+      document.getElementById('bpmRangeSelect').value = state.bpmRange;
+      document.getElementById('keyModeSelect').value = state.keyMode;
 
       const isLossless = ['flac', 'wav', 'aiff'].includes(state.outputFormat);
       document.getElementById('bitrateWrapper').classList.toggle('hidden', isLossless);
       document.getElementById('bitDepthWrapper').classList.toggle('hidden', !isLossless);
     }
 
+    function getActiveBpmBounds() {
+      const parts = String(state.bpmRange || '95-160').split('-');
+      return { minBPM: Number(parts[0]) || 95, maxBPM: Number(parts[1]) || 160 };
+    }
+
     async function ingestFiles(fileList) {
       const files = Array.from(fileList || []);
       if (!files.length) return;
+      const statusText = document.getElementById('dropzoneStatusText');
+      statusText.textContent = `Running DSP BPM & Krumhansl-Schmuckler Key Analysis on ${files.length} file(s)...`;
+
       const ctx = getAudioContext();
+      const { minBPM, maxBPM } = getActiveBpmBounds();
+
       for (const file of files) {
         try {
-          const { tags, cover } = await extractBinaryMetadataAndCover(file);
+          const { tags, extractedCover } = await extractBinaryMetadataAndCover(file);
           const audioBuffer = await ctx.decodeAudioData((await file.arrayBuffer()).slice(0));
+
+          // Run Real DSP BPM & Key Analysis
+          const detectedBpm = await VNTEXAudioAnalyzer.detectBPM(audioBuffer, minBPM, maxBPM);
+          const detectedKeyObj = VNTEXAudioAnalyzer.detectMusicalKey(audioBuffer);
+
+          tags.bpm = detectedBpm;
+          tags.camelotKey = detectedKeyObj.camelot;
+          tags.standardKey = detectedKeyObj.standard;
+          tags.key = state.keyMode === 'camelot' ? detectedKeyObj.camelot : detectedKeyObj.standard;
+
+          const cover = extractedCover || await generateProceduralCoverArt(tags.title, tags.artist, tags.key, tags.bpm);
+
           state.tracks.push({
             id: 'trk_' + Math.random().toString(36).slice(2, 10),
             originalName: file.name,
@@ -2617,34 +3060,70 @@
           });
         } catch (e) { console.error(e); }
       }
+      statusText.textContent = 'MP3, FLAC, WAV, AIFF, M4A, OGG & OPUS • Auto DSP BPM & Key Detection + Cover Art';
+      renderTrackList();
+    }
+
+    async function reanalyzeLoadedTracksBpmAndKey() {
+      if (!state.tracks.length) return;
+      const { minBPM, maxBPM } = getActiveBpmBounds();
+      for (const t of state.tracks) {
+        t.tags.bpm = await VNTEXAudioAnalyzer.detectBPM(t.audioBuffer, minBPM, maxBPM);
+        const kObj = VNTEXAudioAnalyzer.detectMusicalKey(t.audioBuffer);
+        t.tags.camelotKey = kObj.camelot;
+        t.tags.standardKey = kObj.standard;
+        t.tags.key = state.keyMode === 'camelot' ? kObj.camelot : kObj.standard;
+      }
       renderTrackList();
     }
 
     async function loadDemoTracks() {
       const ctx = getAudioContext();
+      const { minBPM, maxBPM } = getActiveBpmBounds();
       const demos = [
-        { title: 'Obsidian Telemetry', artist: 'Uno', bpm: '128', key: '8A', freq: 110 },
-        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', bpm: '126', key: '9A', freq: 98 },
-        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', bpm: '130', key: '5A', freq: 130.8 }
+        { title: 'Obsidian Telemetry', artist: 'Uno', targetBpm: 128, freq: 220.0 },     // A3 (Am / 8A)
+        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', targetBpm: 124, freq: 164.81 }, // E3 (Em / 9A)
+        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', targetBpm: 132, freq: 261.63 }    // C4 (Cm / 5A)
       ];
       for (const d of demos) {
-        const sr = 44100, dur = 5.0, buf = ctx.createBuffer(2, sr * dur, sr);
+        const sr = 44100, dur = 6.0, buf = ctx.createBuffer(2, sr * dur, sr);
         for (let c = 0; c < 2; c++) {
           const ch = buf.getChannelData(c);
           for (let i = 0; i < ch.length; i++) {
             const t = i / sr;
-            const env = Math.exp(-((t * (Number(d.bpm) / 60)) % 1) * 5.5);
-            ch[i] = Math.sin(2 * Math.PI * d.freq * t) * 0.55 * env;
+            const beatPhase = (t * (d.targetBpm / 60)) % 1;
+            const kickEnv = Math.exp(-beatPhase * 8.0);
+            const kick = Math.sin(2 * Math.PI * 65 * t) * 0.75 * kickEnv;
+            // Minor triad harmonic chord for Krumhansl-Schmuckler key detection
+            const root = Math.sin(2 * Math.PI * d.freq * t) * 0.25;
+            const minorThird = Math.sin(2 * Math.PI * (d.freq * Math.pow(2, 3 / 12)) * t) * 0.18;
+            const fifth = Math.sin(2 * Math.PI * (d.freq * Math.pow(2, 7 / 12)) * t) * 0.18;
+            ch[i] = Math.max(-0.98, Math.min(0.98, kick + root + minorThird + fifth));
           }
         }
-        const cover = await generateProceduralCoverArt(d.title, d.artist, d.key, d.bpm);
+        const detectedBpm = await VNTEXAudioAnalyzer.detectBPM(buf, minBPM, maxBPM);
+        const detectedKeyObj = VNTEXAudioAnalyzer.detectMusicalKey(buf);
+        const keyStr = state.keyMode === 'camelot' ? detectedKeyObj.camelot : detectedKeyObj.standard;
+        const cover = await generateProceduralCoverArt(d.title, d.artist, keyStr, detectedBpm);
+
         state.tracks.push({
           id: 'demo_' + Math.random().toString(36).slice(2, 10),
           originalName: `${d.artist} - ${d.title}.wav`,
           duration: dur,
           audioBuffer: buf,
           peaks: computeWaveformPeaks(buf, 80),
-          tags: { title: d.title, artist: d.artist, album: 'VNTEX Sessions', year: '2026', genre: 'Electronic', bpm: d.bpm, key: d.key, trackNum: '' },
+          tags: {
+            title: d.title,
+            artist: d.artist,
+            album: 'VNTEX Sessions',
+            year: '2026',
+            genre: 'Electronic',
+            bpm: detectedBpm,
+            camelotKey: detectedKeyObj.camelot,
+            standardKey: detectedKeyObj.standard,
+            key: keyStr,
+            trackNum: ''
+          },
           cover,
           status: 'queued',
           convertedBlob: null,
@@ -2656,10 +3135,9 @@
     }
 
     /**************************************************************************
-     * 10. INITIALIZATION & EVENT LISTENERS
+     * 12. INITIALIZATION & EVENT LISTENERS
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      // Boot live vntex-e24a5 Firebase backend immediately
       VNTEXAuthEngine.boot();
 
       checkRouteMode();
@@ -2671,6 +3149,23 @@
       syncEncoderSelects();
       renderStudioHubDeviceDropdown();
       updateAccountAndGatingUI();
+
+      // Key Mode Switcher (Camelot vs Standard) -> Live updates all tracks
+      document.getElementById('keyModeSelect').onchange = (e) => {
+        state.keyMode = e.target.value;
+        state.tracks.forEach((t) => {
+          t.tags.key = VNTEXAudioAnalyzer.formatKeyString(t.tags.key, state.keyMode);
+        });
+        renderTrackList();
+      };
+
+      // BPM Range Selector -> Auto re-analyzes loaded tracks
+      document.getElementById('bpmRangeSelect').onchange = async (e) => {
+        state.bpmRange = e.target.value;
+        await reanalyzeLoadedTracksBpmAndKey();
+      };
+
+      document.getElementById('reanalyzeAllBpmKeyBtn').onclick = reanalyzeLoadedTracksBpmAndKey;
 
       // Password Visibility Eye Toggles
       document.querySelectorAll('[data-toggle-pass]').forEach((btn) => {
@@ -2715,7 +3210,6 @@
         signInForm.classList.add('hidden');
       };
 
-      // Live Password Complexity Checker on Keystroke
       const pwInput = document.getElementById('signUpPasswordInput');
       const pwConfirmInput = document.getElementById('signUpConfirmInput');
       const signUpSubmitBtn = document.getElementById('signUpSubmitBtn');
@@ -2752,7 +3246,7 @@
       pwInput.addEventListener('input', updatePasswordComplexityUI);
       pwConfirmInput.addEventListener('input', updatePasswordComplexityUI);
 
-      // CREATE ACCOUNT HANDLER (Firebase Email Auth + Real Verification Link Dispatch)
+      // CREATE ACCOUNT HANDLER
       signUpForm.onsubmit = async (e) => {
         e.preventDefault();
         clearAuthError();
@@ -2772,7 +3266,6 @@
         const otp = VNTEXAuthEngine.generateSixDigitOtp();
         const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
 
-        // Try Live Firebase Account Creation + Email Verification Dispatch first
         if (VNTEXAuthEngine.isFirebaseReady && VNTEXAuthEngine.firebaseAuth) {
           try {
             const cred = await VNTEXAuthEngine.firebaseAuth.createUserWithEmailAndPassword(email, pass);
@@ -2788,6 +3281,7 @@
               salt,
               passwordHash,
               emailVerified: false,
+              verifiedBadge: false,
               pendingOtp: otp,
               activeRigName: dev ? dev.name : 'Standard Studio',
               lastLogin: new Date().toISOString()
@@ -2799,7 +3293,6 @@
             updateAccountAndGatingUI();
             return;
           } catch (fbErr) {
-            // If Email/Password provider isn't enabled in Firebase Console yet, show clear diagnostic or fallback
             if (fbErr?.code !== 'auth/operation-not-allowed') {
               showAuthError(VNTEXAuthEngine.formatFirebaseError(fbErr));
               return;
@@ -2807,7 +3300,6 @@
           }
         }
 
-        // Local SHA-256 Crypto fallback if Firebase Email/Password toggle is off
         if (state.usersRegistry.some((u) => u.email.toLowerCase() === email)) {
           showAuthError('An account with this email already exists. Switch to the Sign In tab.');
           return;
@@ -2820,6 +3312,7 @@
           salt,
           passwordHash,
           emailVerified: false,
+          verifiedBadge: false,
           pendingOtp: otp,
           activeRigName: dev ? dev.name : 'Standard Studio',
           lastLogin: new Date().toISOString()
@@ -2844,7 +3337,6 @@
         const email = document.getElementById('signInEmailInput').value.trim().toLowerCase();
         const pass = document.getElementById('signInPasswordInput').value;
 
-        // 1. Live Firebase Sign-In
         if (VNTEXAuthEngine.isFirebaseReady && VNTEXAuthEngine.firebaseAuth) {
           try {
             const cred = await VNTEXAuthEngine.firebaseAuth.signInWithEmailAndPassword(email, pass);
@@ -2859,6 +3351,7 @@
                 email,
                 provider: 'Firebase Email',
                 emailVerified: fbUser.emailVerified,
+                verifiedBadge: false,
                 activeRigName: dev ? dev.name : 'Standard Studio',
                 lastLogin: new Date().toISOString()
               });
@@ -2885,7 +3378,6 @@
           }
         }
 
-        // 2. Local Salted SHA-256 Verification
         const account = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
         if (!account) {
           VNTEXAuthEngine.recordFailedAttempt();
@@ -2910,7 +3402,6 @@
         }
       };
 
-      // LIVE FIREBASE EMAIL VERIFICATION CHECK BUTTON
       document.getElementById('firebaseCheckVerifiedBtn').onclick = async () => {
         const alertEl = document.getElementById('verificationAlertBox');
         alertEl.classList.add('hidden');
@@ -2933,7 +3424,6 @@
         alertEl.classList.remove('hidden');
       };
 
-      // FALLBACK 6-DIGIT OTP VERIFY
       document.getElementById('verifyOtpForm').onsubmit = (e) => {
         e.preventDefault();
         if (!state.user) return;
@@ -2977,7 +3467,7 @@
         updateAccountAndGatingUI();
       };
 
-      // LIVE GOOGLE OAUTH POPUP HANDLER (vntex-e24a5)
+      // LIVE GOOGLE OAUTH POPUP HANDLER
       document.getElementById('googleOAuthBtn').onclick = async () => {
         clearAuthError();
         if (!VNTEXAuthEngine.isFirebaseReady || !VNTEXAuthEngine.firebaseAuth) {
@@ -3001,6 +3491,7 @@
               email,
               provider: 'Google OAuth',
               emailVerified: true,
+              verifiedBadge: false,
               activeRigName: dev ? dev.name : 'Standard Studio',
               lastLogin: new Date().toISOString()
             });
@@ -3021,23 +3512,49 @@
         }
       };
 
-      // Admin Passcode Gate
-      document.getElementById('adminUnlockForm').onsubmit = (e) => {
+      // Admin Passcode Gate (Verifies against Custom Dual Hashes OR Initial Defaults)
+      document.getElementById('adminUnlockForm').onsubmit = async (e) => {
         e.preventDefault();
-        const pin = document.getElementById('adminPinInput').value.trim();
-        if (pin === 'VNTEX-ADMIN') {
+        const pin = document.getElementById('adminPinInput').value;
+        const matchedRole = await verifyAdminConsolePassword(pin);
+        if (matchedRole) {
           state.adminUnlocked = true;
-          state.adminActingRole = 'admin';
-          document.getElementById('adminPinError').classList.add('hidden');
-          renderAdminDashboard();
-        } else if (pin === 'VNTEX-OWNER') {
-          state.adminUnlocked = true;
-          state.adminActingRole = 'owner';
+          state.adminActingRole = matchedRole;
           document.getElementById('adminPinError').classList.add('hidden');
           renderAdminDashboard();
         } else {
           document.getElementById('adminPinError').classList.remove('hidden');
         }
+      };
+
+      // Custom Dual Admin Passwords Modal
+      const adminPasswordsModal = document.getElementById('adminPasswordsModal');
+      document.getElementById('openAdminPasswordsModalBtn').onclick = () => {
+        const isOwner = state.adminActingRole === 'owner';
+        document.getElementById('adminPasswordRoleLockNotice').classList.toggle('hidden', isOwner);
+        document.getElementById('customAdminPasswordsForm').classList.toggle('opacity-40', !isOwner);
+        document.getElementById('customAdminPasswordsForm').classList.toggle('pointer-events-none', !isOwner);
+        adminPasswordsModal.classList.remove('hidden');
+      };
+      document.getElementById('closeAdminPasswordsModalBtn').onclick = () => {
+        adminPasswordsModal.classList.add('hidden');
+      };
+
+      document.getElementById('customAdminPasswordsForm').onsubmit = async (e) => {
+        e.preventDefault();
+        if (state.adminActingRole !== 'owner') return;
+        const stdPass = document.getElementById('newStandardAdminPassInput').value.trim();
+        const ownPass = document.getElementById('newMasterOwnerPassInput').value.trim();
+        const toast = document.getElementById('adminPassSaveToast');
+        if (stdPass === ownPass) {
+          toast.textContent = '✕ Standard Admin and Master Owner passwords must be unique from each other.';
+          toast.className = 'text-xs font-mono-tech text-rose-400';
+          return;
+        }
+        await saveCustomAdminPasswords(stdPass, ownPass);
+        toast.textContent = '✓ Saved both unique SHA-256 Admin & Master Owner passwords!';
+        toast.className = 'text-xs font-mono-tech text-emerald-400';
+        document.getElementById('customAdminPasswordsForm').reset();
       };
 
       document.getElementById('adminRoleSelect').onchange = (e) => {
@@ -3091,20 +3608,23 @@
         };
       });
 
-      ['permTierSelect', 'permAutomationCheck', 'permPalettesCheck', 'permRigCheck'].forEach((id) => {
+      // Standard Admin Permission + Verified Producer Badge Changes
+      ['permVerifiedBadgeCheck', 'permTierSelect', 'permAutomationCheck', 'permPalettesCheck', 'permRigCheck'].forEach((id) => {
         document.getElementById(id).onchange = () => {
           const u = state.usersRegistry.find((x) => x.email.toLowerCase() === String(state.inspectingUserEmail).toLowerCase());
           if (!u) return;
           ensureUserPermissionsStruct(u);
+          u.verifiedBadge = document.getElementById('permVerifiedBadgeCheck').checked;
           u.permissions.tier = document.getElementById('permTierSelect').value;
           u.permissions.automation = document.getElementById('permAutomationCheck').checked;
           u.permissions.palettes = document.getElementById('permPalettesCheck').checked;
           u.permissions.rig = document.getElementById('permRigCheck').checked;
           syncActiveUserIfMatching(u);
           saveState();
+          updateAccountAndGatingUI();
           openAdminUserInspector(u.email);
           renderAdminDashboard();
-          showPermToast('✓ Updated standard user permissions.');
+          showPermToast('✓ Updated user badge & permissions.');
         };
       });
 
@@ -3164,6 +3684,7 @@
             salt: salt1,
             passwordHash: hash1,
             emailVerified: true,
+            verifiedBadge: true,
             activeRigName: 'Pioneer DDJ-GRV6 Controller',
             lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: true, unlimitedApiOverride: true, bypassStorageQuotas: true }
@@ -3176,6 +3697,7 @@
             salt: salt1,
             passwordHash: hash1,
             emailVerified: true,
+            verifiedBadge: true,
             activeRigName: 'Pioneer CDJ-3000 / NXS2 Club Rig',
             lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false, unlimitedApiOverride: false, bypassStorageQuotas: false }
@@ -3183,7 +3705,7 @@
         ];
         state.downloadHistory = [
           { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
-          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
+          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '124', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
         ];
         saveState();
         renderAdminDashboard();
