@@ -3,179 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Developer Admin API &amp; Telemetry Console</title>
+  <title>VNTEX // Admin API & Telemetry Console</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg-void: #030305;
-      --bg-panel: #08080c;
-      --bg-well: #040406;
-      --border-hairline: #181824;
-      --accent-cyan: #00f2fe;
-      --accent-amber: #fbbf24;
-    }
-    body {
-      background-color: var(--bg-void);
-      color: #f3f4f8;
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-    }
+    body { background-color: #030305; color: #f3f4f8; font-family: 'Inter', sans-serif; min-height: 100vh; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .studio-panel {
-      background-color: var(--bg-panel);
-      border: 1px solid var(--border-hairline);
-      border-radius: 0.75rem;
-      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.9);
-    }
-    .hardware-well {
-      background-color: var(--bg-well);
-      border: 1px solid var(--border-hairline);
-      border-radius: 0.5rem;
-      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
-    }
+    .studio-panel { background-color: #08080c; border: 1px solid #181824; border-radius: 0.75rem; }
+    .hardware-well { background-color: #040406; border: 1px solid #181824; border-radius: 0.5rem; }
   </style>
 </head>
 <body class="antialiased">
 
-  <!-- Top Admin Header -->
-  <header class="border-b border-[#181824] bg-[#030305]/90 backdrop-blur-md sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-sm border border-amber-400/50 bg-[#040406] text-amber-400">
-          VX
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-extrabold tracking-tight text-base text-white">VNTEX // ADMIN API</h1>
-            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/30">
-              INTERNAL DEV CONSOLE
-            </span>
-          </div>
-        </div>
+  <header class="border-b border-[#181824] bg-[#030305]/95 sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">VX</div>
+        <span class="font-extrabold text-sm text-white">VNTEX // ADMIN API CONSOLE</span>
       </div>
-
       <div class="flex items-center gap-2">
-        <button id="refreshTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50">
-          <i class="fa-solid fa-rotate mr-1"></i>Refresh Live Data
+        <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-amber-400 hover:border-amber-400/50">
+          + Seed Test Activity
+        </button>
+        <button id="refreshBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50">
+          Refresh
         </button>
         <a href="index.html" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-gray-300 hover:text-white">
-          Open Converter App
+          ← Converter App
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Passcode Lock Gate -->
-  <div id="adminPinGateView" class="max-w-md mx-auto mt-20 p-6 studio-panel text-center space-y-4">
-    <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
-      <i class="fa-solid fa-shield-halved"></i>
-    </div>
-    <div class="space-y-1">
-      <h2 class="text-base font-bold text-white">Developer Admin Authentication</h2>
-      <p class="text-xs text-gray-400">
-        Enter your developer passcode to access user registries, telemetry logs, and the JSON API console (Default: <code class="text-amber-400 font-mono-tech">VNTEX-ADMIN</code>).
-      </p>
-    </div>
-    <form id="unlockForm" class="flex gap-2">
-      <input id="adminPinInput" type="password" value="VNTEX-ADMIN" class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center text-white focus:outline-none" />
-      <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs">
-        Unlock API
-      </button>
-    </form>
-    <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid Passcode</p>
-  </div>
-
-  <!-- Main Unlocked Admin Console -->
-  <main id="adminDashboardView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
     <!-- 4 KPI Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="studio-panel p-4 space-y-1">
+      <div class="studio-panel p-4">
         <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Accounts</div>
-        <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400">0</div>
-        <div class="text-[11px] text-emerald-400 font-mono-tech">● Active User Registry</div>
+        <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400 mt-1">0</div>
       </div>
-      <div class="studio-panel p-4 space-y-1">
+      <div class="studio-panel p-4">
         <div class="font-mono-tech text-[10px] uppercase text-gray-400">Total Conversions</div>
-        <div id="kpiConversions" class="font-mono-tech text-2xl font-extrabold text-white">0</div>
-        <div class="text-[11px] text-gray-400 font-mono-tech">Logged Exports</div>
+        <div id="kpiConversions" class="font-mono-tech text-2xl font-extrabold text-white mt-1">0</div>
       </div>
-      <div class="studio-panel p-4 space-y-1">
+      <div class="studio-panel p-4">
         <div class="font-mono-tech text-[10px] uppercase text-gray-400">Cloud Master Tracks</div>
-        <div id="kpiMasters" class="font-mono-tech text-2xl font-extrabold text-amber-400">0</div>
-        <div class="text-[11px] text-gray-400 font-mono-tech">Multi-Format Linked</div>
+        <div id="kpiMasters" class="font-mono-tech text-2xl font-extrabold text-amber-400 mt-1">0</div>
       </div>
-      <div class="studio-panel p-4 space-y-1">
-        <div class="font-mono-tech text-[10px] uppercase text-gray-400">Processed Volume</div>
-        <div id="kpiVolume" class="font-mono-tech text-2xl font-extrabold text-emerald-400">0 KB</div>
-        <div class="text-[11px] text-emerald-400 font-mono-tech">● DSP Engine Nominal</div>
+      <div class="studio-panel p-4">
+        <div class="font-mono-tech text-[10px] uppercase text-gray-400">Data Processed</div>
+        <div id="kpiVolume" class="font-mono-tech text-2xl font-extrabold text-emerald-400 mt-1">0 KB</div>
       </div>
     </div>
 
-    <!-- Middle Row: Format Distribution + Live JSON API Endpoint -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      <div class="lg:col-span-5 studio-panel p-5 space-y-3">
-        <h3 class="font-mono-tech uppercase text-xs text-amber-400">Format Distribution Telemetry</h3>
-        <div id="formatDistributionBars" class="space-y-2.5"></div>
-      </div>
-
-      <div class="lg:col-span-7 studio-panel p-5 space-y-3 flex flex-col justify-between">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono-tech text-[10px] font-bold">GET</span>
-            <select id="apiEndpointSelect" class="hardware-well px-2.5 py-1 text-xs font-mono-tech text-cyan-400">
-              <option value="telemetry">/api/v1/admin/telemetry</option>
-              <option value="users">/api/v1/admin/users</option>
-              <option value="library">/api/v1/admin/cloud-library</option>
-              <option value="history">/api/v1/admin/download-logs</option>
-            </select>
-          </div>
-          <button id="copyJsonBtn" type="button" class="hardware-well px-3 py-1 text-xs font-mono-tech text-cyan-400">
-            Copy JSON Response
-          </button>
-        </div>
-        <pre id="apiJsonOutput" class="hardware-well p-3.5 font-mono-tech text-[11px] text-emerald-400 overflow-x-auto max-h-56"></pre>
-      </div>
-    </div>
-
-    <!-- Registered Users & Active Rig Registry -->
+    <!-- API Endpoint Inspector -->
     <div class="studio-panel p-5 space-y-3">
-      <h3 class="font-mono-tech uppercase text-xs text-cyan-400">Registered Accounts &amp; Last Login Activity</h3>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono-tech text-[10px] font-bold">GET</span>
+          <select id="endpointSelect" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
+            <option value="overview">/api/v1/admin/overview</option>
+            <option value="users">/api/v1/admin/users</option>
+            <option value="library">/api/v1/admin/cloud-library</option>
+            <option value="logs">/api/v1/admin/download-logs</option>
+          </select>
+        </div>
+        <button id="copyJsonBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
+          Copy JSON Payload
+        </button>
+      </div>
+      <pre id="jsonDisplay" class="hardware-well p-4 font-mono-tech text-[11px] text-emerald-400 overflow-x-auto max-h-60"></pre>
+    </div>
+
+    <!-- Registered Users Table -->
+    <div class="studio-panel p-5 space-y-3">
+      <h2 class="font-mono-tech uppercase text-xs text-cyan-400">Registered Studio Accounts</h2>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse font-mono-tech text-xs">
           <thead>
             <tr class="border-b border-[#181824] text-gray-400">
               <th class="py-2 px-3">UID</th>
-              <th class="py-2 px-3">Producer / DJ Alias</th>
+              <th class="py-2 px-3">Name</th>
               <th class="py-2 px-3">Email</th>
               <th class="py-2 px-3">Provider</th>
-              <th class="py-2 px-3">Last Login</th>
+              <th class="py-2 px-3">Last Active</th>
             </tr>
           </thead>
-          <tbody id="usersTableBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+          <tbody id="usersBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Real-Time Conversion & Download Stream -->
+    <!-- Download Activity Logs -->
     <div class="studio-panel p-5 space-y-3">
-      <h3 class="font-mono-tech uppercase text-xs text-white">Global Conversion &amp; Device-Tuned Download Stream</h3>
+      <h2 class="font-mono-tech uppercase text-xs text-amber-400">Recent Conversion &amp; Device-Tuned Logs</h2>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse font-mono-tech text-xs">
           <thead>
             <tr class="border-b border-[#181824] text-gray-400">
               <th class="py-2 px-3">Timestamp</th>
-              <th class="py-2 px-3">Account</th>
+              <th class="py-2 px-3">User</th>
               <th class="py-2 px-3">Track</th>
-              <th class="py-2 px-3">Format &amp; Specs</th>
+              <th class="py-2 px-3">Format</th>
               <th class="py-2 px-3">Target Rig</th>
-              <th class="py-2 px-3">File Size</th>
+              <th class="py-2 px-3">Size</th>
             </tr>
           </thead>
-          <tbody id="activityTableBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+          <tbody id="logsBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
         </table>
       </div>
     </div>
@@ -183,104 +119,93 @@
   </main>
 
   <script>
-    const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v3',
-      USERS_REGISTRY: 'vntex_users_registry_v3',
+    const KEYS = {
+      USERS: 'vntex_users_registry_v3',
       LIBRARY: 'vntex_cloud_library_v3',
       HISTORY: 'vntex_download_history_v3'
     };
 
     function formatBytes(b) {
       if (!b) return '0 KB';
-      return b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(2)} MB`;
+      return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
     }
 
-    function escapeHtml(s) {
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
+    function renderAdmin() {
+      const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '[]');
+      const library = JSON.parse(localStorage.getItem(KEYS.LIBRARY) || '{}');
+      const history = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]');
+      const vol = history.reduce((s, h) => s + (h.fileSize || 0), 0);
 
-    function loadAdminTelemetry() {
-      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]');
-      const library = JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}');
-      const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+      document.getElementById('kpiUsers').textContent = users.length;
+      document.getElementById('kpiConversions').textContent = history.length;
+      document.getElementById('kpiMasters').textContent = Object.keys(library).length;
+      document.getElementById('kpiVolume').textContent = formatBytes(vol);
 
-      const totalVol = history.reduce((s, h) => s + (h.fileSize || 0), 0);
-      document.getElementById('kpiUsers').textContent = String(users.length);
-      document.getElementById('kpiConversions').textContent = String(history.length);
-      document.getElementById('kpiMasters').textContent = String(Object.keys(library).length);
-      document.getElementById('kpiVolume').textContent = formatBytes(totalVol);
-
-      const counts = { MP3: 0, FLAC: 0, WAV: 0, AIFF: 0, M4A: 0, OGG: 0, OPUS: 0 };
-      history.forEach((h) => {
-        const k = (h.outputFormat || 'MP3').toUpperCase();
-        if (counts[k] !== undefined) counts[k]++;
-      });
-      const max = Math.max(1, ...Object.values(counts));
-      document.getElementById('formatDistributionBars').innerHTML = Object.entries(counts).map(([fmt, c]) => `
-        <div class="space-y-1 font-mono-tech text-xs">
-          <div class="flex justify-between">
-            <span class="font-bold text-white">.${fmt}</span>
-            <span class="text-cyan-400">${c} files</span>
-          </div>
-          <div class="w-full h-2 rounded bg-[#040406] overflow-hidden">
-            <div class="h-full bg-cyan-400" style="width:${Math.round((c / max) * 100)}%"></div>
-          </div>
-        </div>
-      `).join('');
-
-      const endpoint = document.getElementById('apiEndpointSelect').value;
+      const mode = document.getElementById('endpointSelect').value;
       const payloads = {
-        telemetry: { status: 200, registeredUsers: users.length, totalExports: history.length, uniqueMasters: Object.keys(library).length, formatBreakdown: counts },
-        users: { status: 200, count: users.length, accounts: users },
-        library: { status: 200, count: Object.keys(library).length, masters: library },
-        history: { status: 200, count: history.length, logs: history.slice(0, 50) }
+        overview: { status: 200, usersCount: users.length, conversionsCount: history.length, mastersCount: Object.keys(library).length, totalBytes: vol },
+        users: { status: 200, users },
+        library: { status: 200, library },
+        logs: { status: 200, logs: history }
       };
-      document.getElementById('apiJsonOutput').textContent = JSON.stringify(payloads[endpoint], null, 2);
+      document.getElementById('jsonDisplay').textContent = JSON.stringify(payloads[mode], null, 2);
 
-      document.getElementById('usersTableBody').innerHTML = users.length === 0
-        ? `<tr><td colspan="5" class="py-4 text-center text-gray-500">No users registered yet.</td></tr>`
+      document.getElementById('usersBody').innerHTML = users.length === 0
+        ? '<tr><td colspan="5" class="py-4 text-center text-gray-500">No users registered yet. Sign in on index.html or click "+ Seed Test Activity".</td></tr>'
         : users.map((u) => `
             <tr>
-              <td class="py-2 px-3 text-gray-500">${escapeHtml(u.uid)}</td>
-              <td class="py-2 px-3 font-bold text-white">${escapeHtml(u.displayName)}</td>
-              <td class="py-2 px-3 text-cyan-400">${escapeHtml(u.email)}</td>
-              <td class="py-2 px-3">${escapeHtml(u.provider)}</td>
+              <td class="py-2 px-3 text-gray-500">${u.uid}</td>
+              <td class="py-2 px-3 font-bold text-white">${u.displayName}</td>
+              <td class="py-2 px-3 text-cyan-400">${u.email}</td>
+              <td class="py-2 px-3">${u.provider}</td>
               <td class="py-2 px-3 text-gray-400">${new Date(u.lastLogin).toLocaleString()}</td>
             </tr>
           `).join('');
 
-      document.getElementById('activityTableBody').innerHTML = history.length === 0
-        ? `<tr><td colspan="6" class="py-4 text-center text-gray-500">No conversions logged yet.</td></tr>`
-        : history.slice(0, 40).map((h) => `
+      document.getElementById('logsBody').innerHTML = history.length === 0
+        ? '<tr><td colspan="6" class="py-4 text-center text-gray-500">No conversion logs yet. Convert a track or click "+ Seed Test Activity".</td></tr>'
+        : history.map((h) => `
             <tr>
-              <td class="py-2 px-3 text-gray-500">${new Date(h.timestamp).toLocaleString()}</td>
-              <td class="py-2 px-3 text-white">${escapeHtml(h.userEmail)}</td>
-              <td class="py-2 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
-              <td class="py-2 px-3 text-cyan-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
-              <td class="py-2 px-3 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
+              <td class="py-2 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
+              <td class="py-2 px-3 text-white">${h.userEmail}</td>
+              <td class="py-2 px-3 font-bold text-white">${h.artist} - ${h.trackTitle}</td>
+              <td class="py-2 px-3 text-cyan-400">.${h.outputFormat} (${h.qualitySpec})</td>
+              <td class="py-2 px-3 text-emerald-400">${h.targetDevice}</td>
               <td class="py-2 px-3">${formatBytes(h.fileSize)}</td>
             </tr>
           `).join('');
     }
 
-    document.getElementById('unlockForm').onsubmit = (e) => {
-      e.preventDefault();
-      const pin = document.getElementById('adminPinInput').value.trim();
-      if (pin === 'VNTEX-ADMIN' || pin === '2026') {
-        document.getElementById('adminPinGateView').classList.add('hidden');
-        document.getElementById('adminDashboardView').classList.remove('hidden');
-        loadAdminTelemetry();
-      } else {
-        document.getElementById('adminPinError').classList.remove('hidden');
-      }
+    document.getElementById('seedDemoTelemetryBtn').onclick = () => {
+      const now = new Date().toISOString();
+      const users = [{ uid: 'usr_uno01', displayName: 'DJ Uno', email: 'uno@vntex.studio', provider: 'google', lastLogin: now }];
+      const history = [
+        { id: 'log_1', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', fileSize: 4820100 },
+        { id: 'log_2', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', fileSize: 28410000 }
+      ];
+      const library = {
+        uno__obsidiantelemetry: {
+          masterKey: 'uno__obsidiantelemetry',
+          title: 'Obsidian Telemetry',
+          artist: 'Uno',
+          updatedAt: now,
+          variants: [
+            { format: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', timestamp: now, fileSize: 4820100 },
+            { format: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', timestamp: now, fileSize: 28410000 }
+          ]
+        }
+      };
+      localStorage.setItem(KEYS.USERS, JSON.stringify(users));
+      localStorage.setItem(KEYS.HISTORY, JSON.stringify(history));
+      localStorage.setItem(KEYS.LIBRARY, JSON.stringify(library));
+      renderAdmin();
     };
 
-    document.getElementById('refreshTelemetryBtn').onclick = loadAdminTelemetry;
-    document.getElementById('apiEndpointSelect').onchange = loadAdminTelemetry;
-    document.getElementById('copyJsonBtn').onclick = () => {
-      navigator.clipboard?.writeText(document.getElementById('apiJsonOutput').textContent);
-    };
-    window.addEventListener('storage', loadAdminTelemetry);
+    document.getElementById('refreshBtn').onclick = renderAdmin;
+    document.getElementById('endpointSelect').onchange = renderAdmin;
+    document.getElementById('copyJsonBtn').onclick = () => navigator.clipboard?.writeText(document.getElementById('jsonDisplay').textContent);
+    window.addEventListener('storage', renderAdmin);
+    renderAdmin();
   </script>
 </body>
 </html>

@@ -9,67 +9,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
-    :root,
-    html.theme-obsidian {
+    :root {
       --bg-void: #030305;
       --bg-panel: #08080c;
-      --bg-panel-elevated: #0d0d14;
+      --bg-panel-elevated: #0e0e16;
       --bg-well: #040406;
-      --bg-waveform: #040407;
-      --border-hairline: #161621;
-      --border-highlight: #252536;
+      --border-hairline: #171722;
+      --border-highlight: #262638;
       --text-primary: #f3f4f8;
       --text-secondary: #9496a8;
       --text-muted: #585a6e;
       --accent-primary: #00f2fe;
       --accent-secondary: #4facfe;
       --accent-glow: rgba(0, 242, 254, 0.25);
-      --accent-text-contrast: #030508;
-      --led-readout: #00f2fe;
+      --accent-contrast: #030508;
       --panel-radius: 0.75rem;
-    }
-
-    html.theme-winamp {
-      --bg-void: #121316;
-      --bg-panel: #22252c;
-      --bg-panel-elevated: #2c3039;
-      --bg-well: #060d07;
-      --bg-waveform: #050b06;
-      --border-hairline: #3d424f;
-      --border-highlight: #5a6070;
-      --text-primary: #e8ecf2;
-      --text-secondary: #b0b8c5;
-      --text-muted: #7b8391;
-      --accent-primary: #00ff41;
-      --accent-secondary: #ffb000;
-      --accent-glow: rgba(0, 255, 65, 0.28);
-      --accent-text-contrast: #041006;
-      --led-readout: #00ff41;
-      --panel-radius: 0.35rem;
-    }
-
-    html.theme-slate {
-      --bg-void: #0b0e14;
-      --bg-panel: #131822;
-      --bg-panel-elevated: #1a212e;
-      --bg-well: #090c12;
-      --bg-waveform: #080b10;
-      --border-hairline: #232b3a;
-      --border-highlight: #333f54;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-primary: #38bdf8;
-      --accent-secondary: #818cf8;
-      --accent-glow: rgba(56, 189, 248, 0.25);
-      --accent-text-contrast: #040812;
-      --led-readout: #38bdf8;
-      --panel-radius: 0.65rem;
     }
 
     * { box-sizing: border-box; }
@@ -90,15 +46,16 @@
       border: 1px solid var(--border-hairline);
       border-radius: var(--panel-radius);
       box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.85);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .hardware-well {
       background-color: var(--bg-well);
       border: 1px solid var(--border-hairline);
-      border-radius: calc(var(--panel-radius) * 0.75);
+      border-radius: calc(var(--panel-radius) * 0.7);
       box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9);
       color: var(--text-primary);
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: border-color 0.15s ease;
     }
 
     .hardware-well:focus-within,
@@ -106,21 +63,19 @@
     select.hardware-well:focus {
       outline: none;
       border-color: var(--accent-primary);
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--accent-glow);
     }
 
     .btn-convert-primary {
       background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-      color: var(--accent-text-contrast);
+      color: var(--accent-contrast);
       font-weight: 800;
-      box-shadow: 0 0 20px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      box-shadow: 0 0 20px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
     }
 
     .btn-convert-primary:hover:not(:disabled) {
       transform: translateY(-1px);
       filter: brightness(1.08);
-      box-shadow: 0 0 28px var(--accent-glow);
     }
 
     .btn-convert-primary:disabled {
@@ -129,75 +84,65 @@
       box-shadow: none;
     }
 
-    .pill-btn {
+    .tab-pill {
       background-color: var(--bg-well);
       border: 1px solid var(--border-hairline);
       color: var(--text-secondary);
-      border-radius: calc(var(--panel-radius) * 0.65);
+      border-radius: 0.5rem;
       transition: all 0.15s ease;
     }
 
-    .pill-btn:hover {
-      border-color: var(--border-highlight);
-      color: var(--text-primary);
-    }
-
-    .pill-btn.active {
+    .tab-pill.active {
       border-color: var(--accent-primary);
       color: var(--accent-primary);
       background-color: var(--bg-panel-elevated);
       box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    .drawer-collapse {
-      display: grid;
-      grid-template-rows: 0fr;
-      transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
     }
-    .drawer-collapse.open { grid-template-rows: 1fr; }
-    .drawer-inner { overflow: hidden; }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch {
+      border: 1px solid var(--border-highlight);
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body class="antialiased selection:bg-cyan-400 selection:text-black">
 
   <!-- ==========================================================================
-       MINIMALIST STUDIO HEADER
+       ULTRA-CLEAN HEADER (ONLY LOGO + ACCOUNT / STUDIO HUB)
        ========================================================================== -->
-  <header class="sticky top-0 z-30 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+  <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       
-      <!-- Brand + Active Rig Pill -->
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-sm border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-glow)]">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">
           VX
         </div>
-        <div class="flex items-center gap-2.5">
-          <h1 class="font-extrabold tracking-tight text-lg text-[var(--text-primary)]">VNTEX</h1>
-          <span id="activeRigHeaderBadge" class="hidden sm:inline-flex items-center gap-1.5 font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--led-readout)]">
-            <i class="fa-solid fa-headphones-simple"></i>
-            <span id="activeRigHeaderText">Standard Studio</span>
-          </span>
-        </div>
+        <span class="font-extrabold tracking-tight text-base text-[var(--text-primary)]">VNTEX</span>
+        <span id="activeRigBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--accent-primary)]"></span>
       </div>
 
-      <!-- 3 Clean User Actions: Batch Tools, My Crate, Profile/Setup -->
+      <!-- Right Side: Pro Studio Hub (Locked until logged in) + Account Button -->
       <div class="flex items-center gap-2">
-        <button id="openAutomationBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition">
-          <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-primary)]"></i>
-          <span class="hidden sm:inline">Batch Tools</span>
+        <button id="openStudioHubBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
+          <i id="studioHubLockIcon" class="fa-solid fa-lock text-[10px] text-[var(--text-muted)]"></i>
+          <span>Studio Hub</span>
+          <span class="hidden sm:inline text-[10px] font-mono-tech text-[var(--text-secondary)]">(Rig • Automation • Themes)</span>
         </button>
 
-        <button id="openCloudLibraryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition">
-          <i class="fa-solid fa-layer-group text-[var(--accent-primary)]"></i>
-          <span>My Crate</span>
-          <span id="libraryCountBadge" class="font-mono-tech text-[10px] px-1.5 rounded bg-[var(--bg-panel-elevated)] text-[var(--led-readout)]">0</span>
-        </button>
-
-        <button id="openAuthProfileBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
-          <span id="headerUserAvatar" class="w-5 h-5 rounded-full bg-[var(--bg-panel-elevated)] flex items-center justify-center font-mono-tech text-[10px] font-bold text-[var(--accent-primary)]">
-            <i class="fa-regular fa-user"></i>
-          </span>
-          <span id="headerUserName" class="max-w-[90px] truncate">Sign In</span>
+        <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
+          <i class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
+          <span id="headerAccountLabel">Sign In</span>
         </button>
       </div>
 
@@ -205,491 +150,457 @@
   </header>
 
   <!-- ==========================================================================
-       STREAMLINED SINGLE-COLUMN WORKSPACE
+       MAIN WORKSPACE (1. DROPZONE FIRST -> 2. CONSOLIDATED BAR -> 3. QUEUE)
        ========================================================================== -->
-  <main class="max-w-5xl mx-auto px-4 py-6 space-y-5">
+  <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
-    <!-- 1. COMPACT PRESET & FORMAT BAR -->
-    <section class="studio-panel p-4 space-y-3">
-      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        
-        <!-- 4 One-Click Workflow Presets -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1" id="presetBar">
-          <button type="button" data-preset="cdj-rekordbox" class="pill-btn active py-2.5 px-3 text-left flex flex-col justify-between">
-            <div class="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
-              <span>💽 CDJ / DJ</span>
-              <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">320k</span>
-            </div>
-            <span class="text-[10px] text-[var(--text-secondary)] truncate">MP3 • ID3v2.3 Safe</span>
-          </button>
-
-          <button type="button" data-preset="fl-daw" class="pill-btn py-2.5 px-3 text-left flex flex-col justify-between">
-            <div class="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
-              <span>🎹 DAW / Stem</span>
-              <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">32-Bit</span>
-            </div>
-            <span class="text-[10px] text-[var(--text-secondary)] truncate">WAV • 48 kHz Float</span>
-          </button>
-
-          <button type="button" data-preset="master-hifi" class="pill-btn py-2.5 px-3 text-left flex flex-col justify-between">
-            <div class="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
-              <span>💎 Master Hi-Fi</span>
-              <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">24/96</span>
-            </div>
-            <span class="text-[10px] text-[var(--text-secondary)] truncate">FLAC • Lossless</span>
-          </button>
-
-          <button type="button" data-preset="fast-web" class="pill-btn py-2.5 px-3 text-left flex flex-col justify-between">
-            <div class="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
-              <span>⚡ Fast Web</span>
-              <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">128k</span>
-            </div>
-            <span class="text-[10px] text-[var(--text-secondary)] truncate">MP3 • Quick Share</span>
-          </button>
-        </div>
-
-        <!-- Output Format Dropdown + Advanced Settings Toggle -->
-        <div class="flex items-center gap-2 shrink-0">
-          <div class="hardware-well px-3 py-2 flex items-center gap-2 flex-1 sm:flex-initial">
-            <label for="formatSelect" class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Format:</label>
-            <select id="formatSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
-              <option value="mp3" class="bg-[#08080c] text-white">.MP3 (Universal)</option>
-              <option value="flac" class="bg-[#08080c] text-white">.FLAC (Lossless)</option>
-              <option value="wav" class="bg-[#08080c] text-white">.WAV (Uncompressed)</option>
-              <option value="aiff" class="bg-[#08080c] text-white">.AIFF (Apple / CDJ)</option>
-              <option value="m4a" class="bg-[#08080c] text-white">.M4A (AAC / Apple)</option>
-              <option value="ogg" class="bg-[#08080c] text-white">.OGG (Vorbis)</option>
-              <option value="opus" class="bg-[#08080c] text-white">.OPUS (Stream)</option>
-            </select>
-          </div>
-
-          <button id="toggleAdvancedDrawerBtn" type="button" class="hardware-well px-3 py-2.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition" title="Toggle Quality, Sample Rate & Channel Settings">
-            <i class="fa-solid fa-sliders text-[var(--accent-primary)]"></i>
-            <span class="hidden sm:inline">Advanced</span>
-            <i id="advancedDrawerChevron" class="fa-solid fa-chevron-down text-[10px] text-[var(--text-secondary)] transition-transform duration-200"></i>
-          </button>
-        </div>
-
+    <!-- 1. FILE DROPZONE (FIRST THING ON SCREEN) -->
+    <section id="dropzone" class="studio-panel p-7 sm:p-9 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition cursor-pointer text-center space-y-3">
+      <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
+      
+      <div class="w-12 h-12 rounded-2xl hardware-well mx-auto flex items-center justify-center text-[var(--accent-primary)] text-xl">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
       </div>
 
-      <!-- Collapsible Advanced DSP Controls (Hidden by default to prevent clutter) -->
-      <div id="advancedOptionsDrawer" class="drawer-collapse">
-        <div class="drawer-inner">
-          <div class="pt-3 mt-1 border-t border-[var(--border-hairline)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div id="bitrateControlWrapper" class="space-y-1">
-              <label for="bitrateSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Bitrate Quality</label>
-              <select id="bitrateSelect" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech">
-                <option value="320" selected>320 kbps CBR (Max)</option>
-                <option value="256">256 kbps CBR</option>
-                <option value="192">192 kbps CBR</option>
-                <option value="128">128 kbps CBR (Fast)</option>
-              </select>
-            </div>
+      <div class="space-y-1">
+        <h1 class="text-base sm:text-lg font-extrabold text-[var(--text-primary)]">
+          Drop Audio Files Here or Click to Browse
+        </h1>
+        <p class="text-xs text-[var(--text-secondary)]">
+          MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Automatic Cover Art &amp; Metadata Preservation
+        </p>
+      </div>
 
-            <div id="bitDepthControlWrapper" class="space-y-1 hidden">
-              <label for="bitDepthSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Bit Depth</label>
-              <select id="bitDepthSelect" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech">
-                <option value="16">16-Bit Standard</option>
-                <option value="24" selected>24-Bit Studio Master</option>
-                <option value="32">32-Bit IEEE Float</option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label for="sampleRateSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Sample Rate</label>
-              <select id="sampleRateSelect" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech">
-                <option value="44100" selected>44.1 kHz (Standard)</option>
-                <option value="48000">48.0 kHz (Studio)</option>
-                <option value="96000">96.0 kHz (Hi-Res)</option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label for="channelSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Channels</label>
-              <select id="channelSelect" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech">
-                <option value="2" selected>Stereo (2.0)</option>
-                <option value="1">Mono (1.0 Summed)</option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label for="artworkModeSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Cover Art &amp; Tags</label>
-              <select id="artworkModeSelect" class="hardware-well w-full px-3 py-2 text-xs font-mono-tech">
-                <option value="preserve-normalize" selected>Embed Cover Art + Tags (CDJ Safe)</option>
-                <option value="preserve-raw">Embed Raw Original Artwork</option>
-                <option value="strip-all">Strip All Tags &amp; Artwork</option>
-              </select>
-            </div>
-          </div>
-        </div>
+      <div class="pt-1 flex items-center justify-center gap-2">
+        <span class="btn-convert-primary px-4 py-2 rounded-lg text-xs font-mono-tech">
+          Select Audio Files
+        </span>
+        <button id="loadDemoBtn" type="button" class="hardware-well px-3 py-2 text-xs font-mono-tech text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition">
+          + Load 3 Demo Tracks
+        </button>
       </div>
     </section>
 
-    <!-- 2. UNIFIED DROPZONE & TRACK QUEUE PANEL -->
-    <section class="studio-panel p-4 sm:p-5 space-y-4">
-      
-      <!-- Drag & Drop Zone -->
-      <div id="dropzone" class="hardware-well p-6 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4">
-        <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
-        <div class="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
-          <div class="w-11 h-11 rounded-xl bg-[var(--bg-panel-elevated)] border border-[var(--border-highlight)] flex items-center justify-center text-[var(--accent-primary)] text-lg shrink-0">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
+    <!-- 2. SINGLE CONSOLIDATED CONTROL & CONVERT BAR -->
+    <section class="studio-panel p-3.5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        
+        <!-- Left: Preset & Output Format Selectors -->
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+          
+          <!-- Quick Preset Selector -->
+          <div class="hardware-well px-3 py-2 flex items-center gap-2">
+            <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Preset:</span>
+            <select id="presetSelect" class="bg-transparent text-xs font-bold text-[var(--text-primary)] focus:outline-none cursor-pointer">
+              <option value="cdj-rekordbox" class="bg-[#08080c] text-white">💽 CDJ / Rekordbox (320k MP3)</option>
+              <option value="fl-daw" class="bg-[#08080c] text-white">🎹 FL Studio / DAW (32-Bit WAV)</option>
+              <option value="master-hifi" class="bg-[#08080c] text-white">💎 Master Hi-Fi (24/96 FLAC)</option>
+              <option value="fast-web" class="bg-[#08080c] text-white">⚡ Fast Web (128k MP3)</option>
+              <option value="custom" class="bg-[#08080c] text-white">⚙️ Custom Settings</option>
+            </select>
           </div>
-          <div>
-            <h2 class="text-sm sm:text-base font-bold text-[var(--text-primary)]">
-              Drop Audio Files Here or Click to Browse
-            </h2>
-            <p id="liveConfigText" class="text-xs font-mono-tech text-[var(--led-readout)] mt-0.5">
-              Output: .MP3 • 320 kbps • 44.1 kHz • Cover Art &amp; Tags Preserved
-            </p>
+
+          <!-- Output Format Selector -->
+          <div class="hardware-well px-3 py-2 flex items-center gap-2">
+            <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Format:</span>
+            <select id="formatSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+              <option value="mp3" class="bg-[#08080c] text-white">.MP3</option>
+              <option value="flac" class="bg-[#08080c] text-white">.FLAC</option>
+              <option value="wav" class="bg-[#08080c] text-white">.WAV</option>
+              <option value="aiff" class="bg-[#08080c] text-white">.AIFF</option>
+              <option value="m4a" class="bg-[#08080c] text-white">.M4A</option>
+              <option value="ogg" class="bg-[#08080c] text-white">.OGG</option>
+              <option value="opus" class="bg-[#08080c] text-white">.OPUS</option>
+            </select>
           </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button id="loadDemoBtn" type="button" class="pill-btn px-3 py-2 text-xs font-mono-tech font-semibold hover:border-[var(--accent-primary)]" title="Load 3 sample tracks to test">
-            + Demo Tracks
+
+          <!-- Compact Advanced DSP Toggle Button -->
+          <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Advanced Quality & Sample Rate">
+            <i class="fa-solid fa-sliders"></i>
           </button>
-          <span class="btn-convert-primary px-4 py-2 rounded-lg text-xs font-mono-tech">
-            Browse Files
-          </span>
-        </div>
-      </div>
 
-      <!-- Track List Container -->
-      <div id="trackListContainer" class="space-y-2.5"></div>
-
-      <!-- Empty Queue Helper Text -->
-      <div id="emptyQueueState" class="py-4 text-center text-xs text-[var(--text-muted)] font-mono-tech">
-        Queue is empty — drop MP3, FLAC, WAV, AIFF, M4A, OGG, or OPUS files above.
-      </div>
-
-      <!-- Bottom Action Bar (Only active when files are loaded) -->
-      <div id="queueFooterBar" class="pt-3 border-t border-[var(--border-hairline)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div class="flex items-center justify-between sm:justify-start gap-3 text-xs font-mono-tech">
-          <span id="queueStatsBadge" class="text-[var(--led-readout)]">0 Tracks Loaded</span>
-          <span class="text-[var(--text-muted)]">•</span>
-          <span class="text-[var(--text-secondary)]">Naming: <strong id="namingPatternDisplay" class="text-[var(--text-primary)]">[Artist] - [Title]</strong></span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="clearQueueBtn" type="button" disabled class="hardware-well px-3 py-2.5 text-xs font-mono-tech text-rose-400 disabled:opacity-30 hover:border-rose-500/50 transition">
-            Clear
-          </button>
-          <button id="downloadZipBtn" type="button" disabled class="hardware-well px-4 py-2.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 disabled:opacity-30 hover:border-[var(--accent-primary)] transition">
+        <!-- Right: Convert Batch + ZIP Download -->
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button id="downloadZipBtn" type="button" disabled class="hardware-well px-3.5 py-2.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 disabled:opacity-30 hover:border-[var(--accent-primary)] transition">
             <i class="fa-solid fa-file-zipper text-[var(--accent-primary)]"></i>
-            <span>Download .ZIP</span>
+            <span>.ZIP</span>
           </button>
-          <button id="convertAllBtn" type="button" disabled class="btn-convert-primary flex-1 sm:flex-initial px-6 py-2.5 rounded-lg text-xs sm:text-sm font-mono-tech uppercase tracking-wider flex items-center justify-center gap-2">
+
+          <button id="convertAllBtn" type="button" disabled class="btn-convert-primary flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-mono-tech uppercase tracking-wider flex items-center justify-center gap-2">
             <i class="fa-solid fa-bolt"></i>
             <span id="convertBtnLabel">Convert Batch</span>
           </button>
         </div>
+
       </div>
 
+      <!-- Collapsible Granular Settings Row (Hidden unless gear icon clicked) -->
+      <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <div id="bitrateWrapper">
+          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bitrate</label>
+          <select id="bitrateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="320" selected>320 kbps CBR</option>
+            <option value="256">256 kbps CBR</option>
+            <option value="192">192 kbps CBR</option>
+            <option value="128">128 kbps CBR</option>
+          </select>
+        </div>
+
+        <div id="bitDepthWrapper" class="hidden">
+          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bit Depth</label>
+          <select id="bitDepthSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="16">16-Bit PCM</option>
+            <option value="24" selected>24-Bit Master</option>
+            <option value="32">32-Bit Float</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Sample Rate</label>
+          <select id="sampleRateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="44100" selected>44.1 kHz</option>
+            <option value="48000">48.0 kHz</option>
+            <option value="96000">96.0 kHz</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Channels</label>
+          <select id="channelSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="2" selected>Stereo (2.0)</option>
+            <option value="1">Mono (1.0)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Artwork &amp; Tags</label>
+          <select id="artworkModeSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="preserve-normalize" selected>Embed Art + Tags</option>
+            <option value="strip-all">Strip Metadata</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TRACK QUEUE (ONLY VISIBLE WHEN FILES ARE LOADED) -->
+    <section id="queueSection" class="studio-panel p-4 space-y-3 hidden">
+      <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-2.5 text-xs font-mono-tech">
+        <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
+        <button id="clearQueueBtn" type="button" class="text-[11px] text-rose-400 hover:underline">
+          Clear Queue
+        </button>
+      </div>
+      <div id="trackListContainer" class="space-y-2"></div>
     </section>
 
   </main>
 
   <!-- ==========================================================================
-       MODAL 1: USER PROFILE, HARDWARE RIG & UI SKIN SETTINGS
+       MODAL 1: ACCOUNT LOGIN / SIGN UP (UNLOCKS PRO STUDIO HUB)
        ========================================================================== -->
-  <div id="authProfileModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="studio-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
+  <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-[var(--accent-primary)]"></i>
-          <h3 class="text-sm font-bold text-[var(--text-primary)]">Studio Profile, Equipment Rig &amp; Interface Theme</h3>
-        </div>
-        <button id="closeAuthProfileModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+        <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Studio Account</h3>
+        <button id="closeAccountModalBtn" type="button" class="hardware-well w-7 h-7 flex items-center justify-center text-xs">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="p-5 overflow-y-auto space-y-5 text-xs">
-        
-        <!-- 1. UI Skin & Active Hardware Rig Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="hardware-well p-3 space-y-1.5">
-            <label for="skinSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--accent-primary)]">Interface Skin</label>
-            <select id="skinSelect" class="hardware-well w-full px-2.5 py-2 text-xs font-semibold">
-              <option value="theme-obsidian">Obsidian Black (OLED)</option>
-              <option value="theme-winamp">Winamp Brushed Metal</option>
-              <option value="theme-slate">Studio Slate Rack</option>
-            </select>
-          </div>
+      <!-- Logged Out Form -->
+      <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          Create a free account or sign in to unlock <strong>Custom UI Palettes</strong>, <strong>Hardware Rig Optimization</strong>, <strong>Batch Automation</strong>, and your <strong>Cloud Crate Library</strong>.
+        </p>
 
-          <div class="hardware-well p-3 space-y-1.5">
-            <label for="headerDeviceSelect" class="block text-[10px] font-mono-tech uppercase text-[var(--accent-primary)]">Active Hardware / Software Rig</label>
-            <select id="headerDeviceSelect" class="hardware-well w-full px-2.5 py-2 text-xs font-semibold"></select>
-          </div>
+        <button id="googleLoginBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-100 transition">
+          <i class="fa-brands fa-google text-rose-500"></i>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
+          <span class="flex-shrink mx-3 text-[10px] font-mono-tech uppercase text-[var(--text-muted)]">Or Email</span>
+          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
         </div>
 
-        <!-- 2. Account Sign-In / Signed-In Card -->
-        <div id="authLoggedOutView" class="hardware-well p-4 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h4 class="text-xs font-bold text-[var(--text-primary)]">Sign In to Sync Your Rig &amp; Cloud Crate</h4>
-              <p class="text-[11px] text-[var(--text-secondary)]">Saves your download history and links multi-format track variants.</p>
-            </div>
-            <button id="googleSignInBtn" type="button" class="py-2 px-3.5 rounded bg-white text-black font-bold text-xs flex items-center gap-2 hover:bg-gray-100 transition">
-              <i class="fa-brands fa-google text-rose-500"></i>
-              <span>Sign in with Google</span>
-            </button>
-          </div>
+        <form id="emailLoginForm" class="space-y-2.5">
+          <input id="loginNameInput" type="text" required placeholder="DJ / Producer Name (e.g. DJ Uno)" class="hardware-well w-full px-3 py-2 text-xs" />
+          <input id="loginEmailInput" type="email" required placeholder="Email Address" class="hardware-well w-full px-3 py-2 text-xs" />
+          <input id="loginPasswordInput" type="password" required placeholder="Password" class="hardware-well w-full px-3 py-2 text-xs" />
+          <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+            Sign In &amp; Unlock Studio Hub
+          </button>
+        </form>
+      </div>
 
-          <form id="emailAuthForm" class="pt-3 border-t border-[var(--border-hairline)] grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input id="authDisplayNameInput" type="text" placeholder="DJ / Producer Name" class="hardware-well px-2.5 py-2 text-xs" />
-            <input id="authEmailInput" type="email" required placeholder="Email Address" class="hardware-well px-2.5 py-2 text-xs" />
-            <div class="flex gap-1.5">
-              <input id="authPasswordInput" type="password" required placeholder="Password" class="hardware-well w-full px-2.5 py-2 text-xs" />
-              <button type="submit" class="btn-convert-primary px-3 py-2 rounded font-mono-tech text-[11px] shrink-0">Go</button>
-            </div>
-          </form>
-        </div>
-
-        <div id="authLoggedInView" class="hidden hardware-well p-4 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div id="profileModalAvatar" class="w-11 h-11 rounded-lg bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)] flex items-center justify-center font-mono-tech font-bold text-sm text-[var(--accent-primary)]">
-              UN
-            </div>
-            <div>
-              <div id="profileModalName" class="text-sm font-bold text-[var(--text-primary)]">DJ Uno</div>
-              <div id="profileModalEmail" class="text-[11px] font-mono-tech text-[var(--text-secondary)]">uno@vntex.studio</div>
-              <div id="profileModalStats" class="text-[10px] font-mono-tech text-[var(--led-readout)] mt-0.5"></div>
-            </div>
+      <!-- Logged In Summary -->
+      <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
+        <div class="hardware-well p-3.5 flex items-center justify-between">
+          <div>
+            <div id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></div>
+            <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)]"></div>
+            <div class="text-[10px] font-mono-tech text-emerald-400 mt-1">● Pro Studio Hub Unlocked</div>
           </div>
-          <button id="signOutBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-rose-400">
+          <button id="logoutBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-rose-400">
             Sign Out
           </button>
         </div>
 
-        <!-- 3. Equipment & Software Rig Selector Grid -->
-        <div class="space-y-2">
-          <label class="block font-mono-tech uppercase text-[10px] text-[var(--text-secondary)]">
-            Select Your Gear to Auto-Tune Export Formats &amp; Tagging
-          </label>
-          <div id="deviceRegistryGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-        </div>
-
-      </div>
-
-      <div class="px-5 py-3 border-t border-[var(--border-hairline)] flex items-center justify-between bg-[var(--bg-void)]">
-        <span id="authModalToast" class="text-xs font-mono-tech text-emerald-400"></span>
-        <button id="doneAuthModalBtn" type="button" class="hardware-well px-4 py-1.5 text-xs font-semibold">Done</button>
+        <button id="goToStudioHubFromAccountBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+          Open Studio Hub (Themes, Rig &amp; Automation)
+        </button>
       </div>
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 2: MY CRATE (CLOUD LIBRARY VARIANTS & DOWNLOAD HISTORY)
+       MODAL 2: CONSOLIDATED STUDIO HUB (ONLY ACCESSIBLE TO SIGNED-IN USERS)
        ========================================================================== -->
-  <div id="cloudLibraryModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="studio-panel w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-layer-group text-[var(--accent-primary)]"></i>
-          <h3 class="text-sm font-bold text-[var(--text-primary)]">My Cloud Crate &amp; Download History</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="tabCloudMastersBtn" type="button" class="pill-btn active px-3 py-1 text-xs font-mono-tech font-bold">
-            Library (<span id="masterTabCount">0</span>)
+  <div id="studioHubModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
+      
+      <!-- Modal Header + Consolidated Navigation Tabs -->
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" data-hub-tab="themes" class="hub-tab-btn tab-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
+            <i class="fa-solid fa-palette mr-1"></i>UI &amp; Palettes
           </button>
-          <button id="tabDownloadHistoryBtn" type="button" class="pill-btn px-3 py-1 text-xs font-mono-tech font-bold">
-            History (<span id="historyTabCount">0</span>)
+          <button type="button" data-hub-tab="rig" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            <i class="fa-solid fa-headphones-simple mr-1"></i>Device Rig
           </button>
-          <button id="closeCloudLibraryBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" data-hub-tab="automation" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Batch Automation
           </button>
-        </div>
-      </div>
-
-      <div class="px-5 py-2.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2 text-xs">
-        <input id="librarySearchInput" type="text" placeholder="Search tracks, keys, or devices..." class="hardware-well px-3 py-1.5 text-xs flex-1 max-w-xs" />
-        <div class="flex items-center gap-2">
-          <select id="libraryFormatFilter" class="hardware-well px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="all">All Formats</option>
-            <option value="mp3">.MP3</option>
-            <option value="flac">.FLAC</option>
-            <option value="wav">.WAV</option>
-            <option value="aiff">.AIFF</option>
-            <option value="m4a">.M4A</option>
-            <option value="ogg">.OGG</option>
-            <option value="opus">.OPUS</option>
-          </select>
-          <button id="clearUserHistoryBtn" type="button" class="hardware-well px-2.5 py-1.5 text-[11px] font-mono-tech text-rose-400">
-            Clear
+          <button type="button" data-hub-tab="crate" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            <i class="fa-solid fa-layer-group mr-1"></i>My Crate (<span id="hubCrateCount">0</span>)
           </button>
         </div>
-      </div>
-
-      <div class="p-5 overflow-y-auto flex-1 space-y-3 text-xs">
-        <div id="cloudMastersView" class="space-y-2.5"></div>
-        <div id="downloadHistoryView" class="hidden overflow-x-auto">
-          <table class="w-full text-left border-collapse font-mono-tech text-[11px]">
-            <thead>
-              <tr class="border-b border-[var(--border-highlight)] text-[var(--accent-primary)]">
-                <th class="py-2 px-2.5">Time</th>
-                <th class="py-2 px-2.5">Track</th>
-                <th class="py-2 px-2.5">BPM / Key</th>
-                <th class="py-2 px-2.5">Format</th>
-                <th class="py-2 px-2.5">Target Rig</th>
-                <th class="py-2 px-2.5">Size</th>
-              </tr>
-            </thead>
-            <tbody id="downloadHistoryTableBody" class="divide-y divide-[var(--border-hairline)] text-[var(--text-secondary)]"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL 3: BATCH TOOLS (FILENAME TOKENS, CLEANUP MACROS & GLOBAL STAMPING)
-       ========================================================================== -->
-  <div id="automationModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="studio-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-primary)]"></i>
-          <h3 class="text-sm font-bold text-[var(--text-primary)]">Batch Naming, Text Cleanup &amp; Tag Stamping</h3>
-        </div>
-        <button id="closeAutomationModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+        <button id="closeStudioHubBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="p-5 overflow-y-auto space-y-5 text-xs">
-        <!-- 1. Naming Pattern -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
-            <span id="templateLivePreview" class="font-mono-tech text-[11px] text-[var(--led-readout)]"></span>
-          </div>
-          <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well w-full px-3 py-2 font-mono-tech text-xs" />
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" data-token="[Track#]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Track#]</button>
-            <button type="button" data-token="[Artist]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Artist]</button>
-            <button type="button" data-token="[Title]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Title]</button>
-            <button type="button" data-token="[BPM]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[BPM]</button>
-            <button type="button" data-token="[Key]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Key]</button>
-            <button type="button" data-token="[Device]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Device]</button>
-            <button type="button" data-token="[Original]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Original]</button>
-          </div>
-        </div>
+      <!-- Modal Content Area -->
+      <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
 
-        <!-- 2. Quick Cleanup Macros -->
-        <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
-          <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">One-Click Batch Cleanup</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button type="button" data-cleanup="strip-underscores" class="cleanup-macro-btn hardware-well p-2 text-center font-semibold hover:border-[var(--accent-primary)]">Strip Underscores</button>
-            <button type="button" data-cleanup="title-case" class="cleanup-macro-btn hardware-well p-2 text-center font-semibold hover:border-[var(--accent-primary)]">Title Case Text</button>
-            <button type="button" data-cleanup="strip-junk" class="cleanup-macro-btn hardware-well p-2 text-center font-semibold hover:border-[var(--accent-primary)]">Strip (Official/HD)</button>
-            <button type="button" data-cleanup="auto-number" class="cleanup-macro-btn hardware-well p-2 text-center font-semibold hover:border-[var(--accent-primary)]">Auto-Number 01..N</button>
-          </div>
-        </div>
-
-        <!-- 3. Global Batch Tag & Artwork Stamp -->
-        <div class="space-y-2.5 pt-3 border-t border-[var(--border-hairline)]">
-          <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Stamp Global Tags Across All Loaded Files</label>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <input id="batchArtistInput" type="text" placeholder="Global Artist" class="hardware-well px-2.5 py-2 text-xs" />
-            <input id="batchAlbumInput" type="text" placeholder="Global Album" class="hardware-well px-2.5 py-2 text-xs" />
-            <input id="batchGenreInput" type="text" placeholder="Global Genre" class="hardware-well px-2.5 py-2 text-xs" />
-            <input id="batchYearInput" type="text" placeholder="Year (2026)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
-            <input id="batchBpmInput" type="text" placeholder="BPM (128)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
-            <input id="batchKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
-          </div>
-          <div class="flex items-center justify-between gap-2 hardware-well p-2.5">
-            <div class="flex items-center gap-2.5">
-              <img id="batchCoverPreview" src="" alt="" class="w-9 h-9 rounded object-cover hidden" />
-              <span id="batchCoverStatus" class="text-[11px] text-[var(--text-secondary)]">Optional: Stamp cover art across batch</span>
-            </div>
-            <div class="flex gap-2">
-              <input id="batchCoverInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
-              <button id="selectBatchCoverBtn" type="button" class="hardware-well px-2.5 py-1.5 font-mono-tech text-[11px]">Select Image</button>
-              <button id="applyBatchStampBtn" type="button" class="btn-convert-primary px-3 py-1.5 rounded font-mono-tech text-[11px]">Apply Stamp</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="px-5 py-3 border-t border-[var(--border-hairline)] flex items-center justify-between bg-[var(--bg-void)]">
-        <span id="automationToast" class="text-xs font-mono-tech text-emerald-400"></span>
-        <button id="doneAutomationModalBtn" type="button" class="hardware-well px-4 py-1.5 text-xs font-semibold">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL 4: PER-TRACK TAG & COVER ART EDITOR
-       ========================================================================== -->
-  <div id="tagEditorModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="studio-panel w-full max-w-lg overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
-        <h3 class="text-sm font-bold text-[var(--text-primary)]">Edit Track Tags &amp; Cover Art</h3>
-        <button id="closeTagEditorBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div class="p-5 space-y-4 text-xs">
-        <div class="flex items-center gap-4 hardware-well p-3">
-          <img id="editTrackCoverImg" src="" alt="" class="w-20 h-20 rounded-lg object-cover border border-[var(--border-highlight)] shrink-0" />
+        <!-- TAB 1: UI SKINS & CUSTOM PALETTE CREATOR -->
+        <div id="hubTab-themes" class="hub-tab-pane space-y-5">
           <div class="space-y-2">
-            <div id="editCoverDimensions" class="font-mono-tech text-[11px] text-[var(--led-readout)]"></div>
-            <div class="flex flex-wrap gap-2 items-center">
-              <input id="editCoverFileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
-              <button id="changeTrackCoverBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-[11px]">Replace Cover</button>
-              <label class="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] cursor-pointer">
-                <input id="applyCoverToBatchCheckbox" type="checkbox" class="accent-cyan-400" />
-                <span>Apply to all</span>
-              </label>
+            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Built-In Studio Skins</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <button type="button" data-builtin-skin="obsidian" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+                <div class="font-bold text-[var(--text-primary)]">Obsidian OLED</div>
+                <div class="text-[10px] text-[var(--text-secondary)]">Pitch-black &amp; Neon Cyan</div>
+              </button>
+              <button type="button" data-builtin-skin="winamp" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+                <div class="font-bold text-[#00ff41]">Winamp Brushed Metal</div>
+                <div class="text-[10px] text-[var(--text-secondary)]">Charcoal &amp; Retro LED Green</div>
+              </button>
+              <button type="button" data-builtin-skin="slate" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+                <div class="font-bold text-[#38bdf8]">Studio Slate Rack</div>
+                <div class="text-[10px] text-[var(--text-secondary)]">Dark Console &amp; Sky Blue</div>
+              </button>
             </div>
           </div>
+
+          <!-- Custom UI Palette Studio -->
+          <div class="space-y-3 pt-4 border-t border-[var(--border-hairline)]">
+            <div class="flex items-center justify-between">
+              <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Custom UI Palette Creator</label>
+              <span class="text-[11px] text-[var(--text-secondary)]">Live preview updates as you pick colors</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="hardware-well p-2.5 flex items-center gap-2.5">
+                <input id="colorVoidInput" type="color" value="#030305" />
+                <div>
+                  <div class="font-bold text-[11px]">Background</div>
+                  <div id="colorVoidHex" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">#030305</div>
+                </div>
+              </div>
+              <div class="hardware-well p-2.5 flex items-center gap-2.5">
+                <input id="colorPanelInput" type="color" value="#08080c" />
+                <div>
+                  <div class="font-bold text-[11px]">Panels</div>
+                  <div id="colorPanelHex" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">#08080c</div>
+                </div>
+              </div>
+              <div class="hardware-well p-2.5 flex items-center gap-2.5">
+                <input id="colorAccent1Input" type="color" value="#00f2fe" />
+                <div>
+                  <div class="font-bold text-[11px]">Primary Accent</div>
+                  <div id="colorAccent1Hex" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">#00f2fe</div>
+                </div>
+              </div>
+              <div class="hardware-well p-2.5 flex items-center gap-2.5">
+                <input id="colorAccent2Input" type="color" value="#4facfe" />
+                <div>
+                  <div class="font-bold text-[11px]">Secondary Glow</div>
+                  <div id="colorAccent2Hex" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">#4facfe</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <input id="customPaletteNameInput" type="text" placeholder="Palette Name (e.g. Crimson Booth, Cyberpunk Gold)" class="hardware-well flex-1 px-3 py-2 text-xs" />
+              <button id="saveCustomPaletteBtn" type="button" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">
+                Save Custom Palette
+              </button>
+            </div>
+
+            <!-- Saved User Palettes List -->
+            <div id="savedPalettesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2"></div>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
+
+        <!-- TAB 2: HARDWARE & SOFTWARE DEVICE RIG -->
+        <div id="hubTab-rig" class="hub-tab-pane hidden space-y-3">
+          <p class="text-[var(--text-secondary)]">
+            Select your active hardware or software target. VNTEX will automatically tune conversion bitrates, sample rates, and tag headers for your gear.
+          </p>
+          <div id="deviceRigGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- TAB 3: BATCH AUTOMATION & NAMING -->
+        <div id="hubTab-automation" class="hub-tab-pane hidden space-y-4">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
+              <span id="templatePreviewText" class="font-mono-tech text-[11px] text-[var(--accent-primary)]"></span>
+            </div>
+            <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well w-full px-3 py-2 font-mono-tech text-xs" />
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" data-token="[Track#]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Track#]</button>
+              <button type="button" data-token="[Artist]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Artist]</button>
+              <button type="button" data-token="[Title]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Title]</button>
+              <button type="button" data-token="[BPM]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[BPM]</button>
+              <button type="button" data-token="[Key]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Key]</button>
+              <button type="button" data-token="[Device]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Device]</button>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Quick Batch Cleanup</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" data-cleanup="strip-underscores" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Strip Underscores</button>
+              <button type="button" data-cleanup="title-case" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Title Case Info</button>
+              <button type="button" data-cleanup="strip-junk" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Remove (Official/HD)</button>
+              <button type="button" data-cleanup="auto-number" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Number Tracks 01..N</button>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Stamp Global Tags Across Queue</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input id="batchArtistInput" type="text" placeholder="Artist" class="hardware-well px-2.5 py-2 text-xs" />
+              <input id="batchAlbumInput" type="text" placeholder="Album" class="hardware-well px-2.5 py-2 text-xs" />
+              <input id="batchBpmInput" type="text" placeholder="BPM" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
+              <input id="batchKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
+            </div>
+            <button id="applyBatchStampBtn" type="button" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">
+              Stamp Tags Across All Loaded Files
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 4: CLOUD CRATE & DOWNLOAD HISTORY -->
+        <div id="hubTab-crate" class="hub-tab-pane hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--text-secondary)]">Tracks converted in multiple formats are linked under a single master record.</span>
+            <button id="clearCrateHistoryBtn" type="button" class="hardware-well px-2.5 py-1 text-[11px] font-mono-tech text-rose-400">Clear History</button>
+          </div>
+          <div id="crateMastersList" class="space-y-2.5"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: PER-TRACK TAG EDITOR
+       ========================================================================== -->
+  <div id="tagEditorModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-[var(--text-primary)]">Edit Track Metadata &amp; Artwork</h3>
+        <button id="closeTagEditorBtn" type="button" class="hardware-well w-7 h-7 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-3.5 text-xs">
+        <div class="flex items-center gap-3.5 hardware-well p-3">
+          <img id="editTrackCoverImg" src="" alt="" class="w-16 h-16 rounded-lg object-cover border border-[var(--border-highlight)] shrink-0" />
+          <div class="space-y-1.5">
+            <input id="editCoverFileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
+            <button id="changeTrackCoverBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-[11px]">Replace Artwork</button>
+            <label class="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] cursor-pointer">
+              <input id="applyCoverToBatchCheckbox" type="checkbox" class="accent-cyan-400" />
+              <span>Apply cover to entire batch</span>
+            </label>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
           <input id="editTitleInput" type="text" placeholder="Title" class="hardware-well px-3 py-2 text-xs col-span-2" />
           <input id="editArtistInput" type="text" placeholder="Artist" class="hardware-well px-3 py-2 text-xs" />
           <input id="editAlbumInput" type="text" placeholder="Album" class="hardware-well px-3 py-2 text-xs" />
-          <input id="editGenreInput" type="text" placeholder="Genre" class="hardware-well px-3 py-2 text-xs" />
-          <input id="editYearInput" type="text" placeholder="Year" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
           <input id="editBpmInput" type="text" placeholder="BPM" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
           <input id="editKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-3 py-2 text-xs font-mono-tech" />
         </div>
       </div>
       <div class="px-5 py-3 border-t border-[var(--border-hairline)] flex justify-end gap-2 bg-[var(--bg-void)]">
-        <button id="cancelTagEditorBtn" type="button" class="hardware-well px-4 py-1.5 text-xs">Cancel</button>
-        <button id="saveTagEditorBtn" type="button" class="btn-convert-primary px-4 py-1.5 rounded text-xs font-mono-tech">Save</button>
+        <button id="saveTagEditorBtn" type="button" class="btn-convert-primary px-4 py-1.5 rounded text-xs font-mono-tech">Save Changes</button>
       </div>
     </div>
   </div>
 
   <script>
-    const DEVICE_PROFILES = [
-      { id: 'ddj-grv6', name: 'Pioneer DDJ-GRV6', category: 'DJ Controller', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, artworkMode: 'preserve-normalize', specSummary: '320k MP3 • 44.1kHz • ID3v2.3' },
-      { id: 'ddj-flx4', name: 'Pioneer DDJ-FLX4', category: 'DJ Controller', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, artworkMode: 'preserve-normalize', specSummary: '320k MP3 • 44.1kHz • Rekordbox Safe' },
-      { id: 'cdj-3000', name: 'Pioneer CDJ-3000', category: 'Club Deck', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, artworkMode: 'preserve-normalize', specSummary: '24-Bit AIFF • Full Screen Artwork' },
-      { id: 'logic-pro-x', name: 'Apple Logic Pro X', category: 'DAW Studio', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, artworkMode: 'preserve-normalize', specSummary: '24-Bit/48kHz AIFF Master' },
-      { id: 'fl-studio', name: 'FL Studio / DAW', category: 'DAW Studio', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, artworkMode: 'preserve-normalize', specSummary: '32-Bit Float WAV • Zero Clipping' },
-      { id: 'yamaha-hs-ref', name: 'Studio Reference Hi-Fi', category: 'Monitoring', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, artworkMode: 'preserve-raw', specSummary: '24-Bit/96kHz Lossless FLAC' }
-    ];
-
-    const PRESET_DEFINITIONS = {
-      'cdj-rekordbox': { label: 'CDJ / DJ', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, artworkMode: 'preserve-normalize' },
-      'fl-daw': { label: 'DAW / Stem', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, artworkMode: 'preserve-normalize' },
-      'master-hifi': { label: 'Master Hi-Fi', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, artworkMode: 'preserve-normalize' },
-      'fast-web': { label: 'Fast Web', format: 'mp3', bitrate: 128, bitDepth: 16, sampleRate: 44100, channels: 2, artworkMode: 'preserve-normalize' }
-    };
-
+    /**************************************************************************
+     * 1. SHARED STORAGE KEYS (SYNCED WITH STANDALONE ADMIN.HTML)
+     **************************************************************************/
     const STORAGE_KEYS = {
       USER: 'vntex_auth_user_v3',
       USERS_REGISTRY: 'vntex_users_registry_v3',
       LIBRARY: 'vntex_cloud_library_v3',
       HISTORY: 'vntex_download_history_v3',
-      OWNED_DEVICES: 'vntex_owned_devices_v3',
       ACTIVE_DEVICE: 'vntex_active_device_v3',
-      FIREBASE_CONFIG: 'vntex_firebase_config_v3'
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v3',
+      ACTIVE_PALETTE: 'vntex_active_palette_v3'
+    };
+
+    const BUILTIN_PALETTES = {
+      obsidian: { name: 'Obsidian OLED', void: '#030305', panel: '#08080c', accent1: '#00f2fe', accent2: '#4facfe' },
+      winamp:   { name: 'Winamp Metal',  void: '#121316', panel: '#22252c', accent1: '#00ff41', accent2: '#ffb000' },
+      slate:    { name: 'Studio Slate',  void: '#0b0e14', panel: '#131822', accent1: '#38bdf8', accent2: '#818cf8' }
+    };
+
+    const DEVICE_PROFILES = [
+      { id: 'none', name: 'Standard Studio (No Lock)', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: 'Manual preset & format control' },
+      { id: 'ddj-grv6', name: 'Pioneer DDJ-GRV6', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320k CBR MP3 • 44.1kHz • ID3v2.3 Locked' },
+      { id: 'ddj-flx4', name: 'Pioneer DDJ-FLX4', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320k CBR MP3 • Rekordbox Safe Tags' },
+      { id: 'cdj-3000', name: 'Pioneer CDJ-3000 Club', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit/48kHz AIFF • Full Screen Artwork' },
+      { id: 'logic-pro-x', name: 'Apple Logic Pro X', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit/48kHz Apple AIFF Master' },
+      { id: 'fl-studio', name: 'FL Studio / DAW Stem', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, desc: '32-Bit Float WAV • Zero Clipping' },
+      { id: 'yamaha-hs', name: 'Yamaha HS Reference Hi-Fi', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, desc: '24-Bit/96kHz Lossless FLAC' }
+    ];
+
+    const PRESET_DEFINITIONS = {
+      'cdj-rekordbox': { format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2 },
+      'fl-daw':        { format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2 },
+      'master-hifi':   { format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2 },
+      'fast-web':      { format: 'mp3', bitrate: 128, bitDepth: 16, sampleRate: 44100, channels: 2 }
     };
 
     const state = {
+      user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null'),
+      usersRegistry: JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]'),
+      cloudLibrary: JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}'),
+      downloadHistory: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]'),
+      customPalettes: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PALETTES) || '[]'),
+      activePalette: JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVE_PALETTE) || 'null'),
+      activeDeviceId: localStorage.getItem(STORAGE_KEYS.ACTIVE_DEVICE) || 'none',
       activePreset: 'cdj-rekordbox',
       outputFormat: 'mp3',
       bitrate: 320,
@@ -698,20 +609,8 @@
       channels: 2,
       artworkMode: 'preserve-normalize',
       filenameTemplate: '[Artist] - [Title]',
-      activeDeviceId: localStorage.getItem(STORAGE_KEYS.ACTIVE_DEVICE) || 'none',
-      ownedDevices: JSON.parse(localStorage.getItem(STORAGE_KEYS.OWNED_DEVICES) || '["ddj-grv6","ddj-flx4","logic-pro-x"]'),
-      user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null'),
-      usersRegistry: JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]'),
-      cloudLibrary: JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}'),
-      downloadHistory: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]'),
-      firebaseConnected: false,
-      firestoreDb: null,
-      firebaseAuth: null,
       tracks: [],
       editingTrackId: null,
-      batchStampCoverBytes: null,
-      batchStampCoverMime: null,
-      batchStampCoverUrl: null,
       audioCtx: null,
       currentlyPlayingId: null,
       activeSourceNode: null,
@@ -720,306 +619,234 @@
       playbackRaf: null
     };
 
-    function savePersistentState() {
+    function saveState() {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
       localStorage.setItem(STORAGE_KEYS.USERS_REGISTRY, JSON.stringify(state.usersRegistry));
       localStorage.setItem(STORAGE_KEYS.LIBRARY, JSON.stringify(state.cloudLibrary));
       localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.downloadHistory));
-      localStorage.setItem(STORAGE_KEYS.OWNED_DEVICES, JSON.stringify(state.ownedDevices));
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_PALETTES, JSON.stringify(state.customPalettes));
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_PALETTE, JSON.stringify(state.activePalette));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_DEVICE, state.activeDeviceId);
     }
 
-    function tryInitializeFirebase() {
-      const rawConfig = localStorage.getItem(STORAGE_KEYS.FIREBASE_CONFIG);
-      if (!rawConfig) return false;
-      try {
-        const config = JSON.parse(rawConfig);
-        if (!config.apiKey || !config.projectId) return false;
-        if (!firebase.apps.length) firebase.initializeApp(config);
-        state.firebaseAuth = firebase.auth();
-        state.firestoreDb = firebase.firestore();
-        state.firebaseConnected = true;
-        return true;
-      } catch {
-        return false;
+    /**************************************************************************
+     * 2. CUSTOM UI PALETTE ENGINE
+     **************************************************************************/
+    function applyPaletteColors(p) {
+      if (!p) return;
+      const root = document.documentElement;
+      root.style.setProperty('--bg-void', p.void);
+      root.style.setProperty('--bg-panel', p.panel);
+      root.style.setProperty('--accent-primary', p.accent1);
+      root.style.setProperty('--accent-secondary', p.accent2);
+      root.style.setProperty('--accent-glow', hexToRgba(p.accent1, 0.25));
+
+      document.getElementById('colorVoidInput').value = p.void;
+      document.getElementById('colorPanelInput').value = p.panel;
+      document.getElementById('colorAccent1Input').value = p.accent1;
+      document.getElementById('colorAccent2Input').value = p.accent2;
+
+      document.getElementById('colorVoidHex').textContent = p.void;
+      document.getElementById('colorPanelHex').textContent = p.panel;
+      document.getElementById('colorAccent1Hex').textContent = p.accent1;
+      document.getElementById('colorAccent2Hex').textContent = p.accent2;
+
+      state.activePalette = p;
+      saveState();
+      state.tracks.forEach((t) => drawTrackWaveform(t, t.playProgress || 0));
+    }
+
+    function hexToRgba(hex, alpha) {
+      const h = String(hex || '#00f2fe').replace('#', '');
+      const r = parseInt(h.substring(0, 2), 16) || 0;
+      const g = parseInt(h.substring(2, 4), 16) || 242;
+      const b = parseInt(h.substring(4, 6), 16) || 254;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function renderSavedPalettes() {
+      const container = document.getElementById('savedPalettesContainer');
+      if (!container) return;
+      if (!state.customPalettes.length) {
+        container.innerHTML = `<div class="col-span-3 text-[11px] text-[var(--text-muted)]">No custom palettes saved yet. Pick colors above and click Save.</div>`;
+        return;
       }
-    }
+      container.innerHTML = state.customPalettes.map((p, idx) => `
+        <div class="hardware-well p-2.5 flex items-center justify-between gap-2">
+          <button type="button" data-apply-custom-palette="${idx}" class="flex items-center gap-2 text-left flex-1">
+            <span class="w-4 h-4 rounded-full border border-white/20" style="background: linear-gradient(135deg, ${p.accent1}, ${p.accent2})"></span>
+            <span class="font-bold text-xs truncate">${escapeHtml(p.name)}</span>
+          </button>
+          <button type="button" data-delete-custom-palette="${idx}" class="text-[var(--text-muted)] hover:text-rose-400 text-xs px-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
 
-    function registerUserInTelemetry(userObj) {
-      if (!userObj || !userObj.email) return;
-      const idx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === userObj.email.toLowerCase());
-      if (idx >= 0) state.usersRegistry[idx] = { ...state.usersRegistry[idx], ...userObj };
-      else state.usersRegistry.push(userObj);
-      savePersistentState();
-      if (state.firebaseConnected && state.firestoreDb) {
-        state.firestoreDb.collection('vntex_users').doc(userObj.uid || userObj.email).set(userObj, { merge: true }).catch(() => {});
-      }
-    }
-
-    function getMasterTrackKey(artist, title) {
-      const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return `${norm(artist || 'unknown')}__${norm(title || 'untitled')}`;
-    }
-
-    function recordTrackConversionToCloud(track, blobSize, ext) {
-      const nowIso = new Date().toISOString();
-      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
-      const targetDeviceName = activeDev ? activeDev.name : 'Standard Studio';
-      const presetLabel = PRESET_DEFINITIONS[state.activePreset]?.label || 'Custom';
-      const isLossless = ['flac', 'wav', 'aiff'].includes(ext);
-      const qualitySpec = isLossless
-        ? `${state.bitDepth}-Bit • ${(state.sampleRate / 1000).toFixed(1)}kHz`
-        : `${state.bitrate}kbps • ${(state.sampleRate / 1000).toFixed(1)}kHz`;
-
-      const logEntry = {
-        id: 'log_' + Math.random().toString(36).slice(2, 10),
-        timestamp: nowIso,
-        userEmail: state.user ? state.user.email : 'guest@local.studio',
-        trackTitle: track.tags.title || 'Untitled',
-        artist: track.tags.artist || 'Unknown Artist',
-        album: track.tags.album || 'VNTEX Session',
-        bpm: track.tags.bpm || '128',
-        key: track.tags.key || '8A',
-        outputFormat: ext.toUpperCase(),
-        qualitySpec,
-        presetUsed: presetLabel,
-        targetDevice: targetDeviceName,
-        fileSize: blobSize || 0
-      };
-      state.downloadHistory.unshift(logEntry);
-
-      const masterKey = getMasterTrackKey(track.tags.artist, track.tags.title);
-      if (!state.cloudLibrary[masterKey]) {
-        state.cloudLibrary[masterKey] = {
-          masterKey,
-          title: track.tags.title || 'Untitled',
-          artist: track.tags.artist || 'Unknown Artist',
-          album: track.tags.album || 'VNTEX Session',
-          bpm: track.tags.bpm || '128',
-          key: track.tags.key || '8A',
-          updatedAt: nowIso,
-          variants: []
+      container.querySelectorAll('[data-apply-custom-palette]').forEach((btn) => {
+        btn.onclick = () => applyPaletteColors(state.customPalettes[Number(btn.getAttribute('data-apply-custom-palette'))]);
+      });
+      container.querySelectorAll('[data-delete-custom-palette]').forEach((btn) => {
+        btn.onclick = () => {
+          state.customPalettes.splice(Number(btn.getAttribute('data-delete-custom-palette')), 1);
+          saveState();
+          renderSavedPalettes();
         };
-      }
-
-      const masterRecord = state.cloudLibrary[masterKey];
-      masterRecord.updatedAt = nowIso;
-      const sig = `${ext.toUpperCase()}__${qualitySpec}__${targetDeviceName}`;
-      const vIdx = masterRecord.variants.findIndex((v) => v.signature === sig);
-      const vData = {
-        signature: sig,
-        format: ext.toUpperCase(),
-        qualitySpec,
-        targetDevice: targetDeviceName,
-        fileSize: blobSize || 0,
-        timestamp: nowIso,
-        downloadCount: vIdx >= 0 ? masterRecord.variants[vIdx].downloadCount + 1 : 1
-      };
-      if (vIdx >= 0) masterRecord.variants[vIdx] = vData;
-      else masterRecord.variants.push(vData);
-
-      savePersistentState();
-      if (state.firebaseConnected && state.firestoreDb) {
-        state.firestoreDb.collection('vntex_history').add(logEntry).catch(() => {});
-        state.firestoreDb.collection('vntex_library').doc(masterKey).set(masterRecord, { merge: true }).catch(() => {});
-      }
-      updateAuthUI();
+      });
     }
 
+    /**************************************************************************
+     * 3. ACCOUNT GATING & STUDIO HUB RENDERING
+     **************************************************************************/
+    function updateAccountAndGatingUI() {
+      const lockIcon = document.getElementById('studioHubLockIcon');
+      const accountLabel = document.getElementById('headerAccountLabel');
+      const rigBadge = document.getElementById('activeRigBadge');
+      const crateCount = Object.keys(state.cloudLibrary).length;
+      document.getElementById('hubCrateCount').textContent = String(crateCount);
+
+      if (state.user) {
+        lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
+        accountLabel.textContent = state.user.displayName;
+        document.getElementById('loggedOutPanel').classList.add('hidden');
+        document.getElementById('loggedInPanel').classList.remove('hidden');
+        document.getElementById('accountModalName').textContent = state.user.displayName;
+        document.getElementById('accountModalEmail').textContent = state.user.email;
+
+        const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+        if (dev && dev.id !== 'none') {
+          rigBadge.textContent = `Rig: ${dev.name}`;
+          rigBadge.classList.remove('hidden');
+        } else {
+          rigBadge.classList.add('hidden');
+        }
+      } else {
+        // Guest mode: reset theme to default Obsidian and lock pro features
+        lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
+        accountLabel.textContent = 'Sign In';
+        rigBadge.classList.add('hidden');
+        document.getElementById('loggedOutPanel').classList.remove('hidden');
+        document.getElementById('loggedInPanel').classList.add('hidden');
+      }
+    }
+
+    function renderDeviceRigGrid() {
+      const grid = document.getElementById('deviceRigGrid');
+      if (!grid) return;
+      grid.innerHTML = DEVICE_PROFILES.map((d) => {
+        const active = state.activeDeviceId === d.id;
+        return `
+          <button type="button" data-select-rig="${d.id}" class="tab-pill p-3 text-left flex items-center justify-between ${active ? 'active' : ''}">
+            <div>
+              <div class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(d.name)}</div>
+              <div class="text-[10px] font-mono-tech text-[var(--text-secondary)] mt-0.5">${escapeHtml(d.desc)}</div>
+            </div>
+            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-panel)] text-[var(--accent-primary)]">
+              ${active ? '● Active' : 'Select'}
+            </span>
+          </button>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('[data-select-rig]').forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-select-rig');
+          state.activeDeviceId = id;
+          const dev = DEVICE_PROFILES.find((x) => x.id === id);
+          if (dev && id !== 'none') {
+            state.outputFormat = dev.format;
+            state.bitrate = dev.bitrate;
+            state.bitDepth = dev.bitDepth;
+            state.sampleRate = dev.sampleRate;
+            state.channels = dev.channels;
+            state.activePreset = 'custom';
+          }
+          saveState();
+          syncEncoderSelects();
+          updateAccountAndGatingUI();
+          renderDeviceRigGrid();
+        };
+      });
+    }
+
+    function renderCrateList() {
+      const el = document.getElementById('crateMastersList');
+      const masters = Object.values(state.cloudLibrary);
+      if (!masters.length) {
+        el.innerHTML = `<div class="hardware-well p-6 text-center text-[var(--text-muted)]">No converted tracks logged yet. Convert a batch to populate your Cloud Crate.</div>`;
+        return;
+      }
+      el.innerHTML = masters.map((m) => `
+        <div class="hardware-well p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(m.artist)} — ${escapeHtml(m.title)}</span>
+            <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">${m.variants.length} Format Variant(s)</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${m.variants.map((v) => `
+              <span class="px-2 py-0.5 rounded bg-[var(--bg-panel)] border border-[var(--border-hairline)] font-mono-tech text-[10px]">
+                <strong class="text-[var(--accent-primary)]">.${escapeHtml(v.format)}</strong> • ${escapeHtml(v.qualitySpec)} • ${escapeHtml(v.targetDevice)}
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /**************************************************************************
+     * 4. AUDIO METADATA, ARTWORK & TRANSCODING ENGINE
+     **************************************************************************/
     async function generateProceduralCoverArt(title = 'UNTITLED', artist = 'VNTEX', key = '8A', bpm = '128') {
       const canvas = document.createElement('canvas');
-      canvas.width = 600;
-      canvas.height = 600;
+      canvas.width = 600; canvas.height = 600;
       const ctx = canvas.getContext('2d');
       const grad = ctx.createRadialGradient(300, 220, 40, 300, 300, 420);
-      grad.addColorStop(0, '#0f293a');
-      grad.addColorStop(0.6, '#070b12');
-      grad.addColorStop(1, '#030306');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 600, 600);
-
-      ctx.strokeStyle = 'rgba(0, 242, 254, 0.32)';
-      ctx.lineWidth = 2;
+      grad.addColorStop(0, '#0f293a'); grad.addColorStop(0.6, '#070b12'); grad.addColorStop(1, '#030306');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 600, 600);
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.35)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(300, 250, 110, 0, Math.PI * 2); ctx.stroke();
-
-      ctx.fillStyle = '#00f2fe';
-      ctx.font = '800 42px "JetBrains Mono", monospace';
-      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00f2fe'; ctx.font = '800 42px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
       ctx.fillText('VNTEX', 300, 264);
-
-      ctx.fillStyle = '#9496a8';
-      ctx.font = '600 16px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#9496a8'; ctx.font = '600 16px "JetBrains Mono", monospace';
       ctx.fillText(`${bpm} BPM • KEY ${key}`, 300, 54);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '800 28px "Inter", sans-serif';
+      ctx.fillStyle = '#ffffff'; ctx.font = '800 28px "Inter", sans-serif';
       ctx.fillText(String(title).slice(0, 26).toUpperCase(), 300, 485);
-
-      ctx.fillStyle = '#00f2fe';
-      ctx.font = '600 19px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#00f2fe'; ctx.font = '600 19px "JetBrains Mono", monospace';
       ctx.fillText(String(artist).slice(0, 30).toUpperCase(), 300, 522);
 
-      const bytes = dataURLToUint8Array(canvas.toDataURL('image/jpeg', 0.92));
-      return {
-        bytes,
-        mime: 'image/jpeg',
-        url: URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' })),
-        width: 600,
-        height: 600,
-        source: 'VNTEX Cover'
-      };
-    }
-
-    function dataURLToUint8Array(dataURL) {
-      const binary = atob(dataURL.split(',')[1]);
+      const binary = atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return bytes;
-    }
-
-    function stripUnsynchronisation(bytes) {
-      const out = new Uint8Array(bytes.length);
-      let w = 0;
-      for (let i = 0; i < bytes.length; i++) {
-        out[w++] = bytes[i];
-        if (bytes[i] === 0xFF && i + 1 < bytes.length && bytes[i + 1] === 0x00) i++;
-      }
-      return out.subarray(0, w);
-    }
-
-    function pinpointImageMagicBytes(buf) {
-      for (let i = 0; i < Math.min(buf.length - 8, 512); i++) {
-        if (buf[i] === 0xFF && buf[i + 1] === 0xD8 && buf[i + 2] === 0xFF) return { bytes: buf.slice(i), mime: 'image/jpeg' };
-        if (buf[i] === 0x89 && buf[i + 1] === 0x50 && buf[i + 2] === 0x4E && buf[i + 3] === 0x47) return { bytes: buf.slice(i), mime: 'image/png' };
-      }
-      return null;
-    }
-
-    async function normalizeAndVerifyCoverArt(rawBytes, rawMime = 'image/jpeg') {
-      if (!rawBytes || rawBytes.length < 32) return null;
-      const tempUrl = URL.createObjectURL(new Blob([rawBytes], { type: rawMime }));
-      try {
-        const img = await new Promise((res, rej) => {
-          const el = new Image();
-          el.onload = () => res(el);
-          el.onerror = rej;
-          el.src = tempUrl;
-        });
-        const w = img.naturalWidth || 600;
-        const h = img.naturalHeight || 600;
-        if (state.artworkMode === 'preserve-raw') {
-          return { bytes: rawBytes, mime: rawMime, url: tempUrl, width: w, height: h, source: 'Embedded Artwork' };
-        }
-        const scale = Math.min(1200, Math.max(w, h)) / Math.max(w, h);
-        const tw = Math.max(1, Math.round(w * scale));
-        const th = Math.max(1, Math.round(h * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = tw; canvas.height = th;
-        canvas.getContext('2d').drawImage(img, 0, 0, tw, th);
-        const cleanBytes = dataURLToUint8Array(canvas.toDataURL('image/jpeg', 0.92));
-        URL.revokeObjectURL(tempUrl);
-        return {
-          bytes: cleanBytes,
-          mime: 'image/jpeg',
-          url: URL.createObjectURL(new Blob([cleanBytes], { type: 'image/jpeg' })),
-          width: tw,
-          height: th,
-          source: 'Extracted Cover Art'
-        };
-      } catch {
-        URL.revokeObjectURL(tempUrl);
-        return null;
-      }
-    }
-
-    function decodeTextPayload(bytes) {
-      if (!bytes || !bytes.length) return '';
-      const enc = bytes[0];
-      const sub = bytes.subarray(1);
-      try {
-        if (enc === 0) return new TextDecoder('iso-8859-1').decode(sub).replace(/\0/g, '').trim();
-        if (enc === 1) return new TextDecoder('utf-16').decode(sub).replace(/\0/g, '').trim();
-        if (enc === 2) return new TextDecoder('utf-16be').decode(sub).replace(/\0/g, '').trim();
-        return new TextDecoder('utf-8').decode(enc === 3 ? sub : bytes).replace(/\0/g, '').trim();
-      } catch {
-        return '';
-      }
-    }
-
-    function parseID3v2Block(u8, offset = 0) {
-      const result = { tags: {}, cover: null };
-      if (offset + 10 > u8.length || u8[offset] !== 0x49 || u8[offset + 1] !== 0x44 || u8[offset + 2] !== 0x33) return result;
-      const version = u8[offset + 3];
-      const flags = u8[offset + 5];
-      const tagSize = ((u8[offset + 6] & 0x7f) << 21) | ((u8[offset + 7] & 0x7f) << 14) | ((u8[offset + 8] & 0x7f) << 7) | (u8[offset + 9] & 0x7f);
-      const end = Math.min(u8.length, offset + 10 + tagSize);
-      let pos = offset + 10;
-
-      while (pos + (version === 2 ? 6 : 10) <= end) {
-        if (u8[pos] === 0) break;
-        const headerLen = version === 2 ? 6 : 10;
-        const frameId = version === 2
-          ? String.fromCharCode(u8[pos], u8[pos + 1], u8[pos + 2])
-          : String.fromCharCode(u8[pos], u8[pos + 1], u8[pos + 2], u8[pos + 3]);
-        const frameSize = version === 2
-          ? (u8[pos + 3] << 16) | (u8[pos + 4] << 8) | u8[pos + 5]
-          : (u8[pos + 4] << 24) | (u8[pos + 5] << 16) | (u8[pos + 6] << 8) | u8[pos + 7];
-        if (frameSize <= 0 || pos + headerLen + frameSize > end) break;
-        let payload = u8.subarray(pos + headerLen, pos + headerLen + frameSize);
-        if (flags & 0x80) payload = stripUnsynchronisation(payload);
-
-        if (frameId === 'TIT2' || frameId === 'TT2') result.tags.title = decodeTextPayload(payload);
-        else if (frameId === 'TPE1' || frameId === 'TP1') result.tags.artist = decodeTextPayload(payload);
-        else if (frameId === 'TALB' || frameId === 'TAL') result.tags.album = decodeTextPayload(payload);
-        else if (frameId === 'TYER' || frameId === 'TDRC') result.tags.year = decodeTextPayload(payload);
-        else if (frameId === 'TCON') result.tags.genre = decodeTextPayload(payload);
-        else if (frameId === 'TBPM') result.tags.bpm = decodeTextPayload(payload);
-        else if (frameId === 'TKEY') result.tags.key = decodeTextPayload(payload);
-        else if (frameId === 'APIC' || frameId === 'PIC') {
-          const pin = pinpointImageMagicBytes(stripUnsynchronisation(payload));
-          if (pin) result.cover = pin;
-        }
-        pos += headerLen + frameSize;
-      }
-      return result;
+      return { bytes, mime: 'image/jpeg', url: URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' })), width: 600, height: 600 };
     }
 
     async function extractBinaryMetadataAndCover(file) {
       const u8 = new Uint8Array(await file.arrayBuffer());
       const baseName = file.name.replace(/\.[^/.]+$/, '');
       const parts = baseName.split(' - ');
-      let extractedTags = {};
       let extractedCover = null;
 
-      if (u8[0] === 0x49 && u8[1] === 0x44 && u8[2] === 0x33) {
-        const id3 = parseID3v2Block(u8, 0);
-        extractedTags = { ...id3.tags };
-        extractedCover = id3.cover;
-      }
-
-      if (!extractedCover) {
-        for (let i = 0; i < Math.min(u8.length - 16, 524288); i++) {
-          if (u8[i] === 0xFF && u8[i + 1] === 0xD8 && u8[i + 2] === 0xFF) {
-            extractedCover = { bytes: u8.slice(i), mime: 'image/jpeg' };
-            break;
-          }
+      for (let i = 0; i < Math.min(u8.length - 16, 524288); i++) {
+        if (u8[i] === 0xFF && u8[i + 1] === 0xD8 && u8[i + 2] === 0xFF) {
+          const slice = u8.slice(i);
+          const url = URL.createObjectURL(new Blob([slice], { type: 'image/jpeg' }));
+          extractedCover = { bytes: slice, mime: 'image/jpeg', url, width: 600, height: 600 };
+          break;
         }
       }
 
       const tags = {
-        title: extractedTags.title || (parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName),
-        artist: extractedTags.artist || (parts.length > 1 ? parts[0].trim() : 'Unknown Artist'),
-        album: extractedTags.album || 'VNTEX Session',
-        year: extractedTags.year || '2026',
-        genre: extractedTags.genre || 'Electronic',
-        bpm: extractedTags.bpm || '128',
-        key: extractedTags.key || '8A',
+        title: parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName,
+        artist: parts.length > 1 ? parts[0].trim() : 'Unknown Artist',
+        album: 'VNTEX Session',
+        year: '2026',
+        genre: 'Electronic',
+        bpm: '128',
+        key: '8A',
         trackNum: ''
       };
-
-      let verifiedCover = extractedCover ? await normalizeAndVerifyCoverArt(extractedCover.bytes, extractedCover.mime) : null;
-      if (!verifiedCover) verifiedCover = await generateProceduralCoverArt(tags.title, tags.artist, tags.key, tags.bpm);
-      return { tags, cover: verifiedCover };
+      const cover = extractedCover || await generateProceduralCoverArt(tags.title, tags.artist, tags.key, tags.bpm);
+      return { tags, cover };
     }
 
     function encodeSynchsafeInt32(val) {
@@ -1028,7 +855,6 @@
     function encodeUint32BE(val) {
       return new Uint8Array([(val >>> 24) & 0xff, (val >>> 16) & 0xff, (val >>> 8) & 0xff, val & 0xff]);
     }
-
     function buildID3v23TextFrame(id, text) {
       const clean = String(text || '').trim();
       if (!clean) return new Uint8Array(0);
@@ -1036,11 +862,9 @@
       const frame = new Uint8Array(11 + tb.length);
       for (let i = 0; i < 4; i++) frame[i] = id.charCodeAt(i);
       frame.set(encodeUint32BE(1 + tb.length), 4);
-      frame[10] = 0x03;
-      frame.set(tb, 11);
+      frame[10] = 0x03; frame.set(tb, 11);
       return frame;
     }
-
     function buildID3v23ApicFrame(imageBytes, mime = 'image/jpeg') {
       if (!imageBytes || !imageBytes.length) return new Uint8Array(0);
       const mb = new TextEncoder().encode(mime);
@@ -1048,28 +872,19 @@
       const frame = new Uint8Array(10 + payloadLen);
       frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43;
       frame.set(encodeUint32BE(payloadLen), 4);
-      let p = 10;
-      frame[p++] = 0x00;
-      frame.set(mb, p); p += mb.length;
-      frame[p++] = 0x00;
-      frame[p++] = 0x03;
-      frame[p++] = 0x00;
+      let p = 10; frame[p++] = 0x00; frame.set(mb, p); p += mb.length;
+      frame[p++] = 0x00; frame[p++] = 0x03; frame[p++] = 0x00;
       frame.set(imageBytes, p);
       return frame;
     }
-
     function buildCompleteID3v23Tag(tags, cover) {
       if (state.artworkMode === 'strip-all') return new Uint8Array(0);
-      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
       const frames = [
         buildID3v23TextFrame('TIT2', tags.title),
         buildID3v23TextFrame('TPE1', tags.artist),
         buildID3v23TextFrame('TALB', tags.album),
-        buildID3v23TextFrame('TYER', tags.year),
-        buildID3v23TextFrame('TCON', tags.genre),
         buildID3v23TextFrame('TBPM', tags.bpm),
-        buildID3v23TextFrame('TKEY', tags.key),
-        buildID3v23TextFrame('TENC', activeDev ? `VNTEX // ${activeDev.name}` : 'VNTEX DSP')
+        buildID3v23TextFrame('TKEY', tags.key)
       ];
       if (cover && cover.bytes) frames.push(buildID3v23ApicFrame(cover.bytes, cover.mime));
       const bodyLen = frames.reduce((s, f) => s + f.length, 0);
@@ -1085,17 +900,14 @@
       const len = Math.max(1, Math.ceil(sourceBuffer.duration * targetSampleRate));
       const offline = new OfflineAudioContext(targetChannels, len, targetSampleRate);
       const src = offline.createBufferSource();
-      src.buffer = sourceBuffer;
-      src.connect(offline.destination);
-      src.start(0);
+      src.buffer = sourceBuffer; src.connect(offline.destination); src.start(0);
       return await offline.startRendering();
     }
 
     function encodeMP3Buffer(audioBuffer, kbps, tags, cover) {
-      const ch = audioBuffer.numberOfChannels;
-      const sr = audioBuffer.sampleRate;
+      const ch = audioBuffer.numberOfChannels, sr = audioBuffer.sampleRate;
       const enc = new lamejs.Mp3Encoder(ch, sr, Number(kbps));
-      const f32ToI16 = (f32) => {
+      const toI16 = (f32) => {
         const i16 = new Int16Array(f32.length);
         for (let i = 0; i < f32.length; i++) {
           const s = Math.max(-1, Math.min(1, f32[i]));
@@ -1103,8 +915,8 @@
         }
         return i16;
       };
-      const left = f32ToI16(audioBuffer.getChannelData(0));
-      const right = ch > 1 ? f32ToI16(audioBuffer.getChannelData(1)) : undefined;
+      const left = toI16(audioBuffer.getChannelData(0));
+      const right = ch > 1 ? toI16(audioBuffer.getChannelData(1)) : undefined;
       const chunks = [];
       for (let i = 0; i < left.length; i += 1152) {
         const b = enc.encodeBuffer(left.subarray(i, i + 1152), right ? right.subarray(i, i + 1152) : undefined);
@@ -1121,9 +933,7 @@
     }
 
     function encodeWAVBuffer(audioBuffer, bitDepth, tags, cover) {
-      const ch = audioBuffer.numberOfChannels;
-      const sr = audioBuffer.sampleRate;
-      const frames = audioBuffer.length;
+      const ch = audioBuffer.numberOfChannels, sr = audioBuffer.sampleRate, frames = audioBuffer.length;
       const bps = bitDepth === 32 ? 4 : bitDepth === 24 ? 3 : 2;
       const dataLen = frames * ch * bps;
       const id3 = buildCompleteID3v23Tag(tags, cover);
@@ -1170,44 +980,54 @@
       return new Blob([id3, wav], { type: mimes[fmt] || 'audio/mpeg' });
     }
 
-    function buildExportFilename(track, index, ext) {
-      const tpl = (state.filenameTemplate || '[Artist] - [Title]').trim();
-      const clean = (s) => String(s || '').replace(/[\\/:*?"<>|]/g, '').trim();
-      const num = track.tags.trackNum || String(index + 1).padStart(2, '0');
-      const orig = track.originalName.replace(/\.[^/.]+$/, '');
+    function recordConversionTelemetry(track, blobSize, ext) {
+      const nowIso = new Date().toISOString();
       const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const targetDevice = dev && dev.id !== 'none' ? dev.name : 'Standard Studio';
+      const isLossless = ['flac', 'wav', 'aiff'].includes(ext);
+      const qualitySpec = isLossless ? `${state.bitDepth}-Bit` : `${state.bitrate}kbps`;
 
-      const name = tpl
-        .replace(/\[Track#\]/gi, num)
-        .replace(/\[Artist\]/gi, clean(track.tags.artist))
-        .replace(/\[Title\]/gi, clean(track.tags.title || orig))
-        .replace(/\[BPM\]/gi, clean(track.tags.bpm))
-        .replace(/\[Key\]/gi, clean(track.tags.key))
-        .replace(/\[Device\]/gi, clean(dev ? dev.id.toUpperCase() : 'STUDIO'))
-        .replace(/\[Original\]/gi, clean(orig));
+      const logEntry = {
+        id: 'log_' + Math.random().toString(36).slice(2, 10),
+        timestamp: nowIso,
+        userEmail: state.user ? state.user.email : 'guest@local.studio',
+        trackTitle: track.tags.title,
+        artist: track.tags.artist,
+        bpm: track.tags.bpm,
+        key: track.tags.key,
+        outputFormat: ext.toUpperCase(),
+        qualitySpec,
+        targetDevice,
+        fileSize: blobSize || 0
+      };
+      state.downloadHistory.unshift(logEntry);
 
-      return `${name || clean(orig)}.${ext}`;
+      const masterKey = `${track.tags.artist}__${track.tags.title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!state.cloudLibrary[masterKey]) {
+        state.cloudLibrary[masterKey] = { masterKey, title: track.tags.title, artist: track.tags.artist, updatedAt: nowIso, variants: [] };
+      }
+      const master = state.cloudLibrary[masterKey];
+      master.updatedAt = nowIso;
+      master.variants.push({ format: ext.toUpperCase(), qualitySpec, targetDevice, timestamp: nowIso, fileSize: blobSize });
+      saveState();
+      updateAccountAndGatingUI();
     }
 
-    function updateNamingPreviewUI() {
-      const tpl = state.filenameTemplate || '[Artist] - [Title]';
-      document.getElementById('namingPatternDisplay').textContent = tpl;
-      const sample = state.tracks[0] || { originalName: 'Track.wav', tags: { artist: 'Uno', title: 'Midnight', bpm: '128', key: '8A', trackNum: '01' } };
-      document.getElementById('templateLivePreview').textContent = buildExportFilename(sample, 0, state.outputFormat);
-    }
-
-    function computeWaveformPeaks(audioBuffer, numBars = 84) {
+    /**************************************************************************
+     * 5. TRACK QUEUE & WAVEFORM UI
+     **************************************************************************/
+    function computeWaveformPeaks(audioBuffer, numBars = 80) {
       const ch0 = audioBuffer.getChannelData(0);
       const step = Math.max(1, Math.floor(ch0.length / numBars));
       const peaks = [];
       for (let i = 0; i < numBars; i++) {
         let max = 0;
         const start = i * step;
-        for (let j = 0; j < step && start + j < ch0.length; j += 6) {
+        for (let j = 0; j < step && start + j < ch0.length; j += 8) {
           const v = Math.abs(ch0[start + j]);
           if (v > max) max = v;
         }
-        peaks.push(Math.max(0.1, Math.min(1, max)));
+        peaks.push(Math.max(0.12, Math.min(1, max)));
       }
       return peaks;
     }
@@ -1225,7 +1045,7 @@
 
       const styles = getComputedStyle(document.documentElement);
       const activeColor = styles.getPropertyValue('--accent-primary').trim() || '#00f2fe';
-      const mutedColor = styles.getPropertyValue('--border-highlight').trim() || '#252536';
+      const mutedColor = styles.getPropertyValue('--border-highlight').trim() || '#262638';
       const peaks = track.peaks;
       const gap = 2;
       const bw = Math.max(1.5, (rect.width - (peaks.length - 1) * gap) / peaks.length);
@@ -1243,6 +1063,132 @@
     const waveformResizeObserver = new ResizeObserver(() => {
       state.tracks.forEach((t) => drawTrackWaveform(t, t.playProgress || 0));
     });
+
+    function buildExportFilename(track, index, ext) {
+      const tpl = (state.filenameTemplate || '[Artist] - [Title]').trim();
+      const clean = (s) => String(s || '').replace(/[\\/:*?"<>|]/g, '').trim();
+      const num = track.tags.trackNum || String(index + 1).padStart(2, '0');
+      const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const name = tpl
+        .replace(/\[Track#\]/gi, num)
+        .replace(/\[Artist\]/gi, clean(track.tags.artist))
+        .replace(/\[Title\]/gi, clean(track.tags.title))
+        .replace(/\[BPM\]/gi, clean(track.tags.bpm))
+        .replace(/\[Key\]/gi, clean(track.tags.key))
+        .replace(/\[Device\]/gi, clean(dev ? dev.id.toUpperCase() : 'STUDIO'));
+      return `${name || 'Track'}.${ext}`;
+    }
+
+    function renderTrackList() {
+      const queueSec = document.getElementById('queueSection');
+      const container = document.getElementById('trackListContainer');
+      const total = state.tracks.length;
+      const done = state.tracks.filter((t) => t.status === 'done').length;
+
+      document.getElementById('convertAllBtn').disabled = total === 0;
+      document.getElementById('downloadZipBtn').disabled = done === 0;
+      document.getElementById('queueStatsBadge').textContent = `${total} Track${total === 1 ? '' : 's'} (${done} Ready)`;
+
+      if (total === 0) {
+        queueSec.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+      }
+
+      queueSec.classList.remove('hidden');
+      container.innerHTML = '';
+
+      state.tracks.forEach((t, idx) => {
+        const row = document.createElement('div');
+        row.className = 'hardware-well p-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3';
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0 sm:w-5/12">
+            <div class="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-[var(--border-highlight)]">
+              <img src="${t.cover.url}" alt="" class="w-full h-full object-cover" />
+              <button id="play-btn-${t.id}" type="button" class="absolute inset-0 bg-black/55 flex items-center justify-center text-[var(--accent-primary)] text-xs">
+                <i class="fa-solid ${state.currentlyPlayingId === t.id ? 'fa-pause' : 'fa-play'}"></i>
+              </button>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-bold text-xs text-[var(--text-primary)] truncate">${escapeHtml(t.tags.title)}</div>
+              <div class="text-[11px] text-[var(--text-secondary)] truncate">${escapeHtml(t.tags.artist)} • <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">${escapeHtml(t.tags.bpm)} BPM • ${escapeHtml(t.tags.key)}</span></div>
+            </div>
+          </div>
+
+          <div class="flex-1 h-9 bg-[var(--bg-void)] rounded px-2 py-1 cursor-pointer border border-[var(--border-hairline)]" data-scrub-id="${t.id}">
+            <canvas data-waveform-id="${t.id}" class="w-full h-full block"></canvas>
+          </div>
+
+          <div class="flex items-center justify-end gap-1.5 shrink-0">
+            <button type="button" data-edit-id="${t.id}" class="hardware-well px-2.5 py-1.5 text-[11px] font-mono-tech hover:border-[var(--accent-primary)]">
+              Edit
+            </button>
+            ${
+              t.status === 'done'
+                ? `<button type="button" data-download-id="${t.id}" class="btn-convert-primary px-3 py-1.5 rounded text-[11px] font-mono-tech">
+                     <i class="fa-solid fa-download mr-1"></i>.${t.convertedExt.toUpperCase()}
+                   </button>`
+                : `<span class="font-mono-tech text-[10px] px-2 text-[var(--text-muted)]">${t.status === 'converting' ? 'Encoding...' : 'Queued'}</span>`
+            }
+            <button type="button" data-remove-id="${t.id}" class="hardware-well w-7 h-7 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-rose-400">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+        const cvs = row.querySelector(`canvas[data-waveform-id="${t.id}"]`);
+        if (cvs) waveformResizeObserver.observe(cvs);
+        requestAnimationFrame(() => drawTrackWaveform(t, t.playProgress || 0));
+      });
+
+      bindRowEvents();
+    }
+
+    function bindRowEvents() {
+      state.tracks.forEach((t) => {
+        const pb = document.getElementById(`play-btn-${t.id}`);
+        if (pb) pb.onclick = () => (state.currentlyPlayingId === t.id ? stopActivePlayback() : playTrackFromOffset(t, 0));
+      });
+      document.querySelectorAll('[data-scrub-id]').forEach((el) => {
+        el.onclick = (e) => {
+          const t = state.tracks.find((x) => x.id === el.getAttribute('data-scrub-id'));
+          if (!t) return;
+          const r = el.getBoundingClientRect();
+          playTrackFromOffset(t, Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * t.duration);
+        };
+      });
+      document.querySelectorAll('[data-edit-id]').forEach((b) => {
+        b.onclick = () => {
+          const t = state.tracks.find((x) => x.id === b.getAttribute('data-edit-id'));
+          if (!t) return;
+          state.editingTrackId = t.id;
+          document.getElementById('editTrackCoverImg').src = t.cover.url;
+          document.getElementById('editTitleInput').value = t.tags.title;
+          document.getElementById('editArtistInput').value = t.tags.artist;
+          document.getElementById('editAlbumInput').value = t.tags.album;
+          document.getElementById('editBpmInput').value = t.tags.bpm;
+          document.getElementById('editKeyInput').value = t.tags.key;
+          document.getElementById('tagEditorModal').classList.remove('hidden');
+        };
+      });
+      document.querySelectorAll('[data-download-id]').forEach((b) => {
+        b.onclick = () => {
+          const idx = state.tracks.findIndex((x) => x.id === b.getAttribute('data-download-id'));
+          if (idx >= 0 && state.tracks[idx].convertedBlob) {
+            const trk = state.tracks[idx];
+            triggerBlobDownload(trk.convertedBlob, buildExportFilename(trk, idx, trk.convertedExt));
+          }
+        };
+      });
+      document.querySelectorAll('[data-remove-id]').forEach((b) => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-remove-id');
+          if (state.currentlyPlayingId === id) stopActivePlayback();
+          state.tracks = state.tracks.filter((x) => x.id !== id);
+          renderTrackList();
+        };
+      });
+    }
 
     function getAudioContext() {
       if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1284,10 +1230,7 @@
         if (state.currentlyPlayingId !== track.id) return;
         const el = state.playbackOffset + (ctx.currentTime - state.playbackStartTime);
         if (el >= track.duration) {
-          track.playProgress = 0;
-          drawTrackWaveform(track, 0);
-          stopActivePlayback();
-          return;
+          track.playProgress = 0; drawTrackWaveform(track, 0); stopActivePlayback(); return;
         }
         track.playProgress = el / track.duration;
         drawTrackWaveform(track, track.playProgress);
@@ -1296,105 +1239,20 @@
       state.playbackRaf = requestAnimationFrame(tick);
     }
 
-    function formatBytes(b) {
-      if (!b) return '0 KB';
-      return b < 1048576 ? `${(b / 1024).toFixed(0)} KB` : `${(b / 1048576).toFixed(1)} MB`;
+    function triggerBlobDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
     }
 
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function updateAuthUI() {
-      const masterCount = Object.keys(state.cloudLibrary).length;
-      const historyCount = state.downloadHistory.length;
-      document.getElementById('libraryCountBadge').textContent = masterCount;
-      document.getElementById('masterTabCount').textContent = masterCount;
-      document.getElementById('historyTabCount').textContent = historyCount;
-
-      const loggedOut = document.getElementById('authLoggedOutView');
-      const loggedIn = document.getElementById('authLoggedInView');
-
-      if (state.user) {
-        const init = (state.user.displayName || 'UN').slice(0, 2).toUpperCase();
-        document.getElementById('headerUserAvatar').textContent = init;
-        document.getElementById('headerUserName').textContent = state.user.displayName;
-        loggedOut.classList.add('hidden');
-        loggedIn.classList.remove('hidden');
-        document.getElementById('profileModalAvatar').textContent = init;
-        document.getElementById('profileModalName').textContent = state.user.displayName;
-        document.getElementById('profileModalEmail').textContent = state.user.email;
-        document.getElementById('profileModalStats').textContent = `${masterCount} Master Tracks • ${historyCount} Downloads`;
-      } else {
-        document.getElementById('headerUserAvatar').innerHTML = '<i class="fa-regular fa-user"></i>';
-        document.getElementById('headerUserName').textContent = 'Sign In';
-        loggedOut.classList.remove('hidden');
-        loggedIn.classList.add('hidden');
-      }
-
-      const sel = document.getElementById('headerDeviceSelect');
-      sel.innerHTML = `<option value="none">Standard Studio (Manual)</option>`;
-      DEVICE_PROFILES.forEach((d) => {
-        const opt = document.createElement('option');
-        opt.value = d.id;
-        opt.textContent = d.name;
-        if (d.id === state.activeDeviceId) opt.selected = true;
-        sel.appendChild(opt);
-      });
-
-      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
-      document.getElementById('activeRigHeaderText').textContent = activeDev ? activeDev.name : 'Standard Studio';
-      renderDeviceRegistryGrid();
-    }
-
-    function renderDeviceRegistryGrid() {
-      const grid = document.getElementById('deviceRegistryGrid');
-      if (!grid) return;
-      grid.innerHTML = DEVICE_PROFILES.map((d) => {
-        const active = state.activeDeviceId === d.id;
-        return `
-          <button type="button" data-activate-device="${d.id}" class="pill-btn p-2.5 text-left flex items-center justify-between ${active ? 'active' : ''}">
-            <div>
-              <div class="text-xs font-bold text-[var(--text-primary)]">${escapeHtml(d.name)}</div>
-              <div class="text-[10px] font-mono-tech text-[var(--text-secondary)]">${escapeHtml(d.specSummary)}</div>
-            </div>
-            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-panel)] text-[var(--accent-primary)]">
-              ${active ? '● Active' : 'Select'}
-            </span>
-          </button>
-        `;
-      }).join('');
-
-      grid.querySelectorAll('[data-activate-device]').forEach((btn) => {
-        btn.onclick = () => {
-          const id = btn.getAttribute('data-activate-device');
-          activateDeviceProfile(state.activeDeviceId === id ? 'none' : id);
-        };
-      });
-    }
-
-    function activateDeviceProfile(deviceId) {
-      state.activeDeviceId = deviceId;
-      const dev = DEVICE_PROFILES.find((d) => d.id === deviceId);
-      if (dev) {
-        state.outputFormat = dev.format;
-        state.bitrate = dev.bitrate;
-        state.bitDepth = dev.bitDepth;
-        state.sampleRate = dev.sampleRate;
-        state.channels = dev.channels;
-        state.artworkMode = dev.artworkMode;
-        state.activePreset = 'custom';
-      }
-      savePersistentState();
-      updateAuthUI();
-      updateEncoderControlsUI();
-      renderTrackList();
-    }
-
-    function updateEncoderControlsUI() {
-      document.querySelectorAll('#presetBar .pill-btn').forEach((b) => {
-        b.classList.toggle('active', b.getAttribute('data-preset') === state.activePreset);
-      });
+    function syncEncoderSelects() {
+      document.getElementById('presetSelect').value = state.activePreset;
       document.getElementById('formatSelect').value = state.outputFormat;
       document.getElementById('bitrateSelect').value = String(state.bitrate);
       document.getElementById('bitDepthSelect').value = String(state.bitDepth);
@@ -1403,126 +1261,8 @@
       document.getElementById('artworkModeSelect').value = state.artworkMode;
 
       const isLossless = ['flac', 'wav', 'aiff'].includes(state.outputFormat);
-      document.getElementById('bitrateControlWrapper').classList.toggle('hidden', isLossless);
-      document.getElementById('bitDepthControlWrapper').classList.toggle('hidden', !isLossless);
-
-      const qText = isLossless ? `${state.bitDepth}-Bit` : `${state.bitrate} kbps`;
-      const srText = `${(state.sampleRate / 1000).toFixed(1)} kHz`;
-      const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
-      document.getElementById('liveConfigText').textContent =
-        `Output: .${state.outputFormat.toUpperCase()} • ${qText} • ${srText}${dev ? ' • Rig: ' + dev.name : ''}`;
-    }
-
-    function renderTrackList() {
-      const container = document.getElementById('trackListContainer');
-      const empty = document.getElementById('emptyQueueState');
-      const total = state.tracks.length;
-      const done = state.tracks.filter((t) => t.status === 'done').length;
-
-      document.getElementById('queueStatsBadge').textContent = `${total} Track${total === 1 ? '' : 's'} (${done} Ready)`;
-      document.getElementById('convertAllBtn').disabled = total === 0;
-      document.getElementById('clearQueueBtn').disabled = total === 0;
-      document.getElementById('downloadZipBtn').disabled = done === 0;
-
-      if (!total) {
-        empty.classList.remove('hidden');
-        container.innerHTML = '';
-        updateNamingPreviewUI();
-        return;
-      }
-
-      empty.classList.add('hidden');
-      container.innerHTML = '';
-
-      state.tracks.forEach((t, idx) => {
-        const row = document.createElement('div');
-        row.className = 'hardware-well p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3';
-        row.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0 sm:w-5/12">
-            <div class="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[var(--border-highlight)]">
-              <img src="${t.cover.url}" alt="" class="w-full h-full object-cover" />
-              <button id="play-btn-${t.id}" type="button" class="absolute inset-0 bg-black/55 flex items-center justify-center text-[var(--accent-primary)] text-xs">
-                <i class="fa-solid ${state.currentlyPlayingId === t.id ? 'fa-pause' : 'fa-play'}"></i>
-              </button>
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="font-bold text-xs sm:text-sm text-[var(--text-primary)] truncate">${escapeHtml(t.tags.title)}</div>
-              <div class="text-xs text-[var(--text-secondary)] truncate">${escapeHtml(t.tags.artist)}</div>
-              <div class="flex items-center gap-1.5 font-mono-tech text-[10px] mt-0.5 text-[var(--led-readout)]">
-                <span>${escapeHtml(t.tags.bpm)} BPM</span>
-                <span>•</span>
-                <span>KEY ${escapeHtml(t.tags.key)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex-1 h-10 waveform-well px-2 py-1 cursor-pointer" data-scrub-id="${t.id}">
-            <canvas data-waveform-id="${t.id}" class="w-full h-full block"></canvas>
-          </div>
-
-          <div class="flex items-center justify-end gap-1.5 shrink-0">
-            <button type="button" data-edit-id="${t.id}" class="hardware-well px-2.5 py-1.5 text-xs font-mono-tech hover:border-[var(--accent-primary)]">
-              Edit
-            </button>
-            ${
-              t.status === 'done'
-                ? `<button type="button" data-download-id="${t.id}" class="btn-convert-primary px-3 py-1.5 rounded text-xs font-mono-tech">
-                     <i class="fa-solid fa-download mr-1"></i>.${t.convertedExt.toUpperCase()}
-                   </button>`
-                : `<span class="font-mono-tech text-[10px] px-2 py-1 text-[var(--text-muted)]">${t.status === 'converting' ? 'Encoding...' : 'Queued'}</span>`
-            }
-            <button type="button" data-remove-id="${t.id}" class="hardware-well w-7 h-7 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-rose-400">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        `;
-        container.appendChild(row);
-        const cvs = row.querySelector(`canvas[data-waveform-id="${t.id}"]`);
-        if (cvs) waveformResizeObserver.observe(cvs);
-        requestAnimationFrame(() => drawTrackWaveform(t, t.playProgress || 0));
-      });
-
-      state.tracks.forEach((t) => {
-        const pb = document.getElementById(`play-btn-${t.id}`);
-        if (pb) pb.onclick = () => (state.currentlyPlayingId === t.id ? stopActivePlayback() : playTrackFromOffset(t, 0));
-      });
-      document.querySelectorAll('[data-scrub-id]').forEach((el) => {
-        el.onclick = (e) => {
-          const t = state.tracks.find((x) => x.id === el.getAttribute('data-scrub-id'));
-          if (!t) return;
-          const r = el.getBoundingClientRect();
-          playTrackFromOffset(t, Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * t.duration);
-        };
-      });
-      document.querySelectorAll('[data-edit-id]').forEach((b) => {
-        b.onclick = () => openTagEditorModal(b.getAttribute('data-edit-id'));
-      });
-      document.querySelectorAll('[data-download-id]').forEach((b) => {
-        b.onclick = () => {
-          const idx = state.tracks.findIndex((x) => x.id === b.getAttribute('data-download-id'));
-          if (idx >= 0 && state.tracks[idx].convertedBlob) {
-            const trk = state.tracks[idx];
-            triggerBlobDownload(trk.convertedBlob, buildExportFilename(trk, idx, trk.convertedExt));
-          }
-        };
-      });
-      document.querySelectorAll('[data-remove-id]').forEach((b) => {
-        b.onclick = () => {
-          const id = b.getAttribute('data-remove-id');
-          if (state.currentlyPlayingId === id) stopActivePlayback();
-          state.tracks = state.tracks.filter((x) => x.id !== id);
-          renderTrackList();
-        };
-      });
-      updateNamingPreviewUI();
-    }
-
-    function triggerBlobDownload(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      document.getElementById('bitrateWrapper').classList.toggle('hidden', isLossless);
+      document.getElementById('bitDepthWrapper').classList.toggle('hidden', !isLossless);
     }
 
     async function ingestFiles(fileList) {
@@ -1538,7 +1278,7 @@
             originalName: file.name,
             duration: audioBuffer.duration,
             audioBuffer,
-            peaks: computeWaveformPeaks(audioBuffer, 84),
+            peaks: computeWaveformPeaks(audioBuffer, 80),
             tags,
             cover,
             status: 'queued',
@@ -1551,12 +1291,12 @@
       renderTrackList();
     }
 
-    async function loadDemoStudioTracks() {
+    async function loadDemoTracks() {
       const ctx = getAudioContext();
       const demos = [
-        { title: 'Obsidian Telemetry', artist: 'Uno', album: 'VNTEX Sessions', bpm: '128', key: '8A', freq: 110 },
-        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', album: 'Booth Utility', bpm: '126', key: '9A', freq: 98 },
-        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', album: 'Archives', bpm: '130', key: '5A', freq: 130.8 }
+        { title: 'Obsidian Telemetry', artist: 'Uno', bpm: '128', key: '8A', freq: 110 },
+        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', bpm: '126', key: '9A', freq: 98 },
+        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', bpm: '130', key: '5A', freq: 130.8 }
       ];
       for (const d of demos) {
         const sr = 44100, dur = 5.0, buf = ctx.createBuffer(2, sr * dur, sr);
@@ -1574,8 +1314,8 @@
           originalName: `${d.artist} - ${d.title}.wav`,
           duration: dur,
           audioBuffer: buf,
-          peaks: computeWaveformPeaks(buf, 84),
-          tags: { title: d.title, artist: d.artist, album: d.album, year: '2026', genre: 'Electronic', bpm: d.bpm, key: d.key, trackNum: '' },
+          peaks: computeWaveformPeaks(buf, 80),
+          tags: { title: d.title, artist: d.artist, album: 'VNTEX Sessions', year: '2026', genre: 'Electronic', bpm: d.bpm, key: d.key, trackNum: '' },
           cover,
           status: 'queued',
           convertedBlob: null,
@@ -1586,116 +1326,65 @@
       renderTrackList();
     }
 
-    async function convertAllTracks() {
-      if (!state.tracks.length) return;
-      const lbl = document.getElementById('convertBtnLabel');
-      lbl.textContent = 'Encoding...';
-      for (const t of state.tracks) {
-        t.status = 'converting';
-        renderTrackList();
-        await new Promise((r) => setTimeout(r, 30));
-        const blob = await transcodeTrackToTarget(t);
-        t.convertedBlob = blob;
-        t.convertedExt = state.outputFormat;
-        t.status = 'done';
-        recordTrackConversionToCloud(t, blob.size, state.outputFormat);
-        renderTrackList();
-      }
-      lbl.textContent = 'Convert Batch';
+    function registerUserLogin(name, email, provider) {
+      state.user = {
+        uid: 'usr_' + Math.random().toString(36).slice(2, 10),
+        displayName: name,
+        email,
+        provider,
+        lastLogin: new Date().toISOString()
+      };
+      const existingIdx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (existingIdx >= 0) state.usersRegistry[existingIdx] = state.user;
+      else state.usersRegistry.push(state.user);
+      saveState();
+      updateAccountAndGatingUI();
     }
 
-    function renderCloudLibraryModal() {
-      const q = (document.getElementById('librarySearchInput')?.value || '').toLowerCase().trim();
-      const fmt = document.getElementById('libraryFormatFilter')?.value || 'all';
-      const masters = Object.values(state.cloudLibrary).filter((m) => {
-        const tm = !q || m.title.toLowerCase().includes(q) || m.artist.toLowerCase().includes(q);
-        const fm = fmt === 'all' || m.variants.some((v) => v.format.toLowerCase() === fmt);
-        return tm && fm;
-      });
-
-      const mastersEl = document.getElementById('cloudMastersView');
-      mastersEl.innerHTML = masters.length === 0
-        ? `<div class="hardware-well p-6 text-center text-[var(--text-muted)]">No converted tracks in your Cloud Crate yet.</div>`
-        : masters.map((m) => `
-            <div class="hardware-well p-3.5 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(m.artist)} — ${escapeHtml(m.title)}</span>
-                <span class="font-mono-tech text-[10px] text-[var(--led-readout)]">${m.variants.length} Format Variant(s)</span>
-              </div>
-              <div class="flex flex-wrap gap-1.5">
-                ${m.variants.map((v) => `
-                  <span class="px-2 py-1 rounded bg-[var(--bg-panel)] border border-[var(--border-hairline)] font-mono-tech text-[10px]">
-                    <strong class="text-[var(--accent-primary)]">.${escapeHtml(v.format)}</strong> • ${escapeHtml(v.qualitySpec)} • ${escapeHtml(v.targetDevice)}
-                  </span>
-                `).join('')}
-              </div>
-            </div>
-          `).join('');
-
-      const tbody = document.getElementById('downloadHistoryTableBody');
-      const hist = state.downloadHistory.filter((h) => fmt === 'all' || h.outputFormat.toLowerCase() === fmt);
-      tbody.innerHTML = hist.map((h) => `
-        <tr>
-          <td class="py-2 px-2.5 text-[var(--text-muted)]">${new Date(h.timestamp).toLocaleTimeString()}</td>
-          <td class="py-2 px-2.5 font-bold text-[var(--text-primary)]">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
-          <td class="py-2 px-2.5 text-[var(--led-readout)]">${escapeHtml(h.bpm)} BPM • ${escapeHtml(h.key)}</td>
-          <td class="py-2 px-2.5 text-[var(--accent-primary)] font-bold">.${escapeHtml(h.outputFormat)}</td>
-          <td class="py-2 px-2.5 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
-          <td class="py-2 px-2.5">${formatBytes(h.fileSize)}</td>
-        </tr>
-      `).join('');
-    }
-
-    function openTagEditorModal(trackId) {
-      const t = state.tracks.find((x) => x.id === trackId);
-      if (!t) return;
-      state.editingTrackId = trackId;
-      document.getElementById('editTrackCoverImg').src = t.cover.url;
-      document.getElementById('editCoverDimensions').textContent = `${t.cover.width}×${t.cover.height}px (${formatBytes(t.cover.bytes.length)})`;
-      document.getElementById('editTitleInput').value = t.tags.title;
-      document.getElementById('editArtistInput').value = t.tags.artist;
-      document.getElementById('editAlbumInput').value = t.tags.album;
-      document.getElementById('editGenreInput').value = t.tags.genre;
-      document.getElementById('editYearInput').value = t.tags.year;
-      document.getElementById('editBpmInput').value = t.tags.bpm;
-      document.getElementById('editKeyInput').value = t.tags.key;
-      document.getElementById('tagEditorModal').classList.remove('hidden');
-    }
-
+    /**************************************************************************
+     * 6. INITIALIZATION & EVENT LISTENERS
+     **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      tryInitializeFirebase();
-      updateAuthUI();
-      updateEncoderControlsUI();
+      if (state.user && state.activePalette) {
+        applyPaletteColors(state.activePalette);
+      }
+      syncEncoderSelects();
+      updateAccountAndGatingUI();
 
-      // Presets & Format
-      document.querySelectorAll('#presetBar .pill-btn').forEach((btn) => {
-        btn.onclick = () => {
-          const p = PRESET_DEFINITIONS[btn.getAttribute('data-preset')];
-          if (!p) return;
-          state.activePreset = btn.getAttribute('data-preset');
+      // Dropzone Events
+      const dz = document.getElementById('dropzone');
+      const fi = document.getElementById('fileInput');
+      dz.onclick = (e) => { if (e.target.id !== 'loadDemoBtn') fi.click(); };
+      fi.onchange = (e) => ingestFiles(e.target.files);
+      dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('border-[var(--accent-primary)]'); };
+      dz.ondragleave = () => dz.classList.remove('border-[var(--accent-primary)]');
+      dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('border-[var(--accent-primary)]'); ingestFiles(e.dataTransfer.files); };
+
+      document.getElementById('loadDemoBtn').onclick = (e) => { e.stopPropagation(); loadDemoTracks(); };
+
+      // Consolidated Control Bar
+      document.getElementById('presetSelect').onchange = (e) => {
+        const val = e.target.value;
+        state.activePreset = val;
+        if (PRESET_DEFINITIONS[val]) {
+          const p = PRESET_DEFINITIONS[val];
           state.outputFormat = p.format;
           state.bitrate = p.bitrate;
           state.bitDepth = p.bitDepth;
           state.sampleRate = p.sampleRate;
           state.channels = p.channels;
-          state.artworkMode = p.artworkMode;
-          updateEncoderControlsUI();
-          renderTrackList();
-        };
-      });
+          syncEncoderSelects();
+        }
+      };
 
       document.getElementById('formatSelect').onchange = (e) => {
         state.outputFormat = e.target.value;
         state.activePreset = 'custom';
-        updateEncoderControlsUI();
-        renderTrackList();
+        syncEncoderSelects();
       };
 
-      const advDrawer = document.getElementById('advancedOptionsDrawer');
-      const advChev = document.getElementById('advancedDrawerChevron');
-      document.getElementById('toggleAdvancedDrawerBtn').onclick = () => {
-        const open = advDrawer.classList.toggle('open');
-        advChev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+      document.getElementById('toggleAdvancedBtn').onclick = () => {
+        document.getElementById('advancedDrawer').classList.toggle('hidden');
       };
 
       ['bitrateSelect', 'bitDepthSelect', 'sampleRateSelect', 'channelSelect', 'artworkModeSelect'].forEach((id) => {
@@ -1706,22 +1395,28 @@
           if (id === 'channelSelect') state.channels = Number(e.target.value);
           if (id === 'artworkModeSelect') state.artworkMode = e.target.value;
           state.activePreset = 'custom';
-          updateEncoderControlsUI();
+          syncEncoderSelects();
         };
       });
 
-      // Dropzone & Queue Actions
-      const dz = document.getElementById('dropzone');
-      const fi = document.getElementById('fileInput');
-      dz.onclick = (e) => { if (e.target.id !== 'loadDemoBtn') fi.click(); };
-      fi.onchange = (e) => ingestFiles(e.target.files);
-      dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('border-[var(--accent-primary)]'); };
-      dz.ondragleave = () => dz.classList.remove('border-[var(--accent-primary)]');
-      dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('border-[var(--accent-primary)]'); ingestFiles(e.dataTransfer.files); };
+      // Convert & Queue Actions
+      document.getElementById('convertAllBtn').onclick = async () => {
+        const lbl = document.getElementById('convertBtnLabel');
+        lbl.textContent = 'Encoding...';
+        for (const t of state.tracks) {
+          t.status = 'converting';
+          renderTrackList();
+          await new Promise((r) => setTimeout(r, 30));
+          const blob = await transcodeTrackToTarget(t);
+          t.convertedBlob = blob;
+          t.convertedExt = state.outputFormat;
+          t.status = 'done';
+          recordConversionTelemetry(t, blob.size, state.outputFormat);
+          renderTrackList();
+        }
+        lbl.textContent = 'Convert Batch';
+      };
 
-      document.getElementById('loadDemoBtn').onclick = (e) => { e.stopPropagation(); loadDemoStudioTracks(); };
-      document.getElementById('convertAllBtn').onclick = convertAllTracks;
-      document.getElementById('clearQueueBtn').onclick = () => { stopActivePlayback(); state.tracks = []; renderTrackList(); };
       document.getElementById('downloadZipBtn').onclick = async () => {
         const zip = new JSZip();
         state.tracks.forEach((t, i) => {
@@ -1730,68 +1425,121 @@
         triggerBlobDownload(await zip.generateAsync({ type: 'blob' }), `VNTEX_Batch_${state.outputFormat.toUpperCase()}.zip`);
       };
 
-      // Profile, Skin & Rig Modal
-      const authModal = document.getElementById('authProfileModal');
-      document.getElementById('openAuthProfileBtn').onclick = () => authModal.classList.remove('hidden');
-      document.getElementById('closeAuthProfileModalBtn').onclick = () => authModal.classList.add('hidden');
-      document.getElementById('doneAuthModalBtn').onclick = () => authModal.classList.add('hidden');
-
-      document.getElementById('skinSelect').onchange = (e) => {
-        document.documentElement.className = e.target.value;
-        state.tracks.forEach((t) => drawTrackWaveform(t, t.playProgress || 0));
+      document.getElementById('clearQueueBtn').onclick = () => {
+        stopActivePlayback();
+        state.tracks = [];
+        renderTrackList();
       };
-      document.getElementById('headerDeviceSelect').onchange = (e) => activateDeviceProfile(e.target.value);
 
-      document.getElementById('googleSignInBtn').onclick = () => {
-        state.user = { uid: 'u_' + Date.now(), displayName: 'DJ Uno', email: 'uno@vntex.studio', provider: 'google', lastLogin: new Date().toISOString() };
-        registerUserInTelemetry(state.user);
-        savePersistentState();
-        updateAuthUI();
+      // Account Modal & Gated Studio Hub
+      const accountModal = document.getElementById('accountModal');
+      const studioHubModal = document.getElementById('studioHubModal');
+
+      document.getElementById('openAccountBtn').onclick = () => accountModal.classList.remove('hidden');
+      document.getElementById('closeAccountModalBtn').onclick = () => accountModal.classList.add('hidden');
+
+      document.getElementById('openStudioHubBtn').onclick = () => {
+        if (!state.user) {
+          accountModal.classList.remove('hidden');
+          return;
+        }
+        renderSavedPalettes();
+        renderDeviceRigGrid();
+        renderCrateList();
+        studioHubModal.classList.remove('hidden');
       };
-      document.getElementById('emailAuthForm').onsubmit = (e) => {
+
+      document.getElementById('goToStudioHubFromAccountBtn').onclick = () => {
+        accountModal.classList.add('hidden');
+        renderSavedPalettes();
+        renderDeviceRigGrid();
+        renderCrateList();
+        studioHubModal.classList.remove('hidden');
+      };
+
+      document.getElementById('closeStudioHubBtn').onclick = () => studioHubModal.classList.add('hidden');
+
+      document.getElementById('googleLoginBtn').onclick = () => {
+        registerUserLogin('DJ Uno', 'uno@vntex.studio', 'google');
+        accountModal.classList.add('hidden');
+        renderSavedPalettes();
+        renderDeviceRigGrid();
+        renderCrateList();
+        studioHubModal.classList.remove('hidden');
+      };
+
+      document.getElementById('emailLoginForm').onsubmit = (e) => {
         e.preventDefault();
-        const email = document.getElementById('authEmailInput').value.trim();
-        const name = document.getElementById('authDisplayNameInput').value.trim() || email.split('@')[0];
-        state.user = { uid: 'u_' + Date.now(), displayName: name, email, provider: 'email', lastLogin: new Date().toISOString() };
-        registerUserInTelemetry(state.user);
-        savePersistentState();
-        updateAuthUI();
-      };
-      document.getElementById('signOutBtn').onclick = () => { state.user = null; savePersistentState(); updateAuthUI(); };
-
-      // Cloud Library Modal
-      const cloudModal = document.getElementById('cloudLibraryModal');
-      document.getElementById('openCloudLibraryBtn').onclick = () => { renderCloudLibraryModal(); cloudModal.classList.remove('hidden'); };
-      document.getElementById('closeCloudLibraryBtn').onclick = () => cloudModal.classList.add('hidden');
-      document.getElementById('tabCloudMastersBtn').onclick = () => {
-        document.getElementById('tabCloudMastersBtn').classList.add('active');
-        document.getElementById('tabDownloadHistoryBtn').classList.remove('active');
-        document.getElementById('cloudMastersView').classList.remove('hidden');
-        document.getElementById('downloadHistoryView').classList.add('hidden');
-      };
-      document.getElementById('tabDownloadHistoryBtn').onclick = () => {
-        document.getElementById('tabDownloadHistoryBtn').classList.add('active');
-        document.getElementById('tabCloudMastersBtn').classList.remove('active');
-        document.getElementById('downloadHistoryView').classList.remove('hidden');
-        document.getElementById('cloudMastersView').classList.add('hidden');
-      };
-      document.getElementById('librarySearchInput').oninput = renderCloudLibraryModal;
-      document.getElementById('libraryFormatFilter').onchange = renderCloudLibraryModal;
-      document.getElementById('clearUserHistoryBtn').onclick = () => {
-        state.cloudLibrary = {}; state.downloadHistory = []; savePersistentState(); updateAuthUI(); renderCloudLibraryModal();
+        const name = document.getElementById('loginNameInput').value.trim();
+        const email = document.getElementById('loginEmailInput').value.trim();
+        registerUserLogin(name, email, 'email');
+        accountModal.classList.add('hidden');
+        renderSavedPalettes();
+        renderDeviceRigGrid();
+        renderCrateList();
+        studioHubModal.classList.remove('hidden');
       };
 
-      // Batch Automation Modal
-      const autoModal = document.getElementById('automationModal');
-      const tplIn = document.getElementById('filenameTemplateInput');
-      document.getElementById('openAutomationBtn').onclick = () => { updateNamingPreviewUI(); autoModal.classList.remove('hidden'); };
-      document.getElementById('closeAutomationModalBtn').onclick = () => autoModal.classList.add('hidden');
-      document.getElementById('doneAutomationModalBtn').onclick = () => autoModal.classList.add('hidden');
-      tplIn.oninput = () => { state.filenameTemplate = tplIn.value; updateNamingPreviewUI(); renderTrackList(); };
-      document.querySelectorAll('.token-chip').forEach((c) => {
-        c.onclick = () => { tplIn.value = `${tplIn.value} ${c.getAttribute('data-token')}`.trim(); state.filenameTemplate = tplIn.value; updateNamingPreviewUI(); renderTrackList(); };
+      document.getElementById('logoutBtn').onclick = () => {
+        state.user = null;
+        state.activeDeviceId = 'none';
+        applyPaletteColors(BUILTIN_PALETTES.obsidian);
+        saveState();
+        updateAccountAndGatingUI();
+        accountModal.classList.add('hidden');
+      };
+
+      // Studio Hub Tabs
+      document.querySelectorAll('.hub-tab-btn').forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.hub-tab-btn').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('.hub-tab-pane').forEach((p) => p.classList.add('hidden'));
+          btn.classList.add('active');
+          const target = btn.getAttribute('data-hub-tab');
+          document.getElementById(`hubTab-${target}`).classList.remove('hidden');
+          if (target === 'crate') renderCrateList();
+        };
       });
-      document.querySelectorAll('.cleanup-macro-btn').forEach((b) => {
+
+      // Built-In Skins & Custom Palette Pickers
+      document.querySelectorAll('[data-builtin-skin]').forEach((btn) => {
+        btn.onclick = () => applyPaletteColors(BUILTIN_PALETTES[btn.getAttribute('data-builtin-skin')]);
+      });
+
+      ['colorVoidInput', 'colorPanelInput', 'colorAccent1Input', 'colorAccent2Input'].forEach((id) => {
+        document.getElementById(id).oninput = () => {
+          applyPaletteColors({
+            name: 'Live Custom',
+            void: document.getElementById('colorVoidInput').value,
+            panel: document.getElementById('colorPanelInput').value,
+            accent1: document.getElementById('colorAccent1Input').value,
+            accent2: document.getElementById('colorAccent2Input').value
+          });
+        };
+      });
+
+      document.getElementById('saveCustomPaletteBtn').onclick = () => {
+        const name = document.getElementById('customPaletteNameInput').value.trim() || `Custom #${state.customPalettes.length + 1}`;
+        const newPal = {
+          name,
+          void: document.getElementById('colorVoidInput').value,
+          panel: document.getElementById('colorPanelInput').value,
+          accent1: document.getElementById('colorAccent1Input').value,
+          accent2: document.getElementById('colorAccent2Input').value
+        };
+        state.customPalettes.push(newPal);
+        applyPaletteColors(newPal);
+        document.getElementById('customPaletteNameInput').value = '';
+        renderSavedPalettes();
+      };
+
+      // Automation Inside Studio Hub
+      const tplInput = document.getElementById('filenameTemplateInput');
+      tplInput.oninput = () => { state.filenameTemplate = tplInput.value; };
+      document.querySelectorAll('.token-chip').forEach((c) => {
+        c.onclick = () => { tplInput.value = `${tplInput.value} ${c.getAttribute('data-token')}`.trim(); state.filenameTemplate = tplInput.value; };
+      });
+      document.querySelectorAll('.cleanup-btn').forEach((b) => {
         b.onclick = () => {
           const act = b.getAttribute('data-cleanup');
           state.tracks.forEach((t, i) => {
@@ -1804,41 +1552,37 @@
         };
       });
 
-      const batchCoverIn = document.getElementById('batchCoverInput');
-      document.getElementById('selectBatchCoverBtn').onclick = () => batchCoverIn.click();
-      batchCoverIn.onchange = async (e) => {
-        const f = e.target.files?.[0];
-        if (!f) return;
-        const v = await normalizeAndVerifyCoverArt(new Uint8Array(await f.arrayBuffer()), f.type);
-        if (v) {
-          state.batchStampCoverBytes = v.bytes; state.batchStampCoverMime = v.mime; state.batchStampCoverUrl = v.url;
-          const img = document.getElementById('batchCoverPreview'); img.src = v.url; img.classList.remove('hidden');
-        }
-      };
       document.getElementById('applyBatchStampBtn').onclick = () => {
         const ar = document.getElementById('batchArtistInput').value.trim();
         const al = document.getElementById('batchAlbumInput').value.trim();
-        const ge = document.getElementById('batchGenreInput').value.trim();
-        const yr = document.getElementById('batchYearInput').value.trim();
         const bp = document.getElementById('batchBpmInput').value.trim();
         const ky = document.getElementById('batchKeyInput').value.trim();
         state.tracks.forEach((t) => {
-          if (ar) t.tags.artist = ar; if (al) t.tags.album = al; if (ge) t.tags.genre = ge;
-          if (yr) t.tags.year = yr; if (bp) t.tags.bpm = bp; if (ky) t.tags.key = ky;
-          if (state.batchStampCoverBytes) t.cover = { bytes: state.batchStampCoverBytes, mime: state.batchStampCoverMime, url: state.batchStampCoverUrl, width: 600, height: 600, source: 'Stamped' };
+          if (ar) t.tags.artist = ar; if (al) t.tags.album = al;
+          if (bp) t.tags.bpm = bp; if (ky) t.tags.key = ky;
         });
         renderTrackList();
       };
 
-      // Tag Editor Modal
+      document.getElementById('clearCrateHistoryBtn').onclick = () => {
+        state.cloudLibrary = {};
+        state.downloadHistory = [];
+        saveState();
+        renderCrateList();
+        updateAccountAndGatingUI();
+      };
+
+      // Per-Track Tag Editor Modal
+      document.getElementById('closeTagEditorBtn').onclick = () => document.getElementById('tagEditorModal').classList.add('hidden');
       const editCoverIn = document.getElementById('editCoverFileInput');
       document.getElementById('changeTrackCoverBtn').onclick = () => editCoverIn.click();
       editCoverIn.onchange = async (e) => {
         const f = e.target.files?.[0];
         const t = state.tracks.find((x) => x.id === state.editingTrackId);
         if (!f || !t) return;
-        const v = await normalizeAndVerifyCoverArt(new Uint8Array(await f.arrayBuffer()), f.type);
-        if (v) { t.cover = v; document.getElementById('editTrackCoverImg').src = v.url; }
+        const bytes = new Uint8Array(await f.arrayBuffer());
+        t.cover = { bytes, mime: f.type || 'image/jpeg', url: URL.createObjectURL(new Blob([bytes], { type: f.type })), width: 600, height: 600 };
+        document.getElementById('editTrackCoverImg').src = t.cover.url;
       };
       document.getElementById('saveTagEditorBtn').onclick = () => {
         const t = state.tracks.find((x) => x.id === state.editingTrackId);
@@ -1846,8 +1590,6 @@
           t.tags.title = document.getElementById('editTitleInput').value.trim() || t.tags.title;
           t.tags.artist = document.getElementById('editArtistInput').value.trim() || t.tags.artist;
           t.tags.album = document.getElementById('editAlbumInput').value.trim() || t.tags.album;
-          t.tags.genre = document.getElementById('editGenreInput').value.trim() || t.tags.genre;
-          t.tags.year = document.getElementById('editYearInput').value.trim() || t.tags.year;
           t.tags.bpm = document.getElementById('editBpmInput').value.trim() || t.tags.bpm;
           t.tags.key = document.getElementById('editKeyInput').value.trim() || t.tags.key;
           if (document.getElementById('applyCoverToBatchCheckbox').checked) {
@@ -1857,8 +1599,6 @@
         }
         document.getElementById('tagEditorModal').classList.add('hidden');
       };
-      document.getElementById('cancelTagEditorBtn').onclick = () => document.getElementById('tagEditorModal').classList.add('hidden');
-      document.getElementById('closeTagEditorBtn').onclick = () => document.getElementById('tagEditorModal').classList.add('hidden');
     });
   </script>
 </body>
