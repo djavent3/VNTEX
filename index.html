@@ -9,9 +9,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Firebase v10 Compat SDKs for Live Google OAuth & Email Verification -->
+  <!-- Firebase v10 SDKs (App, Auth, Firestore, Analytics) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
 
   <style>
     :root {
@@ -316,6 +318,9 @@
             <span id="adminRoleHeaderBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
               LOCKED
             </span>
+            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              ● FIREBASE: vntex-e24a5
+            </span>
           </div>
         </div>
 
@@ -338,10 +343,6 @@
 
           <button id="openDeviceConfigModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50 transition">
             <i class="fa-solid fa-sliders mr-1"></i>Device Presets
-          </button>
-
-          <button id="openFirebaseSetupModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-orange-400 hover:border-orange-400/50 transition">
-            <i class="fa-solid fa-fire mr-1"></i>Firebase OAuth Setup
           </button>
 
           <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-emerald-400 hover:border-emerald-400/50 transition">
@@ -528,7 +529,7 @@
   </div>
 
   <!-- ==========================================================================
-       REUSABLE PRODUCTION AUTH MODAL (SIGN IN | CREATE ACCOUNT | VERIFY EMAIL)
+       REUSABLE PRODUCTION AUTH MODAL (LIVE FIREBASE + SHA-256 FALLBACK)
        ========================================================================== -->
   <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
@@ -537,7 +538,7 @@
       <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-shield-halved text-[var(--accent-primary)] text-xs"></i>
-          <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Identity &amp; Security</h3>
+          <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Studio Account</h3>
         </div>
         <button id="closeAccountModalBtn" type="button" class="hardware-well w-7 h-7 flex items-center justify-center text-xs">
           <i class="fa-solid fa-xmark"></i>
@@ -557,7 +558,7 @@
           </button>
         </div>
 
-        <!-- Google OAuth Button -->
+        <!-- Live Google OAuth Button -->
         <button id="googleOAuthBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2.5 hover:bg-gray-100 transition shadow">
           <i class="fa-brands fa-google text-rose-500 text-sm"></i>
           <span>Continue with Google</span>
@@ -565,7 +566,7 @@
 
         <div class="relative flex py-0.5 items-center">
           <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
-          <span id="authDividerLabel" class="flex-shrink mx-3 text-[10px] font-mono-tech uppercase text-[var(--text-muted)]">Or Email &amp; Password</span>
+          <span class="flex-shrink mx-3 text-[10px] font-mono-tech uppercase text-[var(--text-muted)]">Or Email &amp; Password</span>
           <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
         </div>
 
@@ -639,7 +640,7 @@
           </div>
 
           <button id="signUpSubmitBtn" type="submit" disabled class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-            Create Account &amp; Verify Email
+            Create Account &amp; Send Verification Email
           </button>
         </form>
 
@@ -656,28 +657,29 @@
           <p id="verificationSubtext" class="text-[11px] text-[var(--text-secondary)] leading-relaxed"></p>
         </div>
 
-        <!-- Simulated Dispatch / Demo Inbox Preview (For Local Standalone Mode) -->
-        <div id="standaloneOtpNotice" class="hardware-well p-3 border-l-2 border-l-[var(--accent-primary)] space-y-1 font-mono-tech text-[11px]">
-          <div class="text-[10px] uppercase text-[var(--text-secondary)]">Verification Dispatch (Template Preview):</div>
-          <div>Your 6-digit security verification code is: <strong id="generatedOtpCodeDisplay" class="text-[var(--accent-primary)] text-sm tracking-widest"></strong></div>
-        </div>
+        <div id="verificationAlertBox" class="hidden hardware-well p-3 border-l-2 border-l-amber-400 text-amber-300 font-mono-tech text-[11px]"></div>
 
-        <!-- 6-Digit Code Entry Form -->
-        <form id="verifyOtpForm" class="space-y-3">
-          <input id="otpCodeInput" type="text" maxlength="6" placeholder="Enter 6-digit code" class="hardware-well w-full px-3 py-2.5 text-center font-mono-tech text-sm tracking-widest" />
-          <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-            Verify Email &amp; Unlock Studio Hub
-          </button>
-        </form>
-
-        <!-- Live Firebase Link Check Button (Shown when Firebase Auth is active) -->
-        <button id="firebaseCheckVerifiedBtn" type="button" class="hidden btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+        <!-- Primary Action: Check Live Firebase Email Verification Status -->
+        <button id="firebaseCheckVerifiedBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
           I've Clicked the Verification Link in My Email
         </button>
 
+        <!-- Fallback 6-Digit Code Form (Used if Firebase Email/Password provider isn't enabled yet) -->
+        <div id="standaloneOtpWrapper" class="hidden space-y-2.5 pt-2 border-t border-[var(--border-hairline)]">
+          <div class="hardware-well p-2.5 font-mono-tech text-[11px] text-center">
+            Instant Backup Code: <strong id="generatedOtpCodeDisplay" class="text-[var(--accent-primary)] tracking-widest"></strong>
+          </div>
+          <form id="verifyOtpForm" class="flex gap-2">
+            <input id="otpCodeInput" type="text" maxlength="6" placeholder="6-digit code" class="hardware-well flex-1 px-3 py-2 text-center font-mono-tech text-xs tracking-widest" />
+            <button type="submit" class="hardware-well px-4 py-2 font-mono-tech text-xs text-[var(--accent-primary)] border border-[var(--accent-primary)]/40">
+              Verify Code
+            </button>
+          </form>
+        </div>
+
         <div class="flex items-center justify-between pt-2 border-t border-[var(--border-hairline)] font-mono-tech text-[11px]">
           <button id="resendVerificationBtn" type="button" class="text-[var(--accent-primary)] hover:underline">
-            Resend Code / Email
+            Resend Verification Email
           </button>
           <button id="cancelVerificationBtn" type="button" class="text-rose-400 hover:underline">
             Sign Out
@@ -696,7 +698,7 @@
             <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5"></div>
             <div class="text-[10px] font-mono-tech text-emerald-400 mt-1 flex items-center gap-1">
               <i class="fa-solid fa-circle-check"></i>
-              <span>Verified Studio Identity (SHA-256 / OAuth)</span>
+              <span id="accountModalProviderText">Firebase Verified Identity</span>
             </div>
           </div>
           <button id="logoutBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-rose-400">
@@ -709,45 +711,6 @@
         </button>
       </div>
 
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       ADMIN MODAL: FIREBASE OAUTH & EMAIL VERIFICATION CONNECTOR
-       ========================================================================== -->
-  <div id="firebaseSetupModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="studio-panel w-full max-w-xl overflow-hidden border border-orange-400/40">
-      <div class="px-5 py-4 border-b border-[#181824] flex items-center justify-between bg-[#040406]">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-fire text-orange-400"></i>
-          <h3 class="text-sm font-bold text-white">Live Google OAuth &amp; Firebase Auth Configuration</h3>
-        </div>
-        <button id="closeFirebaseSetupBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="p-5 space-y-4 text-xs">
-        <div class="hardware-well p-3.5 space-y-1.5 text-[11px] text-gray-300 leading-relaxed">
-          <div class="font-bold text-white">How to Enable Real Google Sign-In Popups on GitHub Pages:</div>
-          <div>1. Go to <a href="https://console.firebase.google.com" target="_blank" class="text-cyan-400 underline">console.firebase.google.com</a> → Create a project → Enable <strong>Authentication</strong> (Google &amp; Email/Password).</div>
-          <div>2. In Firebase <strong>Authentication → Settings → Authorized domains</strong>, add <code class="text-amber-400 font-mono-tech">djavent3.github.io</code>.</div>
-          <div>3. Copy your Web App's <code class="text-cyan-400 font-mono-tech">firebaseConfig</code> JSON object and paste it below:</div>
-        </div>
-
-        <textarea id="firebaseConfigJsonInput" rows="5" class="hardware-well w-full p-3 font-mono-tech text-[11px] text-emerald-400" placeholder='{"apiKey":"AIzaSy...","authDomain":"your-project.firebaseapp.com","projectId":"your-project","appId":"1:123456:web:abcdef"}'></textarea>
-
-        <div id="firebaseConfigStatusMsg" class="font-mono-tech text-[11px] text-emerald-400"></div>
-
-        <div class="flex items-center justify-between pt-2">
-          <button id="disconnectFirebaseBtn" type="button" class="hardware-well px-3 py-2 font-mono-tech text-xs text-rose-400">
-            Disconnect / Use Local Crypto Auth
-          </button>
-          <button id="saveFirebaseConfigBtn" type="button" class="px-4 py-2 rounded bg-orange-400 text-black font-mono-tech font-bold text-xs">
-            Save &amp; Activate Live Firebase OAuth
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1191,33 +1154,41 @@
 
   <script>
     /**************************************************************************
-     * 1. REUSABLE WEB APP AUTHENTICATION ENGINE (VNTEXAuthEngine)
-     *    - Salted SHA-256 Web Crypto API Hashing
-     *    - Enforced Password Complexity Policy
-     *    - Brute-Force Rate Limiting (5 attempts -> 30s lockout)
-     *    - Mandatory Email Verification Gate (6-digit OTP + Firebase Native)
-     *    - Live Firebase Google OAuth Popup Support
+     * 1. LIVE FIREBASE CONFIGURATION (vntex-e24a5) & AUTH ENGINE
      **************************************************************************/
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A",
+      authDomain: "vntex-e24a5.firebaseapp.com",
+      projectId: "vntex-e24a5",
+      storageBucket: "vntex-e24a5.firebasestorage.app",
+      messagingSenderId: "977209087831",
+      appId: "1:977209087831:web:ab22e81f799442164b5012",
+      measurementId: "G-XEQ270Q51Z"
+    };
+
     const VNTEXAuthEngine = {
       failedAttempts: 0,
       lockoutUntil: 0,
+      firebaseApp: null,
       firebaseAuth: null,
-      isFirebaseActive: false,
+      firestoreDb: null,
+      isFirebaseReady: false,
 
-      initFirebase(configJsonString) {
-        if (!configJsonString) return false;
+      boot() {
         try {
-          const cfg = JSON.parse(configJsonString);
-          if (!cfg.apiKey || !cfg.authDomain) return false;
           if (!firebase.apps.length) {
-            firebase.initializeApp(cfg);
+            this.firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+          } else {
+            this.firebaseApp = firebase.app();
           }
           this.firebaseAuth = firebase.auth();
-          this.isFirebaseActive = true;
+          try { this.firestoreDb = firebase.firestore(); } catch {}
+          try { firebase.analytics(); } catch {}
+          this.isFirebaseReady = true;
           return true;
         } catch (err) {
-          console.warn('Firebase configuration invalid:', err);
-          this.isFirebaseActive = false;
+          console.error("Firebase init error:", err);
+          this.isFirebaseReady = false;
           return false;
         }
       },
@@ -1237,7 +1208,7 @@
         return { rules, score, allValid };
       },
 
-      // Cryptographic Salted SHA-256 Hash via browser SubtleCrypto
+      // Salted SHA-256 Hash via Web Crypto API
       async hashPassword(password, salt) {
         const encoder = new TextEncoder();
         const data = encoder.encode(`${salt}::VNTEX_PEPPER_2026::${password}`);
@@ -1262,7 +1233,7 @@
         const now = Date.now();
         if (this.lockoutUntil > now) {
           const rem = Math.ceil((this.lockoutUntil - now) / 1000);
-          throw new Error(`Too many failed login attempts. Account locked for ${rem}s.`);
+          throw new Error(`Too many failed login attempts. Try again in ${rem}s.`);
         }
       },
 
@@ -1272,6 +1243,26 @@
           this.lockoutUntil = Date.now() + 30000;
           this.failedAttempts = 0;
         }
+      },
+
+      formatFirebaseError(err) {
+        const code = err?.code || '';
+        if (code === 'auth/unauthorized-domain') {
+          return `Domain not authorized yet: Open console.firebase.google.com → vntex-e24a5 → Authentication → Settings → Authorized domains → Add "${window.location.hostname || 'djavent3.github.io'}".`;
+        }
+        if (code === 'auth/operation-not-allowed') {
+          return 'Sign-in provider not enabled yet: Open Firebase Console → Authentication → Sign-in method → Enable Google and Email/Password.';
+        }
+        if (code === 'auth/email-already-in-use') {
+          return 'An account with this email already exists. Switch to the "Sign In" tab above.';
+        }
+        if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+          return 'Incorrect email or password. Please verify your credentials.';
+        }
+        if (code === 'auth/popup-closed-by-user') {
+          return 'Google Sign-In popup was closed before completing login.';
+        }
+        return err?.message || 'Authentication failed.';
       }
     };
 
@@ -1279,16 +1270,15 @@
      * 2. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
      **************************************************************************/
     const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v5',
-      USERS_REGISTRY: 'vntex_users_registry_v5',
-      LIBRARY: 'vntex_cloud_library_v5',
-      HISTORY: 'vntex_download_history_v5',
-      DEVICE_PRESETS: 'vntex_device_presets_v5',
-      ACTIVE_DEVICE: 'vntex_active_device_v5',
-      CUSTOM_PALETTES: 'vntex_custom_palettes_v5',
-      ACTIVE_PALETTE: 'vntex_active_palette_v5',
-      APPROVAL_QUEUE: 'vntex_master_approvals_v5',
-      FIREBASE_CFG: 'vntex_firebase_cfg_v5'
+      USER: 'vntex_auth_user_v6',
+      USERS_REGISTRY: 'vntex_users_registry_v6',
+      LIBRARY: 'vntex_cloud_library_v6',
+      HISTORY: 'vntex_download_history_v6',
+      DEVICE_PRESETS: 'vntex_device_presets_v6',
+      ACTIVE_DEVICE: 'vntex_active_device_v6',
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v6',
+      ACTIVE_PALETTE: 'vntex_active_palette_v6',
+      APPROVAL_QUEUE: 'vntex_master_approvals_v6'
     };
 
     const DEFAULT_DEVICE_PROFILES = [
@@ -1489,7 +1479,7 @@
         const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
         const isPaid = u.permissions.tier === 'paid';
         const verifiedHtml = u.emailVerified
-          ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Verified (${escapeHtml(u.provider || 'SHA-256')})</span>`
+          ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Verified (${escapeHtml(u.provider || 'Firebase')})</span>`
           : `<span class="text-amber-400"><i class="fa-solid fa-clock mr-1"></i>Unverified</span>`;
         const tierBadge = isPaid
           ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px]">PAID PRO</span>`
@@ -1978,6 +1968,13 @@
       master.variants.push({ format: ext.toUpperCase(), qualitySpec, targetDevice, timestamp: nowIso, fileSize: blobSize });
 
       saveState();
+
+      // Mirror to Firestore if available
+      if (VNTEXAuthEngine.firestoreDb) {
+        VNTEXAuthEngine.firestoreDb.collection('vntex_history').add(logEntry).catch(() => {});
+        VNTEXAuthEngine.firestoreDb.collection('vntex_library').doc(masterKey).set(master, { merge: true }).catch(() => {});
+      }
+
       updateAccountAndGatingUI();
     }
 
@@ -2017,8 +2014,13 @@
         loggedInPanel.classList.add('hidden');
         verifyPanel.classList.remove('hidden');
 
-        document.getElementById('verificationSubtext').innerHTML =
-          `We sent a verification challenge to <strong class="text-[var(--text-primary)]">${escapeHtml(state.user.email)}</strong>. Verify your address to unlock Studio Hub.`;
+        const isFbEmail = state.user.provider === 'Firebase Email';
+        document.getElementById('verificationSubtext').innerHTML = isFbEmail
+          ? `We sent a real verification link to <strong class="text-[var(--text-primary)]">${escapeHtml(state.user.email)}</strong>. Click the link in your email inbox, then press the button below.`
+          : `Verify <strong class="text-[var(--text-primary)]">${escapeHtml(state.user.email)}</strong> using the 6-digit security code below to unlock Studio Hub.`;
+
+        document.getElementById('firebaseCheckVerifiedBtn').classList.toggle('hidden', !isFbEmail);
+        document.getElementById('standaloneOtpWrapper').classList.toggle('hidden', isFbEmail);
         document.getElementById('generatedOtpCodeDisplay').textContent = state.user.pendingOtp || '482910';
         return;
       }
@@ -2039,6 +2041,7 @@
 
       document.getElementById('accountModalName').textContent = state.user.displayName;
       document.getElementById('accountModalEmail').textContent = state.user.email;
+      document.getElementById('accountModalProviderText').textContent = `Verified via ${state.user.provider || 'Firebase Auth'}`;
 
       const tierPill = document.getElementById('accountModalTierPill');
       const isPaid = state.user.permissions.tier === 'paid';
@@ -2656,12 +2659,8 @@
      * 10. INITIALIZATION & EVENT LISTENERS
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize Firebase if saved config exists
-      const savedFbCfg = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
-      if (savedFbCfg) {
-        VNTEXAuthEngine.initFirebase(savedFbCfg);
-        document.getElementById('firebaseConfigJsonInput').value = savedFbCfg;
-      }
+      // Boot live vntex-e24a5 Firebase backend immediately
+      VNTEXAuthEngine.boot();
 
       checkRouteMode();
       window.addEventListener('hashchange', checkRouteMode);
@@ -2753,7 +2752,7 @@
       pwInput.addEventListener('input', updatePasswordComplexityUI);
       pwConfirmInput.addEventListener('input', updatePasswordComplexityUI);
 
-      // CREATE ACCOUNT HANDLER (Salted SHA-256 + Mandatory Email Verification Gate)
+      // CREATE ACCOUNT HANDLER (Firebase Email Auth + Real Verification Link Dispatch)
       signUpForm.onsubmit = async (e) => {
         e.preventDefault();
         clearAuthError();
@@ -2764,29 +2763,8 @@
 
         const { allValid } = VNTEXAuthEngine.evaluatePasswordPolicy(pass, conf);
         if (!allValid) {
-          showAuthError('Password does not meet all security requirements.');
+          showAuthError('Password does not meet all 5 security requirements.');
           return;
-        }
-
-        // Check if account already exists in registry
-        const existing = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
-        if (existing) {
-          showAuthError('An account with this email already exists. Please switch to Sign In.');
-          return;
-        }
-
-        // If Live Firebase Auth is configured, also register in Firebase & send real email link
-        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
-          try {
-            const cred = await VNTEXAuthEngine.firebaseAuth.createUserWithEmailAndPassword(email, pass);
-            if (cred.user) {
-              await cred.user.updateProfile({ displayName: name });
-              await cred.user.sendEmailVerification();
-            }
-          } catch (fbErr) {
-            showAuthError(fbErr.message);
-            return;
-          }
         }
 
         const salt = VNTEXAuthEngine.generateSalt();
@@ -2794,11 +2772,51 @@
         const otp = VNTEXAuthEngine.generateSixDigitOtp();
         const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
 
-        const newUser = ensureUserPermissionsStruct({
+        // Try Live Firebase Account Creation + Email Verification Dispatch first
+        if (VNTEXAuthEngine.isFirebaseReady && VNTEXAuthEngine.firebaseAuth) {
+          try {
+            const cred = await VNTEXAuthEngine.firebaseAuth.createUserWithEmailAndPassword(email, pass);
+            if (cred.user) {
+              await cred.user.updateProfile({ displayName: name });
+              await cred.user.sendEmailVerification();
+            }
+            const newUser = ensureUserPermissionsStruct({
+              uid: cred.user.uid,
+              displayName: name,
+              email,
+              provider: 'Firebase Email',
+              salt,
+              passwordHash,
+              emailVerified: false,
+              pendingOtp: otp,
+              activeRigName: dev ? dev.name : 'Standard Studio',
+              lastLogin: new Date().toISOString()
+            });
+            state.usersRegistry = state.usersRegistry.filter((u) => u.email.toLowerCase() !== email);
+            state.usersRegistry.push(newUser);
+            state.user = newUser;
+            saveState();
+            updateAccountAndGatingUI();
+            return;
+          } catch (fbErr) {
+            // If Email/Password provider isn't enabled in Firebase Console yet, show clear diagnostic or fallback
+            if (fbErr?.code !== 'auth/operation-not-allowed') {
+              showAuthError(VNTEXAuthEngine.formatFirebaseError(fbErr));
+              return;
+            }
+          }
+        }
+
+        // Local SHA-256 Crypto fallback if Firebase Email/Password toggle is off
+        if (state.usersRegistry.some((u) => u.email.toLowerCase() === email)) {
+          showAuthError('An account with this email already exists. Switch to the Sign In tab.');
+          return;
+        }
+        const localUser = ensureUserPermissionsStruct({
           uid: 'usr_' + Math.random().toString(36).slice(2, 10),
           displayName: name,
           email,
-          provider: VNTEXAuthEngine.isFirebaseActive ? 'Firebase Email' : 'SHA-256 Crypto',
+          provider: 'SHA-256 Crypto',
           salt,
           passwordHash,
           emailVerified: false,
@@ -2806,14 +2824,13 @@
           activeRigName: dev ? dev.name : 'Standard Studio',
           lastLogin: new Date().toISOString()
         });
-
-        state.usersRegistry.push(newUser);
-        state.user = newUser;
+        state.usersRegistry.push(localUser);
+        state.user = localUser;
         saveState();
         updateAccountAndGatingUI();
       };
 
-      // SIGN IN HANDLER (Verifies Existing Account & Salted SHA-256 Hash)
+      // SIGN IN HANDLER
       signInForm.onsubmit = async (e) => {
         e.preventDefault();
         clearAuthError();
@@ -2827,19 +2844,22 @@
         const email = document.getElementById('signInEmailInput').value.trim().toLowerCase();
         const pass = document.getElementById('signInPasswordInput').value;
 
-        // Live Firebase Auth check if connected
-        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
+        // 1. Live Firebase Sign-In
+        if (VNTEXAuthEngine.isFirebaseReady && VNTEXAuthEngine.firebaseAuth) {
           try {
             const cred = await VNTEXAuthEngine.firebaseAuth.signInWithEmailAndPassword(email, pass);
             const fbUser = cred.user;
+            await fbUser.reload();
             let regUser = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
+            const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
             if (!regUser) {
               regUser = ensureUserPermissionsStruct({
                 uid: fbUser.uid,
                 displayName: fbUser.displayName || email.split('@')[0],
                 email,
-                provider: 'Firebase Auth',
+                provider: 'Firebase Email',
                 emailVerified: fbUser.emailVerified,
+                activeRigName: dev ? dev.name : 'Standard Studio',
                 lastLogin: new Date().toISOString()
               });
               state.usersRegistry.push(regUser);
@@ -2847,26 +2867,31 @@
               regUser.emailVerified = fbUser.emailVerified;
               regUser.lastLogin = new Date().toISOString();
             }
+            VNTEXAuthEngine.failedAttempts = 0;
             state.user = regUser;
             saveState();
             updateAccountAndGatingUI();
-            if (regUser.emailVerified) document.getElementById('accountModal').classList.add('hidden');
+            if (regUser.emailVerified) {
+              document.getElementById('accountModal').classList.add('hidden');
+              openStudioHubAuthenticated();
+            }
             return;
           } catch (fbErr) {
-            VNTEXAuthEngine.recordFailedAttempt();
-            showAuthError('Invalid email or password.');
-            return;
+            if (fbErr?.code !== 'auth/operation-not-allowed') {
+              VNTEXAuthEngine.recordFailedAttempt();
+              showAuthError(VNTEXAuthEngine.formatFirebaseError(fbErr));
+              return;
+            }
           }
         }
 
-        // Local Salted SHA-256 Verification
+        // 2. Local Salted SHA-256 Verification
         const account = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
         if (!account) {
           VNTEXAuthEngine.recordFailedAttempt();
           showAuthError('No account found with that email address. Click "Create Account" above to register.');
           return;
         }
-
         const computedHash = await VNTEXAuthEngine.hashPassword(pass, account.salt || '');
         if (computedHash !== account.passwordHash) {
           VNTEXAuthEngine.recordFailedAttempt();
@@ -2881,10 +2906,34 @@
         updateAccountAndGatingUI();
         if (account.emailVerified) {
           document.getElementById('accountModal').classList.add('hidden');
+          openStudioHubAuthenticated();
         }
       };
 
-      // EMAIL VERIFICATION OTP SUBMIT
+      // LIVE FIREBASE EMAIL VERIFICATION CHECK BUTTON
+      document.getElementById('firebaseCheckVerifiedBtn').onclick = async () => {
+        const alertEl = document.getElementById('verificationAlertBox');
+        alertEl.classList.add('hidden');
+        if (VNTEXAuthEngine.firebaseAuth?.currentUser) {
+          try {
+            await VNTEXAuthEngine.firebaseAuth.currentUser.reload();
+            if (VNTEXAuthEngine.firebaseAuth.currentUser.emailVerified) {
+              state.user.emailVerified = true;
+              const idx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === state.user.email.toLowerCase());
+              if (idx >= 0) state.usersRegistry[idx].emailVerified = true;
+              saveState();
+              updateAccountAndGatingUI();
+              document.getElementById('accountModal').classList.add('hidden');
+              openStudioHubAuthenticated();
+              return;
+            }
+          } catch (e) {}
+        }
+        alertEl.textContent = 'Not verified yet — check your inbox (and spam folder) for the link from noreply@vntex-e24a5.firebaseapp.com, click it, then press this button again.';
+        alertEl.classList.remove('hidden');
+      };
+
+      // FALLBACK 6-DIGIT OTP VERIFY
       document.getElementById('verifyOtpForm').onsubmit = (e) => {
         e.preventDefault();
         if (!state.user) return;
@@ -2899,49 +2948,57 @@
           updateAccountAndGatingUI();
           document.getElementById('accountModal').classList.add('hidden');
           openStudioHubAuthenticated();
-        } else {
-          alert('Invalid 6-digit verification code. Check the code displayed above.');
         }
       };
 
       document.getElementById('resendVerificationBtn').onclick = async () => {
-        if (!state.user) return;
-        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth?.currentUser) {
-          try { await VNTEXAuthEngine.firebaseAuth.currentUser.sendEmailVerification(); } catch {}
+        const alertEl = document.getElementById('verificationAlertBox');
+        if (VNTEXAuthEngine.firebaseAuth?.currentUser) {
+          try {
+            await VNTEXAuthEngine.firebaseAuth.currentUser.sendEmailVerification();
+            alertEl.textContent = '✓ Sent a fresh verification link to your email inbox.';
+            alertEl.classList.remove('hidden');
+            return;
+          } catch (e) {}
         }
-        state.user.pendingOtp = VNTEXAuthEngine.generateSixDigitOtp();
-        saveState();
-        updateAccountAndGatingUI();
+        if (state.user) {
+          state.user.pendingOtp = VNTEXAuthEngine.generateSixDigitOtp();
+          saveState();
+          updateAccountAndGatingUI();
+        }
       };
 
-      document.getElementById('cancelVerificationBtn').onclick = () => {
+      document.getElementById('cancelVerificationBtn').onclick = async () => {
+        if (VNTEXAuthEngine.firebaseAuth) {
+          try { await VNTEXAuthEngine.firebaseAuth.signOut(); } catch {}
+        }
         state.user = null;
         saveState();
         updateAccountAndGatingUI();
       };
 
-      // GOOGLE OAUTH SIGN-IN HANDLER
+      // LIVE GOOGLE OAUTH POPUP HANDLER (vntex-e24a5)
       document.getElementById('googleOAuthBtn').onclick = async () => {
         clearAuthError();
-        if (!VNTEXAuthEngine.isFirebaseActive || !VNTEXAuthEngine.firebaseAuth) {
-          showAuthError(
-            'Google OAuth requires your Firebase Web API Key. Unlock #admin -> "Firebase OAuth Setup" to paste your Firebase config, or use Email & Strong Password below.'
-          );
+        if (!VNTEXAuthEngine.isFirebaseReady || !VNTEXAuthEngine.firebaseAuth) {
+          showAuthError('Firebase Auth SDK failed to initialize.');
           return;
         }
         try {
           const provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
           const result = await VNTEXAuthEngine.firebaseAuth.signInWithPopup(provider);
           const gUser = result.user;
-          if (!gUser || !gUser.email) throw new Error('Google sign-in did not return an email.');
+          if (!gUser || !gUser.email) throw new Error('Google sign-in did not return an email address.');
 
-          let regUser = state.usersRegistry.find((u) => u.email.toLowerCase() === gUser.email.toLowerCase());
+          const email = gUser.email.toLowerCase();
+          let regUser = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
           const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
           if (!regUser) {
             regUser = ensureUserPermissionsStruct({
               uid: gUser.uid,
-              displayName: gUser.displayName || gUser.email.split('@')[0],
-              email: gUser.email.toLowerCase(),
+              displayName: gUser.displayName || email.split('@')[0],
+              email,
               provider: 'Google OAuth',
               emailVerified: true,
               activeRigName: dev ? dev.name : 'Standard Studio',
@@ -2949,6 +3006,7 @@
             });
             state.usersRegistry.push(regUser);
           } else {
+            regUser.displayName = gUser.displayName || regUser.displayName;
             regUser.emailVerified = true;
             regUser.provider = 'Google OAuth';
             regUser.lastLogin = new Date().toISOString();
@@ -2959,32 +3017,8 @@
           document.getElementById('accountModal').classList.add('hidden');
           openStudioHubAuthenticated();
         } catch (err) {
-          showAuthError(`Google Sign-In Error: ${err.message}`);
+          showAuthError(VNTEXAuthEngine.formatFirebaseError(err));
         }
-      };
-
-      // Admin Firebase Setup Modal Events
-      const fbModal = document.getElementById('firebaseSetupModal');
-      document.getElementById('openFirebaseSetupModalBtn').onclick = () => fbModal.classList.remove('hidden');
-      document.getElementById('closeFirebaseSetupBtn').onclick = () => fbModal.classList.add('hidden');
-
-      document.getElementById('saveFirebaseConfigBtn').onclick = () => {
-        const raw = document.getElementById('firebaseConfigJsonInput').value.trim();
-        const statusEl = document.getElementById('firebaseConfigStatusMsg');
-        if (VNTEXAuthEngine.initFirebase(raw)) {
-          localStorage.setItem(STORAGE_KEYS.FIREBASE_CFG, raw);
-          statusEl.textContent = '✓ Live Firebase Auth & Google OAuth Popup Activated!';
-          statusEl.className = 'font-mono-tech text-[11px] text-emerald-400';
-        } else {
-          statusEl.textContent = '✕ Invalid Firebase Config JSON. Ensure apiKey and authDomain are present.';
-          statusEl.className = 'font-mono-tech text-[11px] text-rose-400';
-        }
-      };
-
-      document.getElementById('disconnectFirebaseBtn').onclick = () => {
-        localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
-        VNTEXAuthEngine.isFirebaseActive = false;
-        document.getElementById('firebaseConfigStatusMsg').textContent = 'Switched to Standalone SHA-256 Crypto Auth.';
       };
 
       // Admin Passcode Gate
@@ -3126,7 +3160,7 @@
             uid: 'usr_uno01',
             displayName: 'Darren (DJ Uno)',
             email: 'darren@auburn.edu',
-            provider: 'SHA-256 Crypto',
+            provider: 'Google OAuth',
             salt: salt1,
             passwordHash: hash1,
             emailVerified: true,
@@ -3138,7 +3172,7 @@
             uid: 'usr_dave02',
             displayName: 'DJ Dave',
             email: 'dave@booth.audio',
-            provider: 'SHA-256 Crypto',
+            provider: 'Firebase Email',
             salt: salt1,
             passwordHash: hash1,
             emailVerified: true,
@@ -3257,7 +3291,6 @@
         renderTrackList();
       };
 
-      // Account Modal & Gated Studio Hub (Requires Verified Email!)
       const accountModal = document.getElementById('accountModal');
       const studioHubModal = document.getElementById('studioHubModal');
 
@@ -3289,7 +3322,7 @@
       document.getElementById('closeStudioHubBtn').onclick = () => studioHubModal.classList.add('hidden');
 
       document.getElementById('logoutBtn').onclick = async () => {
-        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
+        if (VNTEXAuthEngine.firebaseAuth) {
           try { await VNTEXAuthEngine.firebaseAuth.signOut(); } catch {}
         }
         state.user = null;
@@ -3300,7 +3333,6 @@
         accountModal.classList.add('hidden');
       };
 
-      // Studio Hub Tabs
       document.querySelectorAll('.hub-tab-btn').forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll('.hub-tab-btn').forEach((b) => b.classList.remove('active'));
