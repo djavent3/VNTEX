@@ -118,184 +118,305 @@
 <body class="antialiased selection:bg-cyan-400 selection:text-black">
 
   <!-- ==========================================================================
-       ULTRA-CLEAN HEADER (ONLY LOGO + ACCOUNT / STUDIO HUB)
+       VIEW 1: PUBLIC USER CONVERTER APP (DEFAULT AT /)
        ========================================================================== -->
-  <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      
-      <!-- Brand Identity -->
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">
-          VX
+  <div id="userAppWrapper">
+
+    <!-- ULTRA-CLEAN HEADER (ONLY LOGO + ACCOUNT / STUDIO HUB) -->
+    <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
+      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">
+            VX
+          </div>
+          <span class="font-extrabold tracking-tight text-base text-[var(--text-primary)]">VNTEX</span>
+          <span id="activeRigBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--accent-primary)]"></span>
         </div>
-        <span class="font-extrabold tracking-tight text-base text-[var(--text-primary)]">VNTEX</span>
-        <span id="activeRigBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--accent-primary)]"></span>
+
+        <div class="flex items-center gap-2">
+          <button id="openStudioHubBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
+            <i id="studioHubLockIcon" class="fa-solid fa-lock text-[10px] text-[var(--text-muted)]"></i>
+            <span>Studio Hub</span>
+            <span class="hidden sm:inline text-[10px] font-mono-tech text-[var(--text-secondary)]">(Rig • Automation • Themes)</span>
+          </button>
+
+          <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
+            <i class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
+            <span id="headerAccountLabel">Sign In</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MAIN WORKSPACE (1. DROPZONE FIRST -> 2. CONSOLIDATED BAR -> 3. QUEUE) -->
+    <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
+
+      <!-- 1. FILE DROPZONE (FIRST THING ON SCREEN) -->
+      <section id="dropzone" class="studio-panel p-7 sm:p-9 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition cursor-pointer text-center space-y-3">
+        <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
+        
+        <div class="w-12 h-12 rounded-2xl hardware-well mx-auto flex items-center justify-center text-[var(--accent-primary)] text-xl">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+
+        <div class="space-y-1">
+          <h1 class="text-base sm:text-lg font-extrabold text-[var(--text-primary)]">
+            Drop Audio Files Here or Click to Browse
+          </h1>
+          <p class="text-xs text-[var(--text-secondary)]">
+            MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Automatic Cover Art &amp; Metadata Preservation
+          </p>
+        </div>
+
+        <div class="pt-1 flex items-center justify-center gap-2">
+          <span class="btn-convert-primary px-4 py-2 rounded-lg text-xs font-mono-tech">
+            Select Audio Files
+          </span>
+          <button id="loadDemoBtn" type="button" class="hardware-well px-3 py-2 text-xs font-mono-tech text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition">
+            + Load 3 Demo Tracks
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. SINGLE CONSOLIDATED CONTROL & CONVERT BAR -->
+      <section class="studio-panel p-3.5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <div class="hardware-well px-3 py-2 flex items-center gap-2">
+              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Preset:</span>
+              <select id="presetSelect" class="bg-transparent text-xs font-bold text-[var(--text-primary)] focus:outline-none cursor-pointer">
+                <option value="cdj-rekordbox" class="bg-[#08080c] text-white">💽 CDJ / Rekordbox (320k MP3)</option>
+                <option value="fl-daw" class="bg-[#08080c] text-white">🎹 FL Studio / DAW (32-Bit WAV)</option>
+                <option value="master-hifi" class="bg-[#08080c] text-white">💎 Master Hi-Fi (24/96 FLAC)</option>
+                <option value="fast-web" class="bg-[#08080c] text-white">⚡ Fast Web (128k MP3)</option>
+                <option value="custom" class="bg-[#08080c] text-white">⚙️ Custom Settings</option>
+              </select>
+            </div>
+
+            <div class="hardware-well px-3 py-2 flex items-center gap-2">
+              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Format:</span>
+              <select id="formatSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+                <option value="mp3" class="bg-[#08080c] text-white">.MP3</option>
+                <option value="flac" class="bg-[#08080c] text-white">.FLAC</option>
+                <option value="wav" class="bg-[#08080c] text-white">.WAV</option>
+                <option value="aiff" class="bg-[#08080c] text-white">.AIFF</option>
+                <option value="m4a" class="bg-[#08080c] text-white">.M4A</option>
+                <option value="ogg" class="bg-[#08080c] text-white">.OGG</option>
+                <option value="opus" class="bg-[#08080c] text-white">.OPUS</option>
+              </select>
+            </div>
+
+            <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Advanced Quality & Sample Rate">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button id="downloadZipBtn" type="button" disabled class="hardware-well px-3.5 py-2.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 disabled:opacity-30 hover:border-[var(--accent-primary)] transition">
+              <i class="fa-solid fa-file-zipper text-[var(--accent-primary)]"></i>
+              <span>.ZIP</span>
+            </button>
+
+            <button id="convertAllBtn" type="button" disabled class="btn-convert-primary flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-mono-tech uppercase tracking-wider flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i>
+              <span id="convertBtnLabel">Convert Batch</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Collapsible Granular Settings Row -->
+        <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+          <div id="bitrateWrapper">
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bitrate</label>
+            <select id="bitrateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="320" selected>320 kbps CBR</option>
+              <option value="256">256 kbps CBR</option>
+              <option value="192">192 kbps CBR</option>
+              <option value="128">128 kbps CBR</option>
+            </select>
+          </div>
+
+          <div id="bitDepthWrapper" class="hidden">
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bit Depth</label>
+            <select id="bitDepthSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="16">16-Bit PCM</option>
+              <option value="24" selected>24-Bit Master</option>
+              <option value="32">32-Bit Float</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Sample Rate</label>
+            <select id="sampleRateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="44100" selected>44.1 kHz</option>
+              <option value="48000">48.0 kHz</option>
+              <option value="96000">96.0 kHz</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Channels</label>
+            <select id="channelSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="2" selected>Stereo (2.0)</option>
+              <option value="1">Mono (1.0)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Artwork &amp; Tags</label>
+            <select id="artworkModeSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
+              <option value="preserve-normalize" selected>Embed Art + Tags</option>
+              <option value="strip-all">Strip Metadata</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. TRACK QUEUE -->
+      <section id="queueSection" class="studio-panel p-4 space-y-3 hidden">
+        <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-2.5 text-xs font-mono-tech">
+          <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
+          <button id="clearQueueBtn" type="button" class="text-[11px] text-rose-400 hover:underline">
+            Clear Queue
+          </button>
+        </div>
+        <div id="trackListContainer" class="space-y-2"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==========================================================================
+       VIEW 2: STANDALONE DEVELOPER ADMIN API CONSOLE (ONLY AT #admin)
+       ========================================================================== -->
+  <div id="adminPortalWrapper" class="hidden min-h-screen bg-[#030305] text-white">
+    <header class="border-b border-[#181824] bg-[#030305]/95 sticky top-0 z-30">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">VX</div>
+          <span class="font-extrabold text-sm text-white">VNTEX // ADMIN API &amp; TELEMETRY CONSOLE</span>
+          <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/30">PRIVATE ROUTE</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-amber-400 hover:border-amber-400/50">
+            + Seed Test Activity
+          </button>
+          <button id="refreshAdminBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50">
+            Refresh
+          </button>
+          <button id="exitAdminRouteBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-gray-300 hover:text-white">
+            ← Back to Converter
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Admin Passcode Lock Gate -->
+    <div id="adminPinGate" class="max-w-md mx-auto mt-20 p-6 studio-panel text-center space-y-4">
+      <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div class="space-y-1">
+        <h2 class="text-base font-bold text-white">Developer Admin Authentication</h2>
+        <p class="text-xs text-gray-400">
+          Enter your developer passcode to unlock platform metrics &amp; JSON API payloads (Default: <code class="text-amber-400 font-mono-tech">VNTEX-ADMIN</code>).
+        </p>
+      </div>
+      <form id="adminUnlockForm" class="flex gap-2">
+        <input id="adminPinInput" type="password" value="VNTEX-ADMIN" class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center text-white" />
+        <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs">
+          Unlock API
+        </button>
+      </form>
+      <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid Passcode</p>
+    </div>
+
+    <!-- Unlocked Admin Telemetry Dashboard -->
+    <div id="adminDashboardContent" class="hidden max-w-6xl mx-auto px-4 py-6 space-y-6">
+      
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="studio-panel p-4">
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Accounts</div>
+          <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400 mt-1">0</div>
+        </div>
+        <div class="studio-panel p-4">
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Total Conversions</div>
+          <div id="kpiConversions" class="font-mono-tech text-2xl font-extrabold text-white mt-1">0</div>
+        </div>
+        <div class="studio-panel p-4">
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Cloud Master Tracks</div>
+          <div id="kpiMasters" class="font-mono-tech text-2xl font-extrabold text-amber-400 mt-1">0</div>
+        </div>
+        <div class="studio-panel p-4">
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Data Processed</div>
+          <div id="kpiVolume" class="font-mono-tech text-2xl font-extrabold text-emerald-400 mt-1">0 KB</div>
+        </div>
       </div>
 
-      <!-- Right Side: Pro Studio Hub (Locked until logged in) + Account Button -->
-      <div class="flex items-center gap-2">
-        <button id="openStudioHubBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
-          <i id="studioHubLockIcon" class="fa-solid fa-lock text-[10px] text-[var(--text-muted)]"></i>
-          <span>Studio Hub</span>
-          <span class="hidden sm:inline text-[10px] font-mono-tech text-[var(--text-secondary)]">(Rig • Automation • Themes)</span>
-        </button>
+      <!-- REST API Endpoint Inspector -->
+      <div class="studio-panel p-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono-tech text-[10px] font-bold">GET</span>
+            <select id="endpointSelect" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
+              <option value="overview">/api/v1/admin/overview</option>
+              <option value="users">/api/v1/admin/users</option>
+              <option value="library">/api/v1/admin/cloud-library</option>
+              <option value="logs">/api/v1/admin/download-logs</option>
+            </select>
+          </div>
+          <button id="copyJsonBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
+            Copy JSON Payload
+          </button>
+        </div>
+        <pre id="jsonDisplay" class="hardware-well p-4 font-mono-tech text-[11px] text-emerald-400 overflow-x-auto max-h-60"></pre>
+      </div>
 
-        <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
-          <i class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
-          <span id="headerAccountLabel">Sign In</span>
-        </button>
+      <!-- Registered Studio Accounts Table -->
+      <div class="studio-panel p-5 space-y-3">
+        <h2 class="font-mono-tech uppercase text-xs text-cyan-400">Registered Studio Accounts</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse font-mono-tech text-xs">
+            <thead>
+              <tr class="border-b border-[#181824] text-gray-400">
+                <th class="py-2 px-3">UID</th>
+                <th class="py-2 px-3">Name</th>
+                <th class="py-2 px-3">Email</th>
+                <th class="py-2 px-3">Provider</th>
+                <th class="py-2 px-3">Last Active</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Conversion Activity Logs Table -->
+      <div class="studio-panel p-5 space-y-3">
+        <h2 class="font-mono-tech uppercase text-xs text-amber-400">Recent Conversion &amp; Device-Tuned Logs</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse font-mono-tech text-xs">
+            <thead>
+              <tr class="border-b border-[#181824] text-gray-400">
+                <th class="py-2 px-3">Timestamp</th>
+                <th class="py-2 px-3">User</th>
+                <th class="py-2 px-3">Track</th>
+                <th class="py-2 px-3">Format</th>
+                <th class="py-2 px-3">Target Rig</th>
+                <th class="py-2 px-3">Size</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+          </table>
+        </div>
       </div>
 
     </div>
-  </header>
-
-  <!-- ==========================================================================
-       MAIN WORKSPACE (1. DROPZONE FIRST -> 2. CONSOLIDATED BAR -> 3. QUEUE)
-       ========================================================================== -->
-  <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
-
-    <!-- 1. FILE DROPZONE (FIRST THING ON SCREEN) -->
-    <section id="dropzone" class="studio-panel p-7 sm:p-9 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition cursor-pointer text-center space-y-3">
-      <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
-      
-      <div class="w-12 h-12 rounded-2xl hardware-well mx-auto flex items-center justify-center text-[var(--accent-primary)] text-xl">
-        <i class="fa-solid fa-cloud-arrow-up"></i>
-      </div>
-
-      <div class="space-y-1">
-        <h1 class="text-base sm:text-lg font-extrabold text-[var(--text-primary)]">
-          Drop Audio Files Here or Click to Browse
-        </h1>
-        <p class="text-xs text-[var(--text-secondary)]">
-          MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Automatic Cover Art &amp; Metadata Preservation
-        </p>
-      </div>
-
-      <div class="pt-1 flex items-center justify-center gap-2">
-        <span class="btn-convert-primary px-4 py-2 rounded-lg text-xs font-mono-tech">
-          Select Audio Files
-        </span>
-        <button id="loadDemoBtn" type="button" class="hardware-well px-3 py-2 text-xs font-mono-tech text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition">
-          + Load 3 Demo Tracks
-        </button>
-      </div>
-    </section>
-
-    <!-- 2. SINGLE CONSOLIDATED CONTROL & CONVERT BAR -->
-    <section class="studio-panel p-3.5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2.5">
-        
-        <!-- Left: Preset & Output Format Selectors -->
-        <div class="flex flex-wrap items-center gap-2 flex-1">
-          
-          <!-- Quick Preset Selector -->
-          <div class="hardware-well px-3 py-2 flex items-center gap-2">
-            <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Preset:</span>
-            <select id="presetSelect" class="bg-transparent text-xs font-bold text-[var(--text-primary)] focus:outline-none cursor-pointer">
-              <option value="cdj-rekordbox" class="bg-[#08080c] text-white">💽 CDJ / Rekordbox (320k MP3)</option>
-              <option value="fl-daw" class="bg-[#08080c] text-white">🎹 FL Studio / DAW (32-Bit WAV)</option>
-              <option value="master-hifi" class="bg-[#08080c] text-white">💎 Master Hi-Fi (24/96 FLAC)</option>
-              <option value="fast-web" class="bg-[#08080c] text-white">⚡ Fast Web (128k MP3)</option>
-              <option value="custom" class="bg-[#08080c] text-white">⚙️ Custom Settings</option>
-            </select>
-          </div>
-
-          <!-- Output Format Selector -->
-          <div class="hardware-well px-3 py-2 flex items-center gap-2">
-            <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Format:</span>
-            <select id="formatSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
-              <option value="mp3" class="bg-[#08080c] text-white">.MP3</option>
-              <option value="flac" class="bg-[#08080c] text-white">.FLAC</option>
-              <option value="wav" class="bg-[#08080c] text-white">.WAV</option>
-              <option value="aiff" class="bg-[#08080c] text-white">.AIFF</option>
-              <option value="m4a" class="bg-[#08080c] text-white">.M4A</option>
-              <option value="ogg" class="bg-[#08080c] text-white">.OGG</option>
-              <option value="opus" class="bg-[#08080c] text-white">.OPUS</option>
-            </select>
-          </div>
-
-          <!-- Compact Advanced DSP Toggle Button -->
-          <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Advanced Quality & Sample Rate">
-            <i class="fa-solid fa-sliders"></i>
-          </button>
-
-        </div>
-
-        <!-- Right: Convert Batch + ZIP Download -->
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button id="downloadZipBtn" type="button" disabled class="hardware-well px-3.5 py-2.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 disabled:opacity-30 hover:border-[var(--accent-primary)] transition">
-            <i class="fa-solid fa-file-zipper text-[var(--accent-primary)]"></i>
-            <span>.ZIP</span>
-          </button>
-
-          <button id="convertAllBtn" type="button" disabled class="btn-convert-primary flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-mono-tech uppercase tracking-wider flex items-center justify-center gap-2">
-            <i class="fa-solid fa-bolt"></i>
-            <span id="convertBtnLabel">Convert Batch</span>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Collapsible Granular Settings Row (Hidden unless gear icon clicked) -->
-      <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-        <div id="bitrateWrapper">
-          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bitrate</label>
-          <select id="bitrateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="320" selected>320 kbps CBR</option>
-            <option value="256">256 kbps CBR</option>
-            <option value="192">192 kbps CBR</option>
-            <option value="128">128 kbps CBR</option>
-          </select>
-        </div>
-
-        <div id="bitDepthWrapper" class="hidden">
-          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bit Depth</label>
-          <select id="bitDepthSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="16">16-Bit PCM</option>
-            <option value="24" selected>24-Bit Master</option>
-            <option value="32">32-Bit Float</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Sample Rate</label>
-          <select id="sampleRateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="44100" selected>44.1 kHz</option>
-            <option value="48000">48.0 kHz</option>
-            <option value="96000">96.0 kHz</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Channels</label>
-          <select id="channelSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="2" selected>Stereo (2.0)</option>
-            <option value="1">Mono (1.0)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Artwork &amp; Tags</label>
-          <select id="artworkModeSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-            <option value="preserve-normalize" selected>Embed Art + Tags</option>
-            <option value="strip-all">Strip Metadata</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. TRACK QUEUE (ONLY VISIBLE WHEN FILES ARE LOADED) -->
-    <section id="queueSection" class="studio-panel p-4 space-y-3 hidden">
-      <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-2.5 text-xs font-mono-tech">
-        <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
-        <button id="clearQueueBtn" type="button" class="text-[11px] text-rose-400 hover:underline">
-          Clear Queue
-        </button>
-      </div>
-      <div id="trackListContainer" class="space-y-2"></div>
-    </section>
-
-  </main>
+  </div>
 
   <!-- ==========================================================================
        MODAL 1: ACCOUNT LOGIN / SIGN UP (UNLOCKS PRO STUDIO HUB)
@@ -309,7 +430,6 @@
         </button>
       </div>
 
-      <!-- Logged Out Form -->
       <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
         <p class="text-[var(--text-secondary)] leading-relaxed">
           Create a free account or sign in to unlock <strong>Custom UI Palettes</strong>, <strong>Hardware Rig Optimization</strong>, <strong>Batch Automation</strong>, and your <strong>Cloud Crate Library</strong>.
@@ -336,7 +456,6 @@
         </form>
       </div>
 
-      <!-- Logged In Summary -->
       <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
         <div class="hardware-well p-3.5 flex items-center justify-between">
           <div>
@@ -362,7 +481,6 @@
   <div id="studioHubModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
       
-      <!-- Modal Header + Consolidated Navigation Tabs -->
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center gap-1.5">
           <button type="button" data-hub-tab="themes" class="hub-tab-btn tab-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
@@ -383,7 +501,6 @@
         </button>
       </div>
 
-      <!-- Modal Content Area -->
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
 
         <!-- TAB 1: UI SKINS & CUSTOM PALETTE CREATOR -->
@@ -406,7 +523,6 @@
             </div>
           </div>
 
-          <!-- Custom UI Palette Studio -->
           <div class="space-y-3 pt-4 border-t border-[var(--border-hairline)]">
             <div class="flex items-center justify-between">
               <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Custom UI Palette Creator</label>
@@ -451,7 +567,6 @@
               </button>
             </div>
 
-            <!-- Saved User Palettes List -->
             <div id="savedPalettesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2"></div>
           </div>
         </div>
@@ -467,10 +582,7 @@
         <!-- TAB 3: BATCH AUTOMATION & NAMING -->
         <div id="hubTab-automation" class="hub-tab-pane hidden space-y-4">
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
-              <span id="templatePreviewText" class="font-mono-tech text-[11px] text-[var(--accent-primary)]"></span>
-            </div>
+            <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
             <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well w-full px-3 py-2 font-mono-tech text-xs" />
             <div class="flex flex-wrap gap-1.5">
               <button type="button" data-token="[Track#]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Track#]</button>
@@ -558,7 +670,7 @@
 
   <script>
     /**************************************************************************
-     * 1. SHARED STORAGE KEYS (SYNCED WITH STANDALONE ADMIN.HTML)
+     * 1. SHARED STORAGE & STATE
      **************************************************************************/
     const STORAGE_KEYS = {
       USER: 'vntex_auth_user_v3',
@@ -630,7 +742,76 @@
     }
 
     /**************************************************************************
-     * 2. CUSTOM UI PALETTE ENGINE
+     * 2. PRIVATE #admin ROUTER & TELEMETRY RENDERER
+     **************************************************************************/
+    function checkRouteMode() {
+      const isAdminRoute = window.location.hash.toLowerCase() === '#admin' ||
+                           window.location.search.toLowerCase().includes('admin');
+      const userApp = document.getElementById('userAppWrapper');
+      const adminPortal = document.getElementById('adminPortalWrapper');
+      if (isAdminRoute) {
+        userApp.classList.add('hidden');
+        adminPortal.classList.remove('hidden');
+        renderAdminConsole();
+      } else {
+        adminPortal.classList.add('hidden');
+        userApp.classList.remove('hidden');
+      }
+    }
+
+    function formatBytes(b) {
+      if (!b) return '0 KB';
+      return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+    }
+
+    function renderAdminConsole() {
+      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]');
+      const library = JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}');
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+      const vol = history.reduce((s, h) => s + (h.fileSize || 0), 0);
+
+      document.getElementById('kpiUsers').textContent = users.length;
+      document.getElementById('kpiConversions').textContent = history.length;
+      document.getElementById('kpiMasters').textContent = Object.keys(library).length;
+      document.getElementById('kpiVolume').textContent = formatBytes(vol);
+
+      const mode = document.getElementById('endpointSelect').value;
+      const payloads = {
+        overview: { status: 200, usersCount: users.length, conversionsCount: history.length, mastersCount: Object.keys(library).length, totalBytes: vol },
+        users: { status: 200, users },
+        library: { status: 200, library },
+        logs: { status: 200, logs: history }
+      };
+      document.getElementById('jsonDisplay').textContent = JSON.stringify(payloads[mode], null, 2);
+
+      document.getElementById('usersBody').innerHTML = users.length === 0
+        ? '<tr><td colspan="5" class="py-4 text-center text-gray-500">No users registered yet. Sign in on the main app or click "+ Seed Test Activity".</td></tr>'
+        : users.map((u) => `
+            <tr>
+              <td class="py-2 px-3 text-gray-500">${escapeHtml(u.uid)}</td>
+              <td class="py-2 px-3 font-bold text-white">${escapeHtml(u.displayName)}</td>
+              <td class="py-2 px-3 text-cyan-400">${escapeHtml(u.email)}</td>
+              <td class="py-2 px-3">${escapeHtml(u.provider)}</td>
+              <td class="py-2 px-3 text-gray-400">${new Date(u.lastLogin).toLocaleString()}</td>
+            </tr>
+          `).join('');
+
+      document.getElementById('logsBody').innerHTML = history.length === 0
+        ? '<tr><td colspan="6" class="py-4 text-center text-gray-500">No conversion logs yet. Convert a track or click "+ Seed Test Activity".</td></tr>'
+        : history.map((h) => `
+            <tr>
+              <td class="py-2 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
+              <td class="py-2 px-3 text-white">${escapeHtml(h.userEmail)}</td>
+              <td class="py-2 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+              <td class="py-2 px-3 text-cyan-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
+              <td class="py-2 px-3 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
+              <td class="py-2 px-3">${formatBytes(h.fileSize)}</td>
+            </tr>
+          `).join('');
+    }
+
+    /**************************************************************************
+     * 3. CUSTOM UI PALETTE ENGINE
      **************************************************************************/
     function applyPaletteColors(p) {
       if (!p) return;
@@ -696,7 +877,7 @@
     }
 
     /**************************************************************************
-     * 3. ACCOUNT GATING & STUDIO HUB RENDERING
+     * 4. ACCOUNT GATING & STUDIO HUB RENDERING
      **************************************************************************/
     function updateAccountAndGatingUI() {
       const lockIcon = document.getElementById('studioHubLockIcon');
@@ -721,7 +902,6 @@
           rigBadge.classList.add('hidden');
         }
       } else {
-        // Guest mode: reset theme to default Obsidian and lock pro features
         lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
         accountLabel.textContent = 'Sign In';
         rigBadge.classList.add('hidden');
@@ -794,7 +974,7 @@
     }
 
     /**************************************************************************
-     * 4. AUDIO METADATA, ARTWORK & TRANSCODING ENGINE
+     * 5. AUDIO METADATA, ARTWORK & TRANSCODING ENGINE
      **************************************************************************/
     async function generateProceduralCoverArt(title = 'UNTITLED', artist = 'VNTEX', key = '8A', bpm = '128') {
       const canvas = document.createElement('canvas');
@@ -1014,7 +1194,7 @@
     }
 
     /**************************************************************************
-     * 5. TRACK QUEUE & WAVEFORM UI
+     * 6. TRACK QUEUE & WAVEFORM UI
      **************************************************************************/
     function computeWaveformPeaks(audioBuffer, numBars = 80) {
       const ch0 = audioBuffer.getChannelData(0);
@@ -1342,14 +1522,63 @@
     }
 
     /**************************************************************************
-     * 6. INITIALIZATION & EVENT LISTENERS
+     * 7. INITIALIZATION & EVENT LISTENERS
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
+      checkRouteMode();
+      window.addEventListener('hashchange', checkRouteMode);
+
       if (state.user && state.activePalette) {
         applyPaletteColors(state.activePalette);
       }
       syncEncoderSelects();
       updateAccountAndGatingUI();
+
+      // Admin Portal Controls
+      document.getElementById('adminUnlockForm').onsubmit = (e) => {
+        e.preventDefault();
+        const pin = document.getElementById('adminPinInput').value.trim();
+        if (pin === 'VNTEX-ADMIN' || pin === '2026') {
+          document.getElementById('adminPinGate').classList.add('hidden');
+          document.getElementById('adminDashboardContent').classList.remove('hidden');
+          document.getElementById('adminPinError').classList.add('hidden');
+          renderAdminConsole();
+        } else {
+          document.getElementById('adminPinError').classList.remove('hidden');
+        }
+      };
+
+      document.getElementById('exitAdminRouteBtn').onclick = () => {
+        window.location.hash = '';
+        checkRouteMode();
+      };
+      document.getElementById('refreshAdminBtn').onclick = renderAdminConsole;
+      document.getElementById('endpointSelect').onchange = renderAdminConsole;
+      document.getElementById('copyJsonBtn').onclick = () => {
+        navigator.clipboard?.writeText(document.getElementById('jsonDisplay').textContent);
+      };
+      document.getElementById('seedDemoTelemetryBtn').onclick = () => {
+        const now = new Date().toISOString();
+        state.usersRegistry = [{ uid: 'usr_uno01', displayName: 'DJ Uno', email: 'uno@vntex.studio', provider: 'google', lastLogin: now }];
+        state.downloadHistory = [
+          { id: 'log_1', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', fileSize: 4820100 },
+          { id: 'log_2', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', fileSize: 28410000 }
+        ];
+        state.cloudLibrary = {
+          uno__obsidiantelemetry: {
+            masterKey: 'uno__obsidiantelemetry',
+            title: 'Obsidian Telemetry',
+            artist: 'Uno',
+            updatedAt: now,
+            variants: [
+              { format: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', timestamp: now, fileSize: 4820100 },
+              { format: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', timestamp: now, fileSize: 28410000 }
+            ]
+          }
+        };
+        saveState();
+        renderAdminConsole();
+      };
 
       // Dropzone Events
       const dz = document.getElementById('dropzone');
