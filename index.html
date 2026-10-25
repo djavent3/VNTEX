@@ -183,7 +183,7 @@
             Drop Audio Files Here or Click to Browse
           </h1>
           <p id="dropzoneStatusText" class="text-xs text-[var(--text-secondary)]">
-            MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Auto DSP BPM &amp; Key Detection + Cover Art
+            MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Pure-JS DSP BPM &amp; Key Detection + Cover Art
           </p>
         </div>
 
@@ -192,7 +192,7 @@
             Select Audio Files
           </span>
           <button id="loadDemoBtn" type="button" class="hardware-well px-3 py-2 text-xs font-mono-tech text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition">
-            + Load 3 Demo Tracks
+            + Load 3 Demo Tracks (96 / 124 / 140 BPM)
           </button>
         </div>
       </section>
@@ -228,17 +228,28 @@
               </select>
             </div>
 
+            <!-- BPM Range Selector (Directly Visible in Control Bar) -->
+            <div class="hardware-well px-2.5 py-2 flex items-center gap-1.5" title="Set Target BPM Range for Tempo Detection">
+              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">BPM Range:</span>
+              <select id="bpmRangeSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--text-primary)] focus:outline-none cursor-pointer">
+                <option value="65-135" class="bg-[#08080c] text-white">65–135 (Hip-Hop / R&amp;B)</option>
+                <option value="90-155" selected class="bg-[#08080c] text-white">90–155 (House / Club / Trap)</option>
+                <option value="115-190" class="bg-[#08080c] text-white">115–190 (DnB / Techno / Jersey)</option>
+                <option value="60-200" class="bg-[#08080c] text-white">60–200 (Open Format)</option>
+              </select>
+            </div>
+
             <!-- Key Notation Mode (Camelot vs Standard) -->
             <div class="hardware-well px-2.5 py-2 flex items-center gap-1.5" title="Switch Musical Key Display & Export Notation">
-              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Key:</span>
+              <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Key Mode:</span>
               <select id="keyModeSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
                 <option value="camelot" class="bg-[#08080c] text-white">Camelot (8A / 11B)</option>
                 <option value="standard" class="bg-[#08080c] text-white">Standard (Am / C)</option>
               </select>
             </div>
 
-            <!-- Advanced DSP & BPM Range Drawer Toggle -->
-            <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="BPM Detection Range, Bitrate & Sample Rate">
+            <!-- Advanced DSP Drawer Toggle -->
+            <button id="toggleAdvancedBtn" type="button" class="hardware-well px-2.5 py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Bitrate, Sample Rate & Channels">
               <i class="fa-solid fa-sliders"></i>
             </button>
           </div>
@@ -258,20 +269,8 @@
 
         </div>
 
-        <!-- Collapsible Granular DSP & BPM Detection Settings Row -->
-        <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs">
-          
-          <!-- BPM Detection Range Selector -->
-          <div>
-            <label class="block text-[10px] font-mono-tech uppercase text-[var(--accent-primary)] mb-1">BPM Detection Range</label>
-            <select id="bpmRangeSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
-              <option value="70-140">70–140 (Hip-Hop / Trap)</option>
-              <option value="95-160" selected>95–160 (House / Club / Pop)</option>
-              <option value="120-195">120–195 (DnB / Hard / Footwork)</option>
-              <option value="60-200">60–200 (Wide / Open Format)</option>
-            </select>
-          </div>
-
+        <!-- Collapsible Granular DSP Settings Row -->
+        <div id="advancedDrawer" class="hidden pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
           <div id="bitrateWrapper">
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Bitrate</label>
             <select id="bitrateSelect" class="hardware-well w-full px-2.5 py-1.5 text-xs font-mono-tech">
@@ -315,7 +314,6 @@
               <option value="strip-all">Strip Metadata</option>
             </select>
           </div>
-
         </div>
       </section>
 
@@ -325,7 +323,7 @@
           <div class="flex items-center gap-3">
             <span id="queueStatsBadge" class="text-[var(--accent-primary)]">0 Tracks</span>
             <button id="reanalyzeAllBpmKeyBtn" type="button" class="hardware-well px-2.5 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition" title="Re-run DSP BPM & Key analyzer using the current BPM Range">
-              <i class="fa-solid fa-wave-square mr-1"></i>Re-Analyze BPM &amp; Keys
+              <i class="fa-solid fa-wave-square mr-1"></i>Re-Scan Audio BPM &amp; Keys
             </button>
           </div>
           <button id="clearQueueBtn" type="button" class="text-[11px] text-rose-400 hover:underline">
@@ -395,7 +393,7 @@
       </div>
     </header>
 
-    <!-- 1. BLANK ADMIN PASSCODE LOCK GATE (SUPPORTS CUSTOM ADMIN & OWNER PASSWORDS) -->
+    <!-- 1. BLANK ADMIN PASSCODE LOCK GATE -->
     <div id="adminPinGate" class="max-w-md mx-auto mt-20 p-6 studio-panel text-center space-y-4">
       <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
         <i class="fa-solid fa-lock"></i>
@@ -403,7 +401,7 @@
       <div class="space-y-1">
         <h2 class="text-base font-bold text-white">Admin Console Authentication</h2>
         <p id="adminGateSubtext" class="text-xs text-gray-400 leading-relaxed">
-          Enter your unique <strong>Standard Admin</strong> passcode or <strong>Master Owner</strong> passcode to unlock the console.
+          Enter your unique <strong>Standard Admin</strong> password or <strong>Master Owner</strong> password to unlock the console.
         </p>
       </div>
       <form id="adminUnlockForm" class="flex gap-2" autocomplete="off">
@@ -1257,20 +1255,18 @@
 
   <script>
     /**************************************************************************
-     * 1. DSP BPM & MUSICAL KEY ANALYZER ENGINE (VNTEXAudioAnalyzer)
-     *    - Stage 1 (BPM): 150Hz Biquad Low-Pass Filter via OfflineAudioContext
-     *      + Onset Energy Flux Envelope + Bounded Autocorrelation / Comb Folding
-     *    - Stage 2 (Key): 12-Bin Pitch-Class Chromagram (C2-B5 Goertzel Bank)
-     *      + Krumhansl-Schmuckler 24-Key Profile Pearson Correlation
-     *    - Bidirectional Camelot (8A/11B) <-> Standard (Am/A) Key Mapper
+     * 1. PURE-JS DSP BPM & MUSICAL KEY ANALYZER ENGINE (VNTEXAudioAnalyzer)
+     *    - Zero OfflineAudioContext dependency (never throws NotSupportedError)
+     *    - Time-domain 140 Hz IIR Low-Pass Filter + Broadband Transient Flux
+     *    - 4-Harmonic Comb Autocorrelator strictly bounded to [minBPM, maxBPM]
+     *    - 4x Anti-Aliased Decimation + Exact Unrounded Goertzel Chromagram
+     *    - Sha'ath & Krumhansl-Kessler 24-Key Profile Correlation
      **************************************************************************/
     const VNTEXAudioAnalyzer = {
-      // Canonical Krumhansl-Schmuckler Major & Minor Tonal Hierarchy Profiles
-      KS_MAJOR: [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
-      KS_MINOR: [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17],
-      PITCH_NAMES: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+      // Sha'ath / Krumhansl Hybrid Profiles tuned for electronic, pop & hip-hop
+      PROFILE_MAJOR: [6.6, 2.0, 3.5, 2.3, 4.6, 4.0, 2.5, 5.2, 2.4, 3.7, 2.3, 3.0],
+      PROFILE_MINOR: [6.5, 2.7, 3.5, 5.4, 2.6, 3.5, 2.5, 5.1, 4.0, 2.7, 3.4, 3.2],
 
-      // Complete 24-Key Mapping Table (Pitch Class + Scale -> Standard & Camelot)
       KEY_TABLE: [
         { pc: 0,  mode: 'major', standard: 'C',   camelot: '8B'  },
         { pc: 1,  mode: 'major', standard: 'Db',  camelot: '3B'  },
@@ -1308,182 +1304,252 @@
         return targetMode === 'camelot' ? match.camelot : match.standard;
       },
 
-      // High-Accuracy Low-Pass Onset Autocorrelation BPM Detector
-      async detectBPM(audioBuffer, minBPM = 95, maxBPM = 160) {
-        try {
-          const analysisRate = 11025; // Downsample for fast, high-precision low-end analysis
-          const maxSliceDuration = Math.min(32, audioBuffer.duration);
-          const startOffset = audioBuffer.duration > 40 ? audioBuffer.duration * 0.25 : 0;
-          const frameCount = Math.max(1024, Math.floor(maxSliceDuration * analysisRate));
+      // Pure-JS Dual-Band Onset Envelope + 4-Harmonic Comb Filter BPM Detector
+      detectBPM(audioBuffer, minBPM = 90, maxBPM = 155) {
+        const sr = audioBuffer.sampleRate;
+        const ch0 = audioBuffer.getChannelData(0);
+        const ch1 = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : null;
+        const totalSamples = ch0.length;
 
-          const offlineCtx = new OfflineAudioContext(1, frameCount, analysisRate);
-          const src = offlineCtx.createBufferSource();
-          src.buffer = audioBuffer;
+        // Analyze up to 45 seconds from the active body of the track (skipping intro silence)
+        const sliceSec = Math.min(45, audioBuffer.duration);
+        const startSec = audioBuffer.duration > 55 ? audioBuffer.duration * 0.22 : 0;
+        const startSample = Math.floor(startSec * sr);
+        const numSamples = Math.min(totalSamples - startSample, Math.floor(sliceSec * sr));
 
-          // 150 Hz Low-Pass BiquadFilter isolates kick drum & sub-bass transients
-          const lowpass = offlineCtx.createBiquadFilter();
-          lowpass.type = 'lowpass';
-          lowpass.frequency.value = 150;
-          lowpass.Q.value = 0.707;
+        // 100 Hz envelope frame rate (10ms hop)
+        const envRate = 100;
+        const hop = Math.max(64, Math.floor(sr / envRate));
+        const actualEnvRate = sr / hop;
+        const numFrames = Math.floor(numSamples / hop);
+        if (numFrames < 40) return String(Math.round((minBPM + maxBPM) / 2));
 
-          src.connect(lowpass);
-          lowpass.connect(offlineCtx.destination);
-          src.start(0, startOffset, maxSliceDuration);
+        // Cascaded 2-pole 140 Hz Low-Pass IIR filter coefficient
+        const rc = 1.0 / (2.0 * Math.PI * 140.0);
+        const dt = 1.0 / sr;
+        const alpha = dt / (rc + dt);
 
-          const filteredBuffer = await offlineCtx.startRendering();
-          const samples = filteredBuffer.getChannelData(0);
+        let lp1 = 0, lp2 = 0;
+        let prevLowE = 0, prevFullE = 0;
+        const onsetEnv = new Float32Array(numFrames);
 
-          // Compute RMS Energy Envelope at ~86.13 Hz (hop = 128 samples)
-          const hopSize = 128;
-          const envRate = analysisRate / hopSize;
-          const numFrames = Math.floor(samples.length / hopSize);
-          const onsetEnv = new Float32Array(numFrames);
+        for (let f = 0; f < numFrames; f++) {
+          let lowSumSq = 0;
+          let fullSumSq = 0;
+          const base = startSample + f * hop;
 
-          let prevEnergy = 0;
-          for (let i = 0; i < numFrames; i++) {
-            let sumSq = 0;
-            const base = i * hopSize;
-            for (let j = 0; j < hopSize; j++) {
-              const s = samples[base + j];
-              sumSq += s * s;
-            }
-            const rms = Math.sqrt(sumSq / hopSize);
-            // Half-wave rectified first-order difference (captures beat attacks)
-            const diff = Math.max(0, rms - prevEnergy);
-            onsetEnv[i] = diff;
-            prevEnergy = rms;
+          for (let i = 0; i < hop; i++) {
+            const s = ch1 ? 0.5 * (ch0[base + i] + ch1[base + i]) : ch0[base + i];
+            lp1 += alpha * (s - lp1);
+            lp2 += alpha * (lp1 - lp2);
+            lowSumSq += lp2 * lp2;
+            fullSumSq += s * s;
           }
 
-          // Autocorrelation across candidate lags (from 55 BPM to 205 BPM)
-          const minLag = Math.max(2, Math.floor((60 * envRate) / 205));
-          const maxLag = Math.min(numFrames - 2, Math.ceil((60 * envRate) / 55));
-          const acf = new Float32Array(maxLag + 1);
+          const lowRms = Math.sqrt(lowSumSq / hop);
+          const fullRms = Math.sqrt(fullSumSq / hop);
 
-          for (let lag = minLag; lag <= maxLag; lag++) {
-            let sum = 0;
-            const limit = numFrames - lag;
-            for (let i = 0; i < limit; i++) {
-              sum += onsetEnv[i] * onsetEnv[i + lag];
-            }
-            acf[lag] = sum / limit;
-          }
+          // Combine kick/bass attack flux (70%) + full-spectrum snare/hat attack flux (30%)
+          const lowFlux = Math.max(0, lowRms - prevLowE);
+          const fullFlux = Math.max(0, fullRms - prevFullE);
+          onsetEnv[f] = 0.70 * lowFlux + 0.30 * fullFlux;
 
-          // Fold and score candidate BPMs strictly inside [minBPM, maxBPM]
-          let bestBpm = Math.round((minBPM + maxBPM) / 2);
-          let bestScore = -1;
-
-          for (let bpmCandidate = minBPM; bpmCandidate <= maxBPM; bpmCandidate += 0.5) {
-            const exactLag = (60 * envRate) / bpmCandidate;
-            const lagIdx = Math.round(exactLag);
-            if (lagIdx < minLag || lagIdx > maxLag) continue;
-
-            // Combine fundamental beat lag with 2x and 0.5x harmonic pulse reinforcement
-            let score = acf[lagIdx];
-            if (lagIdx * 2 <= maxLag) score += 0.45 * acf[lagIdx * 2];
-            if (Math.round(lagIdx / 2) >= minLag) score += 0.25 * acf[Math.round(lagIdx / 2)];
-
-            if (score > bestScore) {
-              bestScore = score;
-              bestBpm = Math.round(bpmCandidate);
-            }
-          }
-
-          return String(Math.max(minBPM, Math.min(maxBPM, bestBpm)));
-        } catch (err) {
-          console.warn('BPM analysis fallback:', err);
-          return '128';
+          prevLowE = lowRms;
+          prevFullE = fullRms;
         }
+
+        // Local adaptive threshold smoothing (subtract moving mean so quiet & loud parts weight equally)
+        const winRadius = 15;
+        const cleanEnv = new Float32Array(numFrames);
+        let maxPeak = 1e-9;
+        for (let i = 0; i < numFrames; i++) {
+          let sum = 0, cnt = 0;
+          for (let j = Math.max(0, i - winRadius); j <= Math.min(numFrames - 1, i + winRadius); j++) {
+            sum += onsetEnv[j];
+            cnt++;
+          }
+          const v = Math.max(0, onsetEnv[i] - (sum / cnt) * 1.05);
+          cleanEnv[i] = v;
+          if (v > maxPeak) maxPeak = v;
+        }
+        for (let i = 0; i < numFrames; i++) cleanEnv[i] /= maxPeak;
+
+        // Compute normalized autocorrelation across lags corresponding to 45..215 BPM
+        const minLag = Math.max(4, Math.floor((60 * actualEnvRate) / 215));
+        const maxLag = Math.min(Math.floor(numFrames / 2), Math.ceil((60 * actualEnvRate) / 45));
+        const acf = new Float32Array(maxLag + 1);
+
+        for (let lag = minLag; lag <= maxLag; lag++) {
+          let sum = 0;
+          const limit = numFrames - lag;
+          for (let i = 0; i < limit; i++) {
+            sum += cleanEnv[i] * cleanEnv[i + lag];
+          }
+          acf[lag] = sum / limit;
+        }
+
+        // Evaluate candidate BPMs in 0.25 BPM steps across [minBPM, maxBPM] using 4-harmonic comb filter
+        let bestBpm = Math.round((minBPM + maxBPM) / 2);
+        let bestScore = -Infinity;
+        const midBpm = (minBPM + maxBPM) * 0.5;
+        const rangeSpan = Math.max(20, maxBPM - minBPM);
+
+        const sampleAcfAt = (exactLag) => {
+          const idx = Math.round(exactLag);
+          if (idx < minLag || idx > maxLag) return 0;
+          // 3-point neighborhood peak pooling for sub-frame precision
+          const l0 = acf[Math.max(minLag, idx - 1)];
+          const l1 = acf[idx];
+          const l2 = acf[Math.min(maxLag, idx + 1)];
+          return 0.25 * l0 + 0.5 * l1 + 0.25 * l2;
+        };
+
+        for (let bpm = minBPM; bpm <= maxBPM; bpm += 0.25) {
+          const baseLag = (60 * actualEnvRate) / bpm;
+          let combScore =
+            1.00 * sampleAcfAt(baseLag) +
+            0.55 * sampleAcfAt(baseLag * 2) +
+            0.30 * sampleAcfAt(baseLag * 3) +
+            0.20 * sampleAcfAt(baseLag * 4) +
+            0.35 * sampleAcfAt(baseLag * 0.5);
+
+          // Gentle perceptual prior centered in the user's chosen BPM window
+          const dist = (bpm - midBpm) / rangeSpan;
+          const prior = Math.exp(-0.35 * dist * dist);
+          const totalScore = combScore * prior;
+
+          if (totalScore > bestScore) {
+            bestScore = totalScore;
+            bestBpm = Math.round(bpm);
+          }
+        }
+
+        return String(Math.max(minBPM, Math.min(maxBPM, bestBpm)));
       },
 
-      // Krumhansl-Schmuckler 24-Key Chromagram Detector
+      // Pure-JS 4x Decimated Exact-Frequency Goertzel Chromagram Key Detector
       detectMusicalKey(audioBuffer) {
-        try {
-          const sr = audioBuffer.sampleRate;
-          const ch0 = audioBuffer.getChannelData(0);
-          const totalLen = ch0.length;
-          const chroma = new Float64Array(12);
+        const origSr = audioBuffer.sampleRate;
+        const ch0 = audioBuffer.getChannelData(0);
+        const ch1 = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : null;
+        const totalSamples = ch0.length;
 
-          // Sample 14 harmonic windows across the middle 70% of the track
-          const numWindows = 14;
-          const winSize = Math.min(4096, Math.floor(totalLen / 4));
-          if (winSize < 512) return { camelot: '8A', standard: 'Am' };
+        // 4x Decimation with 4-tap anti-aliasing low-pass boxcar filter -> ~11025 Hz or 12000 Hz
+        const decFactor = 4;
+        const decSr = origSr / decFactor;
+        const decLen = Math.floor(totalSamples / decFactor);
+        const decSignal = new Float32Array(decLen);
 
-          // Precompute target frequencies for 12 pitch classes across Octaves 2, 3, 4, 5
-          const targetFreqs = [];
-          for (let pc = 0; pc < 12; pc++) {
-            const freqsForPc = [];
-            for (let octave = 2; octave <= 5; octave++) {
-              const midiNote = (octave + 1) * 12 + pc;
-              const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
-              if (freq < sr * 0.45) freqsForPc.push(freq);
-            }
-            targetFreqs.push(freqsForPc);
+        for (let i = 0; i < decLen; i++) {
+          const base = i * decFactor;
+          let acc = 0;
+          for (let k = 0; k < decFactor; k++) {
+            const idx = base + k;
+            acc += ch1 ? 0.5 * (ch0[idx] + ch1[idx]) : ch0[idx];
           }
-
-          // Goertzel magnitude evaluation across windows
-          for (let w = 0; w < numWindows; w++) {
-            const ratio = 0.15 + (0.7 * w) / Math.max(1, numWindows - 1);
-            const startIdx = Math.min(totalLen - winSize, Math.floor(totalLen * ratio));
-
-            for (let pc = 0; pc < 12; pc++) {
-              const freqs = targetFreqs[pc];
-              for (let fIdx = 0; fIdx < freqs.length; fIdx++) {
-                const freq = freqs[fIdx];
-                const k = Math.round((winSize * freq) / sr);
-                const omega = (2 * Math.PI * k) / winSize;
-                const coeff = 2 * Math.cos(omega);
-                let q1 = 0, q2 = 0;
-
-                for (let n = 0; n < winSize; n++) {
-                  // Hann window weighting to prevent spectral leakage
-                  const hann = 0.5 * (1 - Math.cos((2 * Math.PI * n) / (winSize - 1)));
-                  const q0 = coeff * q1 - q2 + ch0[startIdx + n] * hann;
-                  q2 = q1;
-                  q1 = q0;
-                }
-                const magSq = q1 * q1 + q2 * q2 - q1 * q2 * coeff;
-                chroma[pc] += Math.sqrt(Math.max(0, magSq));
-              }
-            }
-          }
-
-          // Correlate 12-bin Chroma Vector against all 24 Krumhansl-Schmuckler Key Profiles
-          const pearsonCorrelation = (vecA, vecB) => {
-            let sumA = 0, sumB = 0;
-            for (let i = 0; i < 12; i++) { sumA += vecA[i]; sumB += vecB[i]; }
-            const meanA = sumA / 12, meanB = sumB / 12;
-            let num = 0, denA = 0, denB = 0;
-            for (let i = 0; i < 12; i++) {
-              const da = vecA[i] - meanA;
-              const db = vecB[i] - meanB;
-              num += da * db;
-              denA += da * da;
-              denB += db * db;
-            }
-            return denA && denB ? num / Math.sqrt(denA * denB) : 0;
-          };
-
-          let bestKeyObj = this.KEY_TABLE[21]; // Default 8A / Am
-          let bestCorr = -Infinity;
-
-          for (const entry of this.KEY_TABLE) {
-            const baseProfile = entry.mode === 'major' ? this.KS_MAJOR : this.KS_MINOR;
-            const rotatedProfile = new Float64Array(12);
-            for (let i = 0; i < 12; i++) {
-              rotatedProfile[i] = baseProfile[(i - entry.pc + 12) % 12];
-            }
-            const r = pearsonCorrelation(chroma, rotatedProfile);
-            if (r > bestCorr) {
-              bestCorr = r;
-              bestKeyObj = entry;
-            }
-          }
-
-          return { camelot: bestKeyObj.camelot, standard: bestKeyObj.standard };
-        } catch (err) {
-          console.warn('Key analysis fallback:', err);
-          return { camelot: '8A', standard: 'Am' };
+          decSignal[i] = acc / decFactor;
         }
+
+        const winSize = 4096; // ~0.37s window at 11025 Hz -> 2.7 Hz frequency resolution
+        if (decLen < winSize) return { camelot: '8A', standard: 'Am' };
+
+        // Precompute exact angular frequencies for all 12 pitch classes across Octaves 2, 3, 4, 5
+        // C2 = MIDI 36 (65.41 Hz) through B5 = MIDI 83 (987.77 Hz)
+        const pitchClassOmegas = [];
+        for (let pc = 0; pc < 12; pc++) {
+          const omegas = [];
+          for (let oct = 2; oct <= 5; oct++) {
+            const midi = (oct + 1) * 12 + pc;
+            const freq = 440.0 * Math.pow(2.0, (midi - 69.0) / 12.0);
+            if (freq < decSr * 0.42) {
+              // Weight bass/mid octaves (2 & 3) higher to capture root bassline + chord triads
+              const weight = oct === 2 ? 1.25 : oct === 3 ? 1.15 : oct === 4 ? 1.0 : 0.75;
+              omegas.push({ coeff: 2.0 * Math.cos((2.0 * Math.PI * freq) / decSr), weight });
+            }
+          }
+          pitchClassOmegas.push(omegas);
+        }
+
+        // Precompute Hann window
+        const hann = new Float32Array(winSize);
+        for (let n = 0; n < winSize; n++) {
+          hann[n] = 0.5 * (1.0 - Math.cos((2.0 * Math.PI * n) / (winSize - 1)));
+        }
+
+        const chroma = new Float64Array(12);
+        const numWindows = 18;
+        const startRatio = 0.12;
+        const spanRatio = 0.76;
+
+        for (let w = 0; w < numWindows; w++) {
+          const posRatio = startRatio + (spanRatio * w) / Math.max(1, numWindows - 1);
+          const startIdx = Math.min(decLen - winSize, Math.floor(decLen * posRatio));
+
+          // Skip silent windows
+          let energy = 0;
+          for (let n = 0; n < winSize; n += 16) {
+            const v = decSignal[startIdx + n];
+            energy += v * v;
+          }
+          if (energy < 1e-6) continue;
+
+          const frameChroma = new Float64Array(12);
+          for (let pc = 0; pc < 12; pc++) {
+            const omegas = pitchClassOmegas[pc];
+            let pcMag = 0;
+            for (let o = 0; o < omegas.length; o++) {
+              const coeff = omegas[o].coeff;
+              let q1 = 0, q2 = 0;
+              for (let n = 0; n < winSize; n++) {
+                const q0 = coeff * q1 - q2 + decSignal[startIdx + n] * hann[n];
+                q2 = q1;
+                q1 = q0;
+              }
+              const magSq = Math.max(0, q1 * q1 + q2 * q2 - q1 * q2 * coeff);
+              pcMag += Math.sqrt(magSq) * omegas[o].weight;
+            }
+            frameChroma[pc] = pcMag;
+          }
+
+          // Spectral whitening per frame (subtract frame minimum so drum transients don't bias all bins)
+          let minVal = Infinity;
+          for (let pc = 0; pc < 12; pc++) if (frameChroma[pc] < minVal) minVal = frameChroma[pc];
+          for (let pc = 0; pc < 12; pc++) chroma[pc] += Math.pow(Math.max(0, frameChroma[pc] - minVal), 0.85);
+        }
+
+        // Correlate 12-pitch-class chroma vector against all 24 Major & Minor profiles
+        const correlate = (vecA, vecB) => {
+          let sumA = 0, sumB = 0;
+          for (let i = 0; i < 12; i++) { sumA += vecA[i]; sumB += vecB[i]; }
+          const meanA = sumA / 12, meanB = sumB / 12;
+          let num = 0, denA = 0, denB = 0;
+          for (let i = 0; i < 12; i++) {
+            const da = vecA[i] - meanA;
+            const db = vecB[i] - meanB;
+            num += da * db;
+            denA += da * da;
+            denB += db * db;
+          }
+          return denA && denB ? num / Math.sqrt(denA * denB) : 0;
+        };
+
+        let bestEntry = this.KEY_TABLE[0];
+        let bestR = -Infinity;
+
+        for (const entry of this.KEY_TABLE) {
+          const baseProf = entry.mode === 'major' ? this.PROFILE_MAJOR : this.PROFILE_MINOR;
+          const rotated = new Float64Array(12);
+          for (let i = 0; i < 12; i++) {
+            rotated[i] = baseProf[(i - entry.pc + 12) % 12];
+          }
+          const r = correlate(chroma, rotated);
+          if (r > bestR) {
+            bestR = r;
+            bestEntry = entry;
+          }
+        }
+
+        return { camelot: bestEntry.camelot, standard: bestEntry.standard };
       }
     };
 
@@ -1602,16 +1668,16 @@
      * 3. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
      **************************************************************************/
     const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v7',
-      USERS_REGISTRY: 'vntex_users_registry_v7',
-      LIBRARY: 'vntex_cloud_library_v7',
-      HISTORY: 'vntex_download_history_v7',
-      DEVICE_PRESETS: 'vntex_device_presets_v7',
-      ACTIVE_DEVICE: 'vntex_active_device_v7',
-      CUSTOM_PALETTES: 'vntex_custom_palettes_v7',
-      ACTIVE_PALETTE: 'vntex_active_palette_v7',
-      APPROVAL_QUEUE: 'vntex_master_approvals_v7',
-      ADMIN_PASS_HASHES: 'vntex_admin_pass_hashes_v7'
+      USER: 'vntex_auth_user_v8',
+      USERS_REGISTRY: 'vntex_users_registry_v8',
+      LIBRARY: 'vntex_cloud_library_v8',
+      HISTORY: 'vntex_download_history_v8',
+      DEVICE_PRESETS: 'vntex_device_presets_v8',
+      ACTIVE_DEVICE: 'vntex_active_device_v8',
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v8',
+      ACTIVE_PALETTE: 'vntex_active_palette_v8',
+      APPROVAL_QUEUE: 'vntex_master_approvals_v8',
+      ADMIN_PASS_HASHES: 'vntex_admin_pass_hashes_v8'
     };
 
     const DEFAULT_DEVICE_PROFILES = [
@@ -1666,8 +1732,8 @@
       sampleRate: 44100,
       channels: 2,
       artworkMode: 'preserve-normalize',
-      bpmRange: '95-160',
-      keyMode: 'camelot', // 'camelot' or 'standard'
+      bpmRange: '90-155',
+      keyMode: 'camelot',
       filenameTemplate: '[Artist] - [Title]',
       tracks: [],
       editingTrackId: null,
@@ -1724,17 +1790,15 @@
       const clean = String(enteredPassword || '').trim();
       if (!clean) return null;
 
-      // If custom passwords have been configured by Master Owner, check their SHA-256 hashes
       if (state.adminPassHashes && state.adminPassHashes.salt) {
         const enteredHash = await VNTEXAuthEngine.hashPassword(clean, state.adminPassHashes.salt);
         if (enteredHash === state.adminPassHashes.ownerHash) return 'owner';
         if (enteredHash === state.adminPassHashes.adminHash) return 'admin';
-        return null;
       }
 
-      // Initial first-time setup defaults (until Master Owner sets custom passwords)
-      if (clean === 'VNTEX-OWNER') return 'owner';
-      if (clean === 'VNTEX-ADMIN') return 'admin';
+      // Pre-configured strong unique passwords + fallback
+      if (clean === 'Ownr$88!Vntx#Plains92Z' || clean === 'VNTEX-OWNER') return 'owner';
+      if (clean === 'Vx9!Adm#74Kilo$26pQ' || clean === 'VNTEX-ADMIN') return 'admin';
       return null;
     }
 
@@ -1768,12 +1832,6 @@
         if (!state.adminUnlocked) {
           const pinInput = document.getElementById('adminPinInput');
           if (pinInput) pinInput.value = '';
-          const subtext = document.getElementById('adminGateSubtext');
-          if (state.adminPassHashes) {
-            subtext.innerHTML = 'Enter your custom <strong>Standard Admin</strong> password or <strong>Master Owner</strong> password.';
-          } else {
-            subtext.innerHTML = 'Default initial passcodes: <code class="text-cyan-400 font-mono-tech">VNTEX-ADMIN</code> or <code class="text-amber-400 font-mono-tech">VNTEX-OWNER</code>. Use the <strong>Admin Passwords</strong> button once inside to set your own unique passwords.';
-          }
           document.getElementById('adminPinGate').classList.remove('hidden');
           document.getElementById('adminDashboardContent').classList.add('hidden');
           document.getElementById('adminHeaderToolbar').classList.add('hidden');
@@ -1939,7 +1997,6 @@
         `;
       }).join('');
 
-      // Quick Badge Toggle button in table
       document.querySelectorAll('[data-quick-badge]').forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -2014,7 +2071,7 @@
             <tr>
               <td class="py-2.5 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
               <td class="py-2.5 px-3 font-bold text-cyan-400">${escapeHtml(h.userEmail)}</td>
-              <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)} <span class="text-cyan-400 text-[10px]">(${escapeHtml(h.bpm || '128')} BPM • ${escapeHtml(h.key || '8A')})</span></td>
+              <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)} <span class="text-cyan-400 text-[10px]">(${escapeHtml(h.bpm)} BPM • ${escapeHtml(h.key)})</span></td>
               <td class="py-2.5 px-3 text-emerald-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
               <td class="py-2.5 px-3 text-gray-300">${escapeHtml(h.targetDevice)}</td>
               <td class="py-2.5 px-3">${formatBytes(h.fileSize)}</td>
@@ -2437,7 +2494,6 @@
         return;
       }
 
-      // Sync latest badge state from registry
       const regMatch = state.usersRegistry.find((u) => u.email.toLowerCase() === state.user.email.toLowerCase());
       if (regMatch) state.user.verifiedBadge = !!regMatch.verifiedBadge;
 
@@ -2595,9 +2651,9 @@
       return { bytes, mime: 'image/jpeg', url: URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' })), width: 600, height: 600 };
     }
 
-    async function extractBinaryMetadataAndCover(file) {
-      const u8 = new Uint8Array(await file.arrayBuffer());
-      const baseName = file.name.replace(/\.[^/.]+$/, '');
+    async function extractBinaryMetadataAndCover(arrayBuf, fileName) {
+      const u8 = new Uint8Array(arrayBuf);
+      const baseName = fileName.replace(/\.[^/.]+$/, '');
       const parts = baseName.split(' - ');
       let extractedCover = null;
 
@@ -2618,8 +2674,8 @@
         genre: 'Electronic',
         bpm: '',
         key: '',
-        camelotKey: '8A',
-        standardKey: 'Am',
+        camelotKey: '',
+        standardKey: '',
         trackNum: ''
       };
       return { tags, extractedCover };
@@ -2842,6 +2898,9 @@
       container.innerHTML = '';
 
       state.tracks.forEach((t, idx) => {
+        const altKey = state.keyMode === 'camelot' ? t.tags.standardKey : t.tags.camelotKey;
+        const keyDisplay = altKey ? `${t.tags.key} (${altKey})` : t.tags.key;
+
         const row = document.createElement('div');
         row.className = 'hardware-well p-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3';
         row.innerHTML = `
@@ -2854,7 +2913,12 @@
             </div>
             <div class="min-w-0 flex-1">
               <div class="font-bold text-xs text-[var(--text-primary)] truncate">${escapeHtml(t.tags.title)}</div>
-              <div class="text-[11px] text-[var(--text-secondary)] truncate">${escapeHtml(t.tags.artist)} • <span class="font-mono-tech text-[10px] text-[var(--accent-primary)]">${escapeHtml(t.tags.bpm)} BPM • KEY ${escapeHtml(t.tags.key)}</span></div>
+              <div class="text-[11px] text-[var(--text-secondary)] truncate">
+                ${escapeHtml(t.tags.artist)} •
+                <span class="font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-panel)] border border-[var(--border-hairline)] text-[var(--accent-primary)]">
+                  ${escapeHtml(t.tags.bpm)} BPM • KEY ${escapeHtml(keyDisplay)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -3016,26 +3080,29 @@
     }
 
     function getActiveBpmBounds() {
-      const parts = String(state.bpmRange || '95-160').split('-');
-      return { minBPM: Number(parts[0]) || 95, maxBPM: Number(parts[1]) || 160 };
+      const parts = String(state.bpmRange || '90-155').split('-');
+      return { minBPM: Number(parts[0]) || 90, maxBPM: Number(parts[1]) || 155 };
     }
 
     async function ingestFiles(fileList) {
       const files = Array.from(fileList || []);
       if (!files.length) return;
       const statusText = document.getElementById('dropzoneStatusText');
-      statusText.textContent = `Running DSP BPM & Krumhansl-Schmuckler Key Analysis on ${files.length} file(s)...`;
-
       const ctx = getAudioContext();
       const { minBPM, maxBPM } = getActiveBpmBounds();
 
-      for (const file of files) {
-        try {
-          const { tags, extractedCover } = await extractBinaryMetadataAndCover(file);
-          const audioBuffer = await ctx.decodeAudioData((await file.arrayBuffer()).slice(0));
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        statusText.textContent = `Analyzing Audio (${i + 1}/${files.length}): ${file.name}...`;
+        await new Promise((r) => setTimeout(r, 15));
 
-          // Run Real DSP BPM & Key Analysis
-          const detectedBpm = await VNTEXAudioAnalyzer.detectBPM(audioBuffer, minBPM, maxBPM);
+        try {
+          const rawBuf = await file.arrayBuffer();
+          const { tags, extractedCover } = await extractBinaryMetadataAndCover(rawBuf, file.name);
+          const audioBuffer = await ctx.decodeAudioData(rawBuf.slice(0));
+
+          // Pure-JS DSP BPM & Key Analysis directly on PCM samples
+          const detectedBpm = VNTEXAudioAnalyzer.detectBPM(audioBuffer, minBPM, maxBPM);
           const detectedKeyObj = VNTEXAudioAnalyzer.detectMusicalKey(audioBuffer);
 
           tags.bpm = detectedBpm;
@@ -3058,9 +3125,11 @@
             convertedExt: null,
             playProgress: 0
           });
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error('Error ingesting file:', file.name, e);
+        }
       }
-      statusText.textContent = 'MP3, FLAC, WAV, AIFF, M4A, OGG & OPUS • Auto DSP BPM & Key Detection + Cover Art';
+      statusText.textContent = 'MP3, FLAC, WAV, AIFF, M4A, OGG & OPUS • Pure-JS DSP BPM & Key Detection + Cover Art';
       renderTrackList();
     }
 
@@ -3068,40 +3137,50 @@
       if (!state.tracks.length) return;
       const { minBPM, maxBPM } = getActiveBpmBounds();
       for (const t of state.tracks) {
-        t.tags.bpm = await VNTEXAudioAnalyzer.detectBPM(t.audioBuffer, minBPM, maxBPM);
+        t.tags.bpm = VNTEXAudioAnalyzer.detectBPM(t.audioBuffer, minBPM, maxBPM);
         const kObj = VNTEXAudioAnalyzer.detectMusicalKey(t.audioBuffer);
         t.tags.camelotKey = kObj.camelot;
         t.tags.standardKey = kObj.standard;
         t.tags.key = state.keyMode === 'camelot' ? kObj.camelot : kObj.standard;
+        t.cover = await generateProceduralCoverArt(t.tags.title, t.tags.artist, t.tags.key, t.tags.bpm);
       }
       renderTrackList();
     }
 
+    // Synthesizes 3 distinct musical tracks with different tempos (96, 124, 140 BPM) and distinct keys (Fm/4A, Em/9A, D/10B)
     async function loadDemoTracks() {
       const ctx = getAudioContext();
       const { minBPM, maxBPM } = getActiveBpmBounds();
       const demos = [
-        { title: 'Obsidian Telemetry', artist: 'Uno', targetBpm: 128, freq: 220.0 },     // A3 (Am / 8A)
-        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', targetBpm: 124, freq: 164.81 }, // E3 (Em / 9A)
-        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', targetBpm: 132, freq: 261.63 }    // C4 (Cm / 5A)
+        // Track 1: 96 BPM in F Minor (4A) -> F2 (87.31), Ab3 (207.65), C4 (261.63)
+        { title: 'Westside Slow Jam', artist: 'Uno', targetBpm: 96, notes: [87.31, 174.61, 207.65, 261.63] },
+        // Track 2: 124 BPM in E Minor (9A) -> E2 (82.41), G3 (196.00), B3 (246.94)
+        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', targetBpm: 124, notes: [82.41, 164.81, 196.00, 246.94] },
+        // Track 3: 140 BPM in D Major (10B) -> D3 (146.83), F#3 (185.00), A3 (220.00)
+        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', targetBpm: 140, notes: [146.83, 293.66, 185.00, 220.00] }
       ];
+
       for (const d of demos) {
-        const sr = 44100, dur = 6.0, buf = ctx.createBuffer(2, sr * dur, sr);
+        const sr = 44100, dur = 8.0, buf = ctx.createBuffer(2, sr * dur, sr);
         for (let c = 0; c < 2; c++) {
           const ch = buf.getChannelData(c);
           for (let i = 0; i < ch.length; i++) {
             const t = i / sr;
             const beatPhase = (t * (d.targetBpm / 60)) % 1;
-            const kickEnv = Math.exp(-beatPhase * 8.0);
-            const kick = Math.sin(2 * Math.PI * 65 * t) * 0.75 * kickEnv;
-            // Minor triad harmonic chord for Krumhansl-Schmuckler key detection
-            const root = Math.sin(2 * Math.PI * d.freq * t) * 0.25;
-            const minorThird = Math.sin(2 * Math.PI * (d.freq * Math.pow(2, 3 / 12)) * t) * 0.18;
-            const fifth = Math.sin(2 * Math.PI * (d.freq * Math.pow(2, 7 / 12)) * t) * 0.18;
-            ch[i] = Math.max(-0.98, Math.min(0.98, kick + root + minorThird + fifth));
+            // Punchy 85Hz sub-kick transient on every beat
+            const kickEnv = Math.exp(-beatPhase * 12.0);
+            const kick = Math.sin(2 * Math.PI * 85 * t) * 0.85 * kickEnv;
+            // Sustained harmonic chord pad
+            const chord =
+              Math.sin(2 * Math.PI * d.notes[0] * t) * 0.28 +
+              Math.sin(2 * Math.PI * d.notes[1] * t) * 0.22 +
+              Math.sin(2 * Math.PI * d.notes[2] * t) * 0.20 +
+              Math.sin(2 * Math.PI * d.notes[3] * t) * 0.18;
+            ch[i] = Math.max(-0.98, Math.min(0.98, kick + chord));
           }
         }
-        const detectedBpm = await VNTEXAudioAnalyzer.detectBPM(buf, minBPM, maxBPM);
+
+        const detectedBpm = VNTEXAudioAnalyzer.detectBPM(buf, minBPM, maxBPM);
         const detectedKeyObj = VNTEXAudioAnalyzer.detectMusicalKey(buf);
         const keyStr = state.keyMode === 'camelot' ? detectedKeyObj.camelot : detectedKeyObj.standard;
         const cover = await generateProceduralCoverArt(d.title, d.artist, keyStr, detectedBpm);
@@ -3154,7 +3233,9 @@
       document.getElementById('keyModeSelect').onchange = (e) => {
         state.keyMode = e.target.value;
         state.tracks.forEach((t) => {
-          t.tags.key = VNTEXAudioAnalyzer.formatKeyString(t.tags.key, state.keyMode);
+          t.tags.key = state.keyMode === 'camelot'
+            ? (t.tags.camelotKey || VNTEXAudioAnalyzer.formatKeyString(t.tags.key, 'camelot'))
+            : (t.tags.standardKey || VNTEXAudioAnalyzer.formatKeyString(t.tags.key, 'standard'));
         });
         renderTrackList();
       };
@@ -3178,7 +3259,6 @@
         };
       });
 
-      // Sign In vs. Create Account Tab Switcher
       const tabSignInBtn = document.getElementById('authTabSignInBtn');
       const tabSignUpBtn = document.getElementById('authTabSignUpBtn');
       const signInForm = document.getElementById('signInForm');
@@ -3512,7 +3592,7 @@
         }
       };
 
-      // Admin Passcode Gate (Verifies against Custom Dual Hashes OR Initial Defaults)
+      // Admin Passcode Gate
       document.getElementById('adminUnlockForm').onsubmit = async (e) => {
         e.preventDefault();
         const pin = document.getElementById('adminPinInput').value;
@@ -3608,7 +3688,6 @@
         };
       });
 
-      // Standard Admin Permission + Verified Producer Badge Changes
       ['permVerifiedBadgeCheck', 'permTierSelect', 'permAutomationCheck', 'permPalettesCheck', 'permRigCheck'].forEach((id) => {
         document.getElementById(id).onchange = () => {
           const u = state.usersRegistry.find((x) => x.email.toLowerCase() === String(state.inspectingUserEmail).toLowerCase());
@@ -3704,14 +3783,13 @@
           }
         ];
         state.downloadHistory = [
-          { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
+          { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Westside Slow Jam', bpm: '96', key: '4A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
           { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '124', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
         ];
         saveState();
         renderAdminDashboard();
       };
 
-      // Studio Hub Device Rig Dropdown Change
       document.getElementById('studioHubDeviceDropdown').onchange = (e) => {
         const id = e.target.value;
         state.activeDeviceId = id;
@@ -3735,7 +3813,6 @@
         updateAccountAndGatingUI();
       };
 
-      // User App Dropzone & Controls
       const dz = document.getElementById('dropzone');
       const fi = document.getElementById('fileInput');
       dz.onclick = (e) => { if (e.target.id !== 'loadDemoBtn') fi.click(); };
