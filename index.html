@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Universal DSP Audio Converter</title>
+  <title>VNTEX // Universal DSP Audio Converter & Cloud Crate Engine</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome 6 -->
@@ -14,6 +14,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <!-- JSZip for Batch Archive Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Firebase v10 Compat SDKs (Auth & Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
     /* ==========================================================================
@@ -41,7 +45,6 @@
       --panel-radius: 0.75rem;
     }
 
-    /* Classic Late-90s Winamp Brushed Metal & High-Contrast LED Skin */
     html.theme-winamp {
       --bg-void: #121316;
       --bg-panel: #22252c;
@@ -63,7 +66,6 @@
       --panel-radius: 0.35rem;
     }
 
-    /* Clean Studio Rackmount Slate Skin */
     html.theme-slate {
       --bg-void: #0b0e14;
       --bg-panel: #131822;
@@ -108,7 +110,6 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Studio Panels & Recessed Wells */
     .studio-panel {
       background-color: var(--bg-panel);
       border: 1px solid var(--border-hairline);
@@ -132,7 +133,8 @@
 
     .hardware-well:focus-within,
     input.hardware-well:focus,
-    select.hardware-well:focus {
+    select.hardware-well:focus,
+    textarea.hardware-well:focus {
       outline: none;
       border-color: var(--accent-primary);
       box-shadow: var(--well-shadow), 0 0 0 1px var(--accent-glow);
@@ -145,7 +147,6 @@
       box-shadow: var(--well-shadow);
     }
 
-    /* High-Visibility Primary Convert Button */
     .btn-convert-primary {
       background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
       color: var(--accent-text-contrast);
@@ -166,7 +167,6 @@
       box-shadow: none;
     }
 
-    /* Preset Card Styling */
     .preset-card {
       background-color: var(--bg-well);
       border: 1px solid var(--border-hairline);
@@ -187,7 +187,6 @@
       background-color: var(--bg-panel-elevated);
     }
 
-    /* Format Button Styling */
     .format-pill {
       background-color: var(--bg-well);
       border: 1px solid var(--border-hairline);
@@ -208,12 +207,10 @@
       box-shadow: 0 0 14px var(--accent-glow);
     }
 
-    /* Fluid Responsive Typography */
     .title-fluid {
-      font-size: clamp(1.1rem, 2vw, 1.45rem);
+      font-size: clamp(1.05rem, 1.8vw, 1.4rem);
     }
 
-    /* Custom Scrollbars */
     ::-webkit-scrollbar {
       width: 7px;
       height: 7px;
@@ -229,7 +226,6 @@
       background: var(--accent-primary);
     }
 
-    /* Smooth Accordion Transitions */
     .drawer-collapse {
       display: grid;
       grid-template-rows: 0fr;
@@ -246,57 +242,87 @@
 <body class="antialiased selection:bg-cyan-400 selection:text-black">
 
   <!-- ==========================================================================
-       TOP STUDIO HEADER BAR
+       TOP STUDIO HEADER BAR (WITH AUTH, CLOUD LIBRARY, DEVICE RIG & ADMIN PORTAL)
        ========================================================================== -->
   <header class="sticky top-0 z-30 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
       
       <!-- Brand Identity -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-sm tracking-tighter border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-glow)]">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-sm tracking-tighter border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-glow)]">
           VX
         </div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="font-extrabold tracking-tight title-fluid text-[var(--text-primary)]">VNTEX</h1>
             <span class="font-mono-tech text-[10px] uppercase px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--led-readout)]">
-              DSP // CODEC v2.5
+              DSP // CLOUD v3.0
             </span>
           </div>
-          <p class="text-xs text-[var(--text-secondary)] hidden sm:block">
-            Universal Batch Audio Transcoder &amp; Binary Artwork Preservation Engine
+          <p class="text-[11px] text-[var(--text-secondary)] hidden xl:block">
+            Universal Batch Audio Transcoder • Device-Tuned Tagging &amp; Cloud Crate Library
           </p>
         </div>
       </div>
 
-      <!-- Right Studio Controls: Skin Switcher, Automation Modal, Demo Loader -->
-      <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
-        
-        <!-- UI Skin Switcher Dropdown -->
-        <div class="flex items-center gap-1.5 hardware-well px-2.5 py-1.5 text-xs">
-          <i class="fa-solid fa-sliders text-[var(--accent-primary)] text-[11px]"></i>
-          <label for="skinSelect" class="text-[11px] font-mono-tech uppercase text-[var(--text-secondary)] hidden md:inline">Skin:</label>
-          <select id="skinSelect" class="bg-transparent text-xs font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer">
-            <option value="theme-obsidian" class="bg-[#08080c] text-white">Obsidian Black (OLED)</option>
-            <option value="theme-winamp" class="bg-[#22252c] text-[#00ff41]">Winamp Brushed Metal</option>
-            <option value="theme-slate" class="bg-[#131822] text-[#38bdf8]">Studio Slate Rack</option>
+      <!-- Right Studio Controls: Active Device Selector, Cloud Library, Automation, Skins, Admin, User Auth -->
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+
+        <!-- Active Hardware/Software Device Optimization Selector -->
+        <div class="flex items-center gap-1.5 hardware-well px-2.5 py-1.5 text-xs" title="Auto-tune conversion settings & tag files for your active hardware/software rig">
+          <i class="fa-solid fa-headphones-simple text-[var(--accent-primary)] text-[11px]"></i>
+          <span class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] hidden md:inline">Rig:</span>
+          <select id="headerDeviceSelect" class="bg-transparent text-xs font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer max-w-[145px] sm:max-w-[180px] truncate">
+            <option value="none" class="bg-[#08080c] text-white">No Device Lock (Manual)</option>
           </select>
         </div>
 
-        <!-- Batch Automation & Filename Token Button -->
-        <button id="openAutomationBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
-          <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-primary)]"></i>
-          <span>Batch Automation</span>
-          <span id="activeNamingBadge" class="hidden lg:inline font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-panel-elevated)] text-[var(--text-secondary)]">
-            [Original]
+        <!-- Cloud Library & Download History Button -->
+        <button id="openCloudLibraryBtn" type="button" class="hardware-well px-2.5 sm:px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition">
+          <i class="fa-solid fa-cloud-Showers-heavy fa-cloud text-[var(--accent-primary)]"></i>
+          <span>Cloud Crate</span>
+          <span id="libraryCountBadge" class="font-mono-tech text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-panel-elevated)] text-[var(--led-readout)] border border-[var(--border-hairline)]">
+            0
           </span>
         </button>
 
+        <!-- Batch Automation & Regex Button -->
+        <button id="openAutomationBtn" type="button" class="hardware-well px-2.5 sm:px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition">
+          <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-primary)]"></i>
+          <span class="hidden sm:inline">Automation</span>
+        </button>
+
+        <!-- UI Skin Switcher Dropdown -->
+        <div class="flex items-center gap-1 hardware-well px-2 py-1.5 text-xs">
+          <i class="fa-solid fa-palette text-[var(--accent-primary)] text-[11px]"></i>
+          <select id="skinSelect" class="bg-transparent text-xs font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer">
+            <option value="theme-obsidian" class="bg-[#08080c] text-white">Obsidian OLED</option>
+            <option value="theme-winamp" class="bg-[#22252c] text-[#00ff41]">Winamp Metal</option>
+            <option value="theme-slate" class="bg-[#131822] text-[#38bdf8]">Studio Slate</option>
+          </select>
+        </div>
+
         <!-- Demo Studio Tracks Button -->
-        <button id="loadDemoBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+        <button id="loadDemoBtn" type="button" class="hardware-well px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Load 3 synthesized stereo demo tracks">
           <i class="fa-solid fa-compact-disc text-[var(--accent-primary)]"></i>
-          <span class="hidden sm:inline">Load 3 Demo Tracks</span>
-          <span class="sm:hidden">Demo</span>
+          <span class="hidden lg:inline">Demo</span>
+        </button>
+
+        <!-- Admin Telemetry Portal Button -->
+        <button id="openAdminPortalBtn" type="button" class="hardware-well px-2.5 py-1.5 text-xs font-mono-tech font-semibold flex items-center gap-1.5 text-amber-400 hover:border-amber-400/60 transition" title="Admin Activity Monitor & Telemetry API">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span class="hidden md:inline">Admin API</span>
+        </button>
+
+        <!-- User Account / Profile Pill -->
+        <button id="openAuthProfileBtn" type="button" class="hardware-well px-2.5 py-1 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
+          <div id="headerUserAvatar" class="w-6 h-6 rounded-full bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)]/60 flex items-center justify-center font-mono-tech text-[10px] font-bold text-[var(--accent-primary)]">
+            <i class="fa-regular fa-user"></i>
+          </div>
+          <div class="text-left leading-tight">
+            <div id="headerUserName" class="text-[11px] font-bold text-[var(--text-primary)] max-w-[100px] truncate">Sign In</div>
+            <div id="headerUserStatus" class="text-[9px] font-mono-tech text-[var(--text-secondary)]">Guest Mode</div>
+          </div>
         </button>
 
       </div>
@@ -308,6 +334,21 @@
        ========================================================================== -->
   <main class="max-w-7xl mx-auto px-3 sm:px-6 py-5 space-y-5">
 
+    <!-- GUEST / CLOUD SYNC BANNER (DYNAMIC TELEMETRY BAR) -->
+    <div id="cloudStatusRibbon" class="hardware-well px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span id="cloudSyncIndicatorDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span id="cloudStatusMessage" class="text-[var(--text-secondary)]">
+          Running in <strong>Guest Studio Mode</strong> — conversions are unrestricted. <button type="button" id="ribbonSignInLink" class="underline text-[var(--accent-primary)] font-semibold">Sign in with Google or Email</button> to sync your Device Rig, Download History &amp; Derived Track Variants.
+        </span>
+      </div>
+      <div class="flex items-center gap-3 font-mono-tech text-[11px]">
+        <span id="activeDeviceTelemetryPill" class="text-[var(--led-readout)]">
+          <i class="fa-solid fa-microchip mr-1"></i>Target Rig: Standard Studio
+        </span>
+      </div>
+    </div>
+
     <!-- 1. STREAMLINED ENCODER & PRESET CONTROL DECK -->
     <section class="studio-panel p-4 sm:p-5 space-y-4">
       
@@ -316,12 +357,12 @@
         <div class="flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]"></span>
           <h2 class="text-xs font-mono-tech uppercase tracking-wider text-[var(--text-secondary)]">
-            1. Select Workflow Preset or Output Container
+            1. Select Workflow Preset, Device Profile, or Output Container
           </h2>
         </div>
         <!-- Live Active Config Readout -->
         <div id="liveConfigReadout" class="hardware-well px-3 py-1 text-[11px] font-mono-tech text-[var(--led-readout)] flex items-center gap-2">
-          <i class="fa-solid fa-microchip"></i>
+          <i class="fa-solid fa-sliders"></i>
           <span id="liveConfigText">CDJ / Rekordbox • MP3 • 320 kbps CBR • 44.1 kHz • Stereo • ID3v2.3 + APIC</span>
         </div>
       </div>
@@ -419,7 +460,7 @@
           </button>
         </div>
 
-        <!-- Collapsible Drawer Triggers (Keeps Main View Clean) -->
+        <!-- Collapsible Drawer Triggers -->
         <div class="flex flex-wrap items-center gap-2">
           <button id="toggleAdvancedDrawerBtn" type="button" class="hardware-well px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
             <i class="fa-solid fa-sliders text-[var(--accent-primary)]"></i>
@@ -429,13 +470,13 @@
 
           <button id="toggleFormatSpecsBtn" type="button" class="hardware-well px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
             <i class="fa-solid fa-circle-check text-emerald-400"></i>
-            <span>Format Specs &amp; Compatibility</span>
+            <span>Format Compatibility</span>
             <i id="formatSpecsChevron" class="fa-solid fa-chevron-down text-[10px] text-[var(--text-secondary)] transition-transform duration-200"></i>
           </button>
         </div>
       </div>
 
-      <!-- COLLAPSIBLE DRAWER 1: ADVANCED DSP OPTIONS (Bitrate, Sample Rate, Channels, Bit Depth, Tag Mode) -->
+      <!-- COLLAPSIBLE DRAWER 1: ADVANCED DSP OPTIONS -->
       <div id="advancedOptionsDrawer" class="drawer-collapse">
         <div class="drawer-inner">
           <div class="pt-3 mt-1 border-t border-[var(--border-hairline)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -526,7 +567,6 @@
               </button>
             </div>
 
-            <!-- 3-Column Format Telemetry Breakdown -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div class="hardware-well p-3 space-y-1.5">
                 <div class="font-mono-tech text-[11px] uppercase text-[var(--accent-primary)] flex items-center gap-1.5">
@@ -569,7 +609,7 @@
               Drop Audio Files Here or Click to Browse Batch
             </h3>
             <p class="text-xs text-[var(--text-secondary)] mt-0.5">
-              Supports MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Binary ID3/Vorbis/MP4 Artwork &amp; BPM/Key Extraction
+              Supports MP3, FLAC, WAV, AIFF, M4A, OGG &amp; OPUS • Auto-Logs Derived Variants to Cloud Crate
             </p>
           </div>
         </div>
@@ -608,16 +648,16 @@
     <!-- 3. BATCH QUEUE TRACK LIST -->
     <section class="studio-panel p-4 sm:p-5 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-hairline)] pb-3">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <h2 class="text-xs font-mono-tech uppercase tracking-wider text-[var(--text-secondary)]">
             2. Active Audio Batch Queue
           </h2>
           <span id="namingPreviewHeaderPill" class="text-[11px] font-mono-tech px-2 py-0.5 rounded hardware-well text-[var(--text-secondary)]">
-            Naming Pattern: <strong class="text-[var(--accent-primary)]" id="namingPatternDisplay">[Artist] - [Title]</strong>
+            Export Pattern: <strong class="text-[var(--accent-primary)]" id="namingPatternDisplay">[Artist] - [Title]</strong>
           </span>
         </div>
         <div id="batchStatusBanner" class="text-xs font-mono-tech text-[var(--text-secondary)]">
-          Drop files or load demo tracks to inspect waveforms, tags &amp; cover art.
+          Drop files or click "Demo" in the top bar to test conversion, device tagging &amp; Cloud Crate tracking.
         </div>
       </div>
 
@@ -629,7 +669,7 @@
         <div class="space-y-1">
           <p class="text-sm font-semibold text-[var(--text-secondary)]">No Audio Tracks Loaded in Batch Queue</p>
           <p class="text-xs text-[var(--text-muted)]">
-            Drag and drop local audio files above or click <strong>"Load 3 Demo Tracks"</strong> in the top bar to test conversion &amp; cover art preservation.
+            Drag and drop local audio files above or click <strong>"Demo"</strong> in the top header to test conversion &amp; Cloud Crate variant linking.
           </p>
         </div>
       </div>
@@ -641,7 +681,367 @@
   </main>
 
   <!-- ==========================================================================
-       MODAL 1: BATCH AUTOMATION, FILENAME TOKEN ENGINE & GLOBAL TAG STAMPING
+       MODAL 1: USER AUTHENTICATION, PROFILE & HARDWARE/SOFTWARE DEVICE REGISTRY
+       ========================================================================== -->
+  <div id="authProfileModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-user-astronaut text-[var(--accent-primary)]"></i>
+          <div>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Studio Account, Hardware Rig &amp; Firebase Cloud Sync</h3>
+            <p class="text-[11px] text-[var(--text-secondary)]">Sign in to save your hardware rig, auto-tune exports by device, and track multi-format master variants.</p>
+          </div>
+        </div>
+        <button id="closeAuthProfileModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent-primary)]">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-6 text-xs">
+
+        <!-- SECTION A: UNAUTHENTICATED LOGIN / REGISTER VIEW -->
+        <div id="authLoggedOutView" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Left: One-Click Google Sign-In + Quick Studio Login -->
+          <div class="hardware-well p-4 flex flex-col justify-between space-y-4">
+            <div class="space-y-1.5">
+              <span class="font-mono-tech text-[10px] uppercase px-2 py-0.5 rounded bg-[var(--bg-panel-elevated)] text-[var(--accent-primary)] border border-[var(--border-hairline)]">
+                OAuth 2.0 / Studio Identity
+              </span>
+              <h4 class="text-sm font-bold text-[var(--text-primary)] pt-1">One-Click Google Sign-In</h4>
+              <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Authenticate with your Google account to sync your DJ/Producer hardware stack, download logs, and derived track variants.
+              </p>
+            </div>
+
+            <div class="space-y-2.5">
+              <button id="googleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2.5 hover:bg-gray-100 transition shadow">
+                <i class="fa-brands fa-google text-rose-500 text-sm"></i>
+                <span>Continue with Google Account</span>
+              </button>
+
+              <div class="text-[10px] font-mono-tech text-[var(--text-muted)] text-center">
+                Works instantly via Local Cloud Sync or Live Firebase Auth
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Email & Password Authentication -->
+          <form id="emailAuthForm" class="hardware-well p-4 space-y-3">
+            <div class="font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
+              Email &amp; Password Studio Login
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Alias</label>
+              <input id="authDisplayNameInput" type="text" placeholder="e.g. DJ Uno" class="hardware-well w-full px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
+              <input id="authEmailInput" type="email" required placeholder="producer@vntex.studio" class="hardware-well w-full px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Password</label>
+              <input id="authPasswordInput" type="password" required placeholder="••••••••" class="hardware-well w-full px-3 py-2 text-xs" />
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+              <button type="submit" class="btn-convert-primary flex-1 py-2 px-3 rounded text-xs font-mono-tech uppercase">
+                Sign In / Create Profile
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+        <!-- SECTION B: AUTHENTICATED USER PROFILE & STATS VIEW -->
+        <div id="authLoggedInView" class="hidden hardware-well p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div id="profileModalAvatar" class="w-14 h-14 rounded-xl bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)] flex items-center justify-center font-mono-tech text-lg font-extrabold text-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-glow)]">
+              UN
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h4 id="profileModalName" class="text-sm font-bold text-[var(--text-primary)]">DJ Uno</h4>
+                <span id="profileSyncModeBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  ● Cloud Synced
+                </span>
+              </div>
+              <div id="profileModalEmail" class="text-xs font-mono-tech text-[var(--text-secondary)]">uno@vntex.studio</div>
+              <div id="profileModalStats" class="text-[11px] font-mono-tech text-[var(--led-readout)]">
+                0 Master Tracks in Library • 0 Total Format Downloads
+              </div>
+            </div>
+          </div>
+          <button id="signOutBtn" type="button" class="hardware-well px-3.5 py-2 text-xs font-mono-tech text-rose-400 hover:border-rose-500/60 transition">
+            <i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out
+          </button>
+        </div>
+
+        <!-- SECTION C: HARDWARE & SOFTWARE DEVICE REGISTRY (IDEA 5 - PART C) -->
+        <div class="space-y-3 pt-2 border-t border-[var(--border-hairline)]">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
+                Hardware &amp; Software Rig Registry (Device-Specific Auto-Tuning)
+              </h4>
+              <p class="text-[11px] text-[var(--text-secondary)]">
+                Select the equipment and software in your studio. Click <strong>"Set Active Target"</strong> on any gear to lock conversion specs and tag exports for that device.
+              </p>
+            </div>
+          </div>
+
+          <!-- Device Rig Grid -->
+          <div id="deviceRegistryGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- SECTION D: OPTIONAL LIVE FIREBASE PROJECT CONNECTOR -->
+        <div class="space-y-2.5 pt-3 border-t border-[var(--border-hairline)]">
+          <div class="flex items-center justify-between">
+            <span class="font-mono-tech uppercase text-[11px] text-[var(--text-secondary)]">
+              <i class="fa-solid fa-fire text-amber-400 mr-1"></i>Firebase Auth &amp; Firestore Backend Connection
+            </span>
+            <button id="toggleFirebaseConfigBtn" type="button" class="text-[11px] font-mono-tech underline text-[var(--accent-primary)]">
+              Configure Live Firebase Keys →
+            </button>
+          </div>
+
+          <div id="firebaseConfigCollapse" class="hidden hardware-well p-3.5 space-y-2.5">
+            <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              VNTEX automatically persists your profile, library, and download logs locally out-of-the-box. To sync with your own live <strong>Google Firebase Project</strong>, paste your Firebase Web App config JSON below (`apiKey`, `authDomain`, `projectId`, `appId`):
+            </p>
+            <textarea id="firebaseConfigTextarea" rows="4" class="hardware-well w-full p-2.5 font-mono-tech text-[11px]" placeholder='{"apiKey":"AIza...","authDomain":"your-app.firebaseapp.com","projectId":"your-app","appId":"1:123..."}'></textarea>
+            <div class="flex items-center justify-end gap-2">
+              <button id="clearFirebaseConfigBtn" type="button" class="hardware-well px-3 py-1.5 text-[11px] font-mono-tech text-rose-400">
+                Use Local Cloud Default
+              </button>
+              <button id="saveFirebaseConfigBtn" type="button" class="btn-convert-primary px-3.5 py-1.5 rounded text-[11px] font-mono-tech">
+                Connect Firebase Backend
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-[var(--border-hairline)] flex items-center justify-between bg-[var(--bg-void)]">
+        <span id="authModalToast" class="text-xs font-mono-tech text-emerald-400"></span>
+        <button id="doneAuthModalBtn" type="button" class="hardware-well px-4 py-1.5 text-xs font-semibold hover:border-[var(--accent-primary)]">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 2: CLOUD LIBRARY (DERIVED VARIANT TRACKING) & DOWNLOAD HISTORY LOGS
+       ========================================================================== -->
+  <div id="cloudLibraryModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-layer-group text-[var(--accent-primary)]"></i>
+          <div>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Cloud Crate Library &amp; Timestamped Download History</h3>
+            <p class="text-[11px] text-[var(--text-secondary)]">
+              Tracks downloaded multiple times in different formats are automatically linked as <strong>derived format variants</strong> under a single master record.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="tabCloudMastersBtn" type="button" class="format-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
+            Master Library (<span id="masterTabCount">0</span>)
+          </button>
+          <button id="tabDownloadHistoryBtn" type="button" class="format-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            Download Logs (<span id="historyTabCount">0</span>)
+          </button>
+          <button id="closeCloudLibraryBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent-primary)]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter & Search Bar -->
+      <div class="px-5 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/50 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+          <div class="relative flex-1 min-w-[200px] max-w-sm">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[var(--text-muted)] text-[11px]"></i>
+            <input id="librarySearchInput" type="text" placeholder="Filter by title, artist, key, or device..." class="hardware-well w-full pl-8 pr-3 py-1.5 text-xs" />
+          </div>
+          <select id="libraryFormatFilter" class="hardware-well px-2.5 py-1.5 text-xs font-mono-tech">
+            <option value="all">All Formats</option>
+            <option value="mp3">.MP3</option>
+            <option value="flac">.FLAC</option>
+            <option value="wav">.WAV</option>
+            <option value="aiff">.AIFF</option>
+            <option value="m4a">.M4A</option>
+            <option value="ogg">.OGG</option>
+            <option value="opus">.OPUS</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="exportHistoryJsonBtn" type="button" class="hardware-well px-3 py-1.5 text-[11px] font-mono-tech hover:border-[var(--accent-primary)]">
+            <i class="fa-solid fa-file-code mr-1 text-[var(--accent-primary)]"></i>Export JSON
+          </button>
+          <button id="clearUserHistoryBtn" type="button" class="hardware-well px-3 py-1.5 text-[11px] font-mono-tech text-rose-400 hover:border-rose-500/50">
+            Clear History
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+        
+        <!-- VIEW 1: CLOUD LIBRARY MASTER TRACKS & DERIVED VARIANTS -->
+        <div id="cloudMastersView" class="space-y-3"></div>
+
+        <!-- VIEW 2: TIMESTAMPED DOWNLOAD LOG TABLE -->
+        <div id="downloadHistoryView" class="hidden overflow-x-auto">
+          <table class="w-full text-left border-collapse font-mono-tech text-[11px]">
+            <thead>
+              <tr class="border-b border-[var(--border-highlight)] text-[var(--accent-primary)]">
+                <th class="py-2.5 px-3">Timestamp</th>
+                <th class="py-2.5 px-3">Track Title &amp; Artist</th>
+                <th class="py-2.5 px-3">BPM / Key</th>
+                <th class="py-2.5 px-3">Format &amp; Specs</th>
+                <th class="py-2.5 px-3">Target Device / Preset</th>
+                <th class="py-2.5 px-3">Size</th>
+              </tr>
+            </thead>
+            <tbody id="downloadHistoryTableBody" class="divide-y divide-[var(--border-hairline)] text-[var(--text-secondary)]"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: ADMIN PORTAL, TELEMETRY MONITOR & WEB API CONSOLE (IDEA 5 - PART D)
+       ========================================================================== -->
+  <div id="adminPortalModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden border border-amber-400/40">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-shield-halved text-amber-400"></i>
+          <div>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Admin Portal &amp; Developer Telemetry API Console</h3>
+            <p class="text-[11px] text-[var(--text-secondary)]">Monitor registered accounts, conversion volume, device distribution, and live API activity logs.</p>
+          </div>
+        </div>
+        <button id="closeAdminPortalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Admin PIN / Access Gate -->
+      <div id="adminPinGateView" class="p-8 max-w-md mx-auto text-center space-y-4">
+        <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-sm font-bold text-[var(--text-primary)]">Developer Admin Authentication</h4>
+          <p class="text-xs text-[var(--text-secondary)]">
+            Enter your Developer Admin Passcode to unlock platform analytics &amp; the JSON API endpoint inspector (Default Passcode: <code class="text-amber-400 font-mono-tech">VNTEX-ADMIN</code>).
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <input id="adminPinInput" type="password" value="VNTEX-ADMIN" class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center" placeholder="Admin Passcode..." />
+          <button id="unlockAdminBtn" type="button" class="btn-convert-primary px-4 py-2 rounded text-xs font-mono-tech">
+            Unlock Console
+          </button>
+        </div>
+        <div id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid Admin Passcode</div>
+      </div>
+
+      <!-- Unlocked Admin Dashboard View -->
+      <div id="adminDashboardView" class="hidden p-5 overflow-y-auto space-y-5 text-xs">
+        
+        <!-- 4 Real-Time KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="hardware-well p-3.5 space-y-1">
+            <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Registered Studio Users</div>
+            <div id="adminKpiUsers" class="font-mono-tech text-xl font-extrabold text-[var(--accent-primary)]">1</div>
+            <div class="text-[10px] text-emerald-400">● Active Auth Registry</div>
+          </div>
+          <div class="hardware-well p-3.5 space-y-1">
+            <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Total Files Converted</div>
+            <div id="adminKpiConversions" class="font-mono-tech text-xl font-extrabold text-[var(--led-readout)]">0</div>
+            <div class="text-[10px] text-[var(--text-secondary)]">Across 7 DSP Containers</div>
+          </div>
+          <div class="hardware-well p-3.5 space-y-1">
+            <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Master Library Variants</div>
+            <div id="adminKpiMasters" class="font-mono-tech text-xl font-extrabold text-amber-400">0</div>
+            <div class="text-[10px] text-[var(--text-secondary)]">Grouped Multi-Format Tracks</div>
+          </div>
+          <div class="hardware-well p-3.5 space-y-1">
+            <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Processed Audio Volume</div>
+            <div id="adminKpiVolume" class="font-mono-tech text-xl font-extrabold text-emerald-400">0.0 MB</div>
+            <div class="text-[10px] text-emerald-400">● DSP Engine Nominal (100%)</div>
+          </div>
+        </div>
+
+        <!-- Format Breakdown & REST API Payload Preview -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-5 hardware-well p-4 space-y-3">
+            <div class="font-mono-tech uppercase text-[11px] text-amber-400 flex items-center justify-between">
+              <span>Output Format Distribution</span>
+              <i class="fa-solid fa-chart-simple"></i>
+            </div>
+            <div id="adminFormatBars" class="space-y-2"></div>
+          </div>
+
+          <div class="lg:col-span-7 hardware-well p-4 space-y-2.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
+                GET /api/v1/admin/telemetry (Live JSON Feed)
+              </span>
+              <button id="copyApiPayloadBtn" type="button" class="hardware-well px-2.5 py-1 text-[10px] font-mono-tech hover:border-[var(--accent-primary)]">
+                Copy API JSON
+              </button>
+            </div>
+            <pre id="adminApiJsonPreview" class="bg-[var(--bg-void)] p-3 rounded border border-[var(--border-hairline)] font-mono-tech text-[10px] text-emerald-400 overflow-x-auto max-h-40"></pre>
+          </div>
+        </div>
+
+        <!-- Global Activity Stream Table -->
+        <div class="hardware-well p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-mono-tech uppercase text-[11px] text-[var(--text-primary)]">
+              Real-Time Global User &amp; Conversion Activity Stream
+            </span>
+            <span class="font-mono-tech text-[10px] text-emerald-400">● LIVE TELEMETRY</span>
+          </div>
+          <div class="overflow-x-auto max-h-56">
+            <table class="w-full text-left border-collapse font-mono-tech text-[11px]">
+              <thead>
+                <tr class="border-b border-[var(--border-highlight)] text-[var(--text-secondary)]">
+                  <th class="py-2 px-2.5">Timestamp</th>
+                  <th class="py-2 px-2.5">User Account</th>
+                  <th class="py-2 px-2.5">Event / Track</th>
+                  <th class="py-2 px-2.5">Format</th>
+                  <th class="py-2 px-2.5">Target Rig</th>
+                  <th class="py-2 px-2.5">Payload</th>
+                </tr>
+              </thead>
+              <tbody id="adminActivityTableBody" class="divide-y divide-[var(--border-hairline)] text-[var(--text-secondary)]"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: BATCH AUTOMATION, FILENAME TOKEN ENGINE & REGEX MACRO RULES
        ========================================================================== -->
   <div id="automationModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
@@ -651,8 +1051,8 @@
         <div class="flex items-center gap-2.5">
           <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-primary)]"></i>
           <div>
-            <h3 class="text-sm font-bold text-[var(--text-primary)]">Batch Automation, Filename Token Engine &amp; Tag Stamping</h3>
-            <p class="text-[11px] text-[var(--text-secondary)]">Configure export filename patterns, run one-click text cleanup macros, or stamp tags across all tracks.</p>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">Batch Automation, Regex Engine &amp; Global Tag Stamping</h3>
+            <p class="text-[11px] text-[var(--text-secondary)]">Configure bracket naming tokens, execute regex replacements, auto-number tracks, or stamp global tags.</p>
           </div>
         </div>
         <button id="closeAutomationModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent-primary)]">
@@ -665,7 +1065,7 @@
         
         <!-- Part A: Custom Filename Token Engine -->
         <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-1">
             <label for="filenameTemplateInput" class="font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
               1. Export Filename Token Template
             </label>
@@ -677,7 +1077,7 @@
           <div class="flex flex-col sm:flex-row gap-2">
             <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well flex-1 px-3 py-2 font-mono-tech text-xs" placeholder="e.g. [Track#] - [Artist] - [Title] ([BPM]BPM, [Key])" />
             <button id="resetTemplateBtn" type="button" class="hardware-well px-3 py-2 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">
-              Reset to Default
+              Reset Default
             </button>
           </div>
 
@@ -691,65 +1091,98 @@
             <button type="button" data-token="[BPM]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">[BPM]</button>
             <button type="button" data-token="[Key]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">[Key]</button>
             <button type="button" data-token="[Year]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">[Year]</button>
+            <button type="button" data-token="[Device]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">[Device]</button>
             <button type="button" data-token="[Original]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[11px] hover:border-[var(--accent-primary)]">[Original]</button>
           </div>
 
           <!-- Quick Naming Presets -->
           <div class="flex flex-wrap items-center gap-1.5 pt-1">
             <span class="text-[11px] text-[var(--text-muted)] mr-1">Quick Templates:</span>
-            <button type="button" data-template="[Original]" class="template-preset-btn text-[11px] underline text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">Keep Original Filename</button>
+            <button type="button" data-template="[Original]" class="template-preset-btn text-[11px] underline text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">Keep Original</button>
             <span>•</span>
             <button type="button" data-template="[Artist] - [Title]" class="template-preset-btn text-[11px] underline text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">Artist - Title</button>
             <span>•</span>
             <button type="button" data-template="[Track#] - [Artist] - [Title] ([BPM]BPM, [Key])" class="template-preset-btn text-[11px] underline text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">DJ Crate ([Track#] - Artist - Title (BPM, Key))</button>
+            <span>•</span>
+            <button type="button" data-template="[Artist] - [Title] [[Device]]" class="template-preset-btn text-[11px] underline text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">Device Tagged</button>
           </div>
         </div>
 
-        <!-- Part B: One-Click Batch Text Cleanup Macros -->
-        <div class="space-y-2.5 pt-4 border-t border-[var(--border-hairline)]">
+        <!-- Part B: Custom Regex Replacement & Batch Macro Rules -->
+        <div class="space-y-3 pt-4 border-t border-[var(--border-hairline)]">
           <label class="block font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
-            2. One-Click Batch Text Cleanup Macros
+            2. Custom Regex Find &amp; Replace + One-Click Batch Macros
           </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+
+          <!-- Custom Regex Bar -->
+          <div class="hardware-well p-3 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            <div class="sm:col-span-4">
+              <input id="regexPatternInput" type="text" placeholder="Regex Pattern (e.g. \s*\(feat\..*?\))" class="hardware-well w-full px-2.5 py-1.5 font-mono-tech text-xs" />
+            </div>
+            <div class="sm:col-span-4">
+              <input id="regexReplaceInput" type="text" placeholder="Replace With (leave empty to strip)" class="hardware-well w-full px-2.5 py-1.5 font-mono-tech text-xs" />
+            </div>
+            <div class="sm:col-span-2">
+              <select id="regexTargetSelect" class="hardware-well w-full px-2 py-1.5 text-xs font-mono-tech">
+                <option value="all">Title + Artist</option>
+                <option value="title">Title Only</option>
+                <option value="artist">Artist Only</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <button id="runRegexReplaceBtn" type="button" class="btn-convert-primary w-full py-1.5 px-2.5 rounded font-mono-tech text-[11px]">
+                Run Regex
+              </button>
+            </div>
+          </div>
+
+          <!-- 6 Macro Buttons -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <button type="button" data-cleanup="strip-underscores" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
               <div class="font-bold text-[var(--text-primary)]">Strip Underscores</div>
-              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Replaces <code>_</code> and multiple spaces in titles</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Replaces <code>_</code> &amp; double spaces</div>
             </button>
             <button type="button" data-cleanup="title-case" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
-              <div class="font-bold text-[var(--text-primary)]">Title Case Track Info</div>
-              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Capitalizes Title, Artist &amp; Album cleanly</div>
+              <div class="font-bold text-[var(--text-primary)]">Title Case Info</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Capitalizes Title, Artist &amp; Album</div>
             </button>
             <button type="button" data-cleanup="strip-prefix-nums" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
               <div class="font-bold text-[var(--text-primary)]">Remove Prefix Numbers</div>
-              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Strips leading <code>01 - </code> or <code>02. </code> from titles</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Strips leading <code>01 - </code> from titles</div>
             </button>
             <button type="button" data-cleanup="strip-junk" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
               <div class="font-bold text-[var(--text-primary)]">Strip Video/Web Junk</div>
-              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Removes <code>(Official Audio)</code>, <code>[HD]</code>, etc.</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Removes <code>(Official Audio)</code>, <code>[HD]</code></div>
+            </button>
+            <button type="button" data-cleanup="auto-number" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
+              <div class="font-bold text-[var(--text-primary)]">Auto-Number Batch</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Sets sequential 01..NN &amp; enables [Track#]</div>
+            </button>
+            <button type="button" data-cleanup="reset-tags-from-filename" class="cleanup-macro-btn hardware-well p-2.5 text-left hover:border-[var(--accent-primary)] transition">
+              <div class="font-bold text-[var(--text-primary)]">Parse Artist - Title</div>
+              <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">Splits filename by <code> - </code> into tags</div>
             </button>
           </div>
         </div>
 
         <!-- Part C: Global Batch Tag & Cover Art Stamping -->
         <div class="space-y-3 pt-4 border-t border-[var(--border-hairline)]">
-          <div class="flex items-center justify-between">
-            <label class="font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
-              3. Global Batch Tag &amp; Cover Art Stamping (Applies to Non-Empty Fields)
-            </label>
-          </div>
+          <label class="block font-mono-tech uppercase text-[11px] text-[var(--accent-primary)]">
+            3. Global Batch Tag &amp; Cover Art Stamping
+          </label>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div>
               <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Global Artist</label>
-              <input id="batchArtistInput" type="text" placeholder="Leave blank to keep per-track" class="hardware-well w-full px-2.5 py-2 text-xs" />
+              <input id="batchArtistInput" type="text" placeholder="Keep per-track if blank" class="hardware-well w-full px-2.5 py-2 text-xs" />
             </div>
             <div>
               <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Global Album</label>
-              <input id="batchAlbumInput" type="text" placeholder="Leave blank to keep per-track" class="hardware-well w-full px-2.5 py-2 text-xs" />
+              <input id="batchAlbumInput" type="text" placeholder="Keep per-track if blank" class="hardware-well w-full px-2.5 py-2 text-xs" />
             </div>
             <div>
               <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Global Genre</label>
-              <input id="batchGenreInput" type="text" placeholder="e.g. Electronic / House / Hip-Hop" class="hardware-well w-full px-2.5 py-2 text-xs" />
+              <input id="batchGenreInput" type="text" placeholder="e.g. Electronic / Hip-Hop" class="hardware-well w-full px-2.5 py-2 text-xs" />
             </div>
             <div>
               <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Global Year</label>
@@ -761,17 +1194,16 @@
             </div>
             <div>
               <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Global Musical Key</label>
-              <input id="batchKeyInput" type="text" placeholder="e.g. 8A / Am" class="hardware-well w-full px-2.5 py-2 text-xs font-mono-tech" />
+              <input id="batchKeyInput" type="text" placeholder="e.g. 8A" class="hardware-well w-full px-2.5 py-2 text-xs font-mono-tech" />
             </div>
           </div>
 
-          <!-- Global Artwork Stamp Upload -->
           <div class="flex flex-wrap items-center justify-between gap-3 hardware-well p-3">
             <div class="flex items-center gap-3">
               <img id="batchCoverPreview" src="" alt="Batch Cover" class="w-11 h-11 rounded object-cover hidden border border-[var(--border-highlight)]" />
               <div>
                 <div class="font-semibold text-[var(--text-primary)]">Stamp Cover Art Across Entire Batch</div>
-                <div id="batchCoverStatus" class="text-[11px] text-[var(--text-secondary)]">No global override image selected (tracks keep their own cover art).</div>
+                <div id="batchCoverStatus" class="text-[11px] text-[var(--text-secondary)]">No global override image selected.</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -799,7 +1231,7 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 2: PER-TRACK METADATA & COVER ART EDITOR
+       MODAL 5: PER-TRACK METADATA & COVER ART EDITOR
        ========================================================================== -->
   <div id="tagEditorModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
@@ -876,7 +1308,7 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 3: ALL 7 FORMATS COMPATIBILITY MATRIX
+       MODAL 6: ALL 7 FORMATS COMPATIBILITY MATRIX
        ========================================================================== -->
   <div id="matrixModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
@@ -965,7 +1397,7 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 4: BINARY OUTPUT TAG INSPECTOR (VERIFIES EMBEDDED BYTES)
+       MODAL 7: BINARY OUTPUT TAG INSPECTOR
        ========================================================================== -->
   <div id="inspectorModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-lg overflow-hidden border border-[var(--border-highlight)]">
@@ -987,7 +1419,117 @@
        ========================================================================== -->
   <script>
     /**************************************************************************
-     * 1. FORMAT SPECIFICATIONS & PLATFORM COMPATIBILITY TELEMETRY
+     * 1. HARDWARE & SOFTWARE DEVICE REGISTRY PROFILES (IDEA 5 - PART C)
+     **************************************************************************/
+    const DEVICE_PROFILES = [
+      {
+        id: 'ddj-grv6',
+        name: 'Pioneer DDJ-GRV6 Controller',
+        category: 'DJ Hardware',
+        icon: 'fa-compact-disc',
+        format: 'mp3',
+        bitrate: 320,
+        bitDepth: 16,
+        sampleRate: 44100,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '320kbps CBR MP3 • 44.1kHz • Strict ID3v2.3 + Groove Circuit Ready'
+      },
+      {
+        id: 'ddj-flx4',
+        name: 'Pioneer DDJ-FLX4 Controller',
+        category: 'DJ Hardware',
+        icon: 'fa-sliders',
+        format: 'mp3',
+        bitrate: 320,
+        bitDepth: 16,
+        sampleRate: 44100,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '320kbps CBR MP3 • 44.1kHz • Rekordbox / Serato ID3v2.3 Locked'
+      },
+      {
+        id: 'cdj-3000',
+        name: 'Pioneer CDJ-3000 / NXS2 Club Rig',
+        category: 'Club Standard',
+        icon: 'fa-record-vinyl',
+        format: 'aiff',
+        bitrate: 320,
+        bitDepth: 24,
+        sampleRate: 48000,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '24-Bit / 48kHz Uncompressed AIFF • Full CDJ Screen Artwork + Key/BPM'
+      },
+      {
+        id: 'rekordbox-mik',
+        name: 'Rekordbox + Mixed In Key Crate',
+        category: 'DJ Software',
+        icon: 'fa-Wave-square fa-bars-staggered',
+        format: 'mp3',
+        bitrate: 320,
+        bitDepth: 16,
+        sampleRate: 44100,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '320kbps CBR MP3 • Camelot Key (TKEY) & TBPM Priority Framing'
+      },
+      {
+        id: 'logic-pro-x',
+        name: 'Apple Logic Pro X Studio',
+        category: 'DAW Production',
+        icon: 'fa-apple-whole',
+        format: 'aiff',
+        bitrate: 320,
+        bitDepth: 24,
+        sampleRate: 48000,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '24-Bit / 48kHz Apple AIFF Master • Native macOS Finder Cover Art'
+      },
+      {
+        id: 'fl-studio',
+        name: 'FL Studio / DAW Stem Engine',
+        category: 'DAW Production',
+        icon: 'fa-drum',
+        format: 'wav',
+        bitrate: 320,
+        bitDepth: 32,
+        sampleRate: 48000,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '32-Bit IEEE Float WAV • 48kHz • Zero Headroom Clipping'
+      },
+      {
+        id: 'yamaha-hs-ref',
+        name: 'Studio Reference Monitors (Hi-Fi)',
+        category: 'Studio Monitoring',
+        icon: 'fa-volume-high',
+        format: 'flac',
+        bitrate: 320,
+        bitDepth: 24,
+        sampleRate: 96000,
+        channels: 2,
+        artworkMode: 'preserve-raw',
+        specSummary: '24-Bit / 96kHz Lossless FLAC • Unaltered Reference Audio'
+      },
+      {
+        id: 'vinyl-archival',
+        name: 'Turntable Vinyl Rip Archival',
+        category: 'Analog Archival',
+        icon: 'fa-turntable fa-circle-dot',
+        format: 'flac',
+        bitrate: 320,
+        bitDepth: 24,
+        sampleRate: 96000,
+        channels: 2,
+        artworkMode: 'preserve-normalize',
+        specSummary: '24-Bit / 96kHz Archival FLAC • High-Dynamic Range Vinyl Preservation'
+      }
+    ];
+
+    /**************************************************************************
+     * 2. FORMAT SPECIFICATIONS & PLATFORM COMPATIBILITY TELEMETRY
      **************************************************************************/
     const FORMAT_SPECS = {
       mp3: {
@@ -996,8 +1538,8 @@
         coverArtPill: '● Cover Art: Full ID3v2.3 APIC Binary Transfer',
         tagPill: '● DJ Tags: Title, Artist, Album, BPM (TBPM), Key (TKEY)',
         artworkDetail: 'Embeds baseline JPEG/PNG bytes directly inside an ID3v2.3 APIC (0x03 Front Cover) frame at byte offset 0. Universally displayed on Pioneer CDJs, Rekordbox, Serato, macOS Finder, and Windows.',
-        metadataDetail: 'Writes spec-compliant ID3v2.3 frames (TIT2, TPE1, TALB, TYER, TCON, TBPM, TKEY, TENC=VNTEX DSP Engine) for instant DJ crate recognition.',
-        platforms: ['Pioneer CDJ / XDJ', 'Rekordbox / Serato', 'macOS & Apple Music', 'Windows Explorer', 'FL Studio / Logic', 'Web & Mobile']
+        metadataDetail: 'Writes spec-compliant ID3v2.3 frames (TIT2, TPE1, TALB, TYER, TCON, TBPM, TKEY, TENC=VNTEX DSP Engine) plus active hardware rig telemetry.',
+        platforms: ['Pioneer DDJ / CDJ', 'Rekordbox / Serato', 'macOS & Apple Music', 'Windows Explorer', 'FL Studio / Logic', 'Web & Mobile']
       },
       flac: {
         name: 'FLAC (Free Lossless Audio Codec)',
@@ -1005,7 +1547,7 @@
         coverArtPill: '● Cover Art: Native Block 6 PICTURE Transfer',
         tagPill: '● DJ Tags: Native Vorbis Comments (BPM, INITIALKEY)',
         artworkDetail: 'Embeds uncompressed binary artwork inside a native FLAC METADATA_BLOCK_PICTURE (Block Type 6) header alongside STREAMINFO.',
-        metadataDetail: 'Stores lossless Vorbis Comment key-value pairs (TITLE, ARTIST, ALBUM, DATE, GENRE, BPM, INITIALKEY, ENCODER=VNTEX DSP Engine).',
+        metadataDetail: 'Stores lossless Vorbis Comment key-value pairs (TITLE, ARTIST, ALBUM, DATE, GENRE, BPM, INITIALKEY, TARGET_RIG).',
         platforms: ['CDJ-2000NXS2 / 3000', 'Rekordbox / Serato / Traktor', 'macOS Finder Preview', 'Windows 10/11', 'FL Studio / Ableton']
       },
       wav: {
@@ -1013,8 +1555,8 @@
         badge: 'WAV • RIFF + ID3v2.3',
         coverArtPill: '● Cover Art: Hybrid RIFF id3 Chunk Embedded',
         tagPill: '● DJ Tags: Dual RIFF LIST-INFO + ID3v2.3 Chunk',
-        artworkDetail: 'Writes an embedded ID3v2.3 chunk ("id3 ") inside the RIFF container so Rekordbox, Serato, and Windows read cover art. (Note: Choose .AIFF or .MP3 if you need macOS Finder to show cover thumbnails on uncompressed files).',
-        metadataDetail: 'Dual-writes native RIFF LIST-INFO tags (INAM, IART, IPRD, ISFT) plus a complete ID3v2.3 chunk with TBPM and TKEY.',
+        artworkDetail: 'Writes an embedded ID3v2.3 chunk ("id3 ") inside the RIFF container so Rekordbox, Serato, and Windows read cover art.',
+        metadataDetail: 'Dual-writes native RIFF headers plus a complete ID3v2.3 chunk with TBPM, TKEY, and device optimization metadata.',
         platforms: ['All Pioneer CDJs', 'FL Studio (32-Bit Float)', 'Logic Pro X / Pro Tools', 'Rekordbox / Serato', 'Broadcast & Mastering']
       },
       aiff: {
@@ -1022,8 +1564,8 @@
         badge: 'AIFF • IFF + ID3v2.3',
         coverArtPill: '● Cover Art: Full IFF ID3 Chunk (macOS & CDJ Native)',
         tagPill: '● DJ Tags: Full ID3v2.3 inside AIFF Chunk',
-        artworkDetail: 'The gold-standard uncompressed format for Mac & DJs: embeds an "ID3 " IFF chunk at the end of the PCM stream so both macOS Finder/Apple Music AND Pioneer CDJs render cover art.',
-        metadataDetail: 'Full ID3v2.3 tag payload including BPM, Musical Key, Artist, Album, and Year.',
+        artworkDetail: 'The gold-standard uncompressed format for Mac & DJs: embeds an "ID3 " IFF chunk so both macOS Finder/Apple Music AND Pioneer CDJs render cover art.',
+        metadataDetail: 'Full ID3v2.3 tag payload including BPM, Musical Key, Artist, Album, Year, and Target Rig.',
         platforms: ['macOS Finder & Apple Music', 'All Pioneer CDJs', 'Rekordbox / Serato / Traktor', 'Logic Pro X']
       },
       m4a: {
@@ -1038,7 +1580,7 @@
       ogg: {
         name: 'OGG (Ogg Container Stream)',
         badge: 'OGG • Vorbis Comments',
-        coverArtPill: '● Cover Art: METADATA_BLOCK_PICTURE Base64/Binary',
+        coverArtPill: '● Cover Art: METADATA_BLOCK_PICTURE Binary',
         tagPill: '● DJ Tags: Vorbis Comment Header Block',
         artworkDetail: 'Stores cover art and track telemetry inside the container metadata header for desktop players and game engines.',
         metadataDetail: 'Preserves Title, Artist, Album, BPM, and Key tags.',
@@ -1056,8 +1598,18 @@
     };
 
     /**************************************************************************
-     * 2. APPLICATION STATE
+     * 3. APPLICATION STATE & PERSISTENT CLOUD / LOCAL STORAGE ENGINE
      **************************************************************************/
+    const STORAGE_KEYS = {
+      USER: 'vntex_auth_user_v3',
+      USERS_REGISTRY: 'vntex_users_registry_v3',
+      LIBRARY: 'vntex_cloud_library_v3',
+      HISTORY: 'vntex_download_history_v3',
+      OWNED_DEVICES: 'vntex_owned_devices_v3',
+      ACTIVE_DEVICE: 'vntex_active_device_v3',
+      FIREBASE_CONFIG: 'vntex_firebase_config_v3'
+    };
+
     const state = {
       activePreset: 'cdj-rekordbox',
       outputFormat: 'mp3',
@@ -1067,6 +1619,15 @@
       channels: 2,
       artworkMode: 'preserve-normalize',
       filenameTemplate: '[Artist] - [Title]',
+      activeDeviceId: localStorage.getItem(STORAGE_KEYS.ACTIVE_DEVICE) || 'none',
+      ownedDevices: JSON.parse(localStorage.getItem(STORAGE_KEYS.OWNED_DEVICES) || '["ddj-grv6","ddj-flx4","rekordbox-mik","logic-pro-x"]'),
+      user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null'),
+      usersRegistry: JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]'),
+      cloudLibrary: JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}'),
+      downloadHistory: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]'),
+      firebaseConnected: false,
+      firestoreDb: null,
+      firebaseAuth: null,
       tracks: [],
       editingTrackId: null,
       batchStampCoverBytes: null,
@@ -1080,8 +1641,158 @@
       playbackRaf: null
     };
 
+    function savePersistentState() {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
+      localStorage.setItem(STORAGE_KEYS.USERS_REGISTRY, JSON.stringify(state.usersRegistry));
+      localStorage.setItem(STORAGE_KEYS.LIBRARY, JSON.stringify(state.cloudLibrary));
+      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.downloadHistory));
+      localStorage.setItem(STORAGE_KEYS.OWNED_DEVICES, JSON.stringify(state.ownedDevices));
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_DEVICE, state.activeDeviceId);
+    }
+
     /**************************************************************************
-     * 3. PROCEDURAL FALLBACK COVER ART GENERATOR (CRISP BASELINE JPEG)
+     * 4. FIREBASE BACKEND INITIALIZATION (LIVE + LOCAL CLOUD HYBRID)
+     **************************************************************************/
+    function tryInitializeFirebase() {
+      const rawConfig = localStorage.getItem(STORAGE_KEYS.FIREBASE_CONFIG);
+      if (!rawConfig) return false;
+      try {
+        const config = JSON.parse(rawConfig);
+        if (!config.apiKey || !config.projectId) return false;
+        if (!firebase.apps.length) {
+          firebase.initializeApp(config);
+        }
+        state.firebaseAuth = firebase.auth();
+        state.firestoreDb = firebase.firestore();
+        state.firebaseConnected = true;
+
+        state.firebaseAuth.onAuthStateChanged((fbUser) => {
+          if (fbUser) {
+            state.user = {
+              uid: fbUser.uid,
+              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Studio User',
+              email: fbUser.email || 'authenticated@vntex.studio',
+              provider: fbUser.providerData?.[0]?.providerId || 'firebase',
+              lastLogin: new Date().toISOString()
+            };
+            registerUserInTelemetry(state.user);
+            savePersistentState();
+            updateAuthUI();
+          }
+        });
+        return true;
+      } catch (e) {
+        console.warn('Firebase custom config invalid, using Local Cloud Sync:', e);
+        state.firebaseConnected = false;
+        return false;
+      }
+    }
+
+    function registerUserInTelemetry(userObj) {
+      if (!userObj || !userObj.email) return;
+      const existingIdx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === userObj.email.toLowerCase());
+      if (existingIdx >= 0) {
+        state.usersRegistry[existingIdx] = { ...state.usersRegistry[existingIdx], ...userObj };
+      } else {
+        state.usersRegistry.push(userObj);
+      }
+      savePersistentState();
+      if (state.firebaseConnected && state.firestoreDb) {
+        state.firestoreDb.collection('vntex_users').doc(userObj.uid || userObj.email).set(userObj, { merge: true }).catch(() => {});
+      }
+    }
+
+    /**************************************************************************
+     * 5. CLOUD LIBRARY & DERIVED VARIANT ENGINE (IDEA 5 - PART B)
+     **************************************************************************/
+    function getMasterTrackKey(artist, title) {
+      const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return `${norm(artist || 'unknown')}__${norm(title || 'untitled')}`;
+    }
+
+    function recordTrackConversionToCloud(track, blobSize, ext) {
+      const nowIso = new Date().toISOString();
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const targetDeviceName = activeDev ? activeDev.name : 'Standard Studio';
+      const presetLabel = PRESET_DEFINITIONS[state.activePreset]?.label || 'Custom DSP';
+      const isLossless = ['flac', 'wav', 'aiff'].includes(ext);
+      const qualitySpec = isLossless
+        ? `${state.bitDepth}-Bit • ${(state.sampleRate / 1000).toFixed(1)} kHz`
+        : `${state.bitrate} kbps • ${(state.sampleRate / 1000).toFixed(1)} kHz`;
+
+      // 1. Append to Timestamped Download History Log
+      const logEntry = {
+        id: 'log_' + Math.random().toString(36).slice(2, 10),
+        timestamp: nowIso,
+        userEmail: state.user ? state.user.email : 'guest@local.studio',
+        trackTitle: track.tags.title || 'Untitled',
+        artist: track.tags.artist || 'Unknown Artist',
+        album: track.tags.album || 'VNTEX Session',
+        bpm: track.tags.bpm || '128',
+        key: track.tags.key || '8A',
+        outputFormat: ext.toUpperCase(),
+        qualitySpec,
+        presetUsed: presetLabel,
+        targetDevice: targetDeviceName,
+        fileSize: blobSize || 0
+      };
+      state.downloadHistory.unshift(logEntry);
+
+      // 2. Link inside Cloud Library Master Record as a Derived Format Variant
+      const masterKey = getMasterTrackKey(track.tags.artist, track.tags.title);
+      if (!state.cloudLibrary[masterKey]) {
+        state.cloudLibrary[masterKey] = {
+          masterKey,
+          title: track.tags.title || 'Untitled',
+          artist: track.tags.artist || 'Unknown Artist',
+          album: track.tags.album || 'VNTEX Session',
+          bpm: track.tags.bpm || '128',
+          key: track.tags.key || '8A',
+          year: track.tags.year || '2026',
+          createdAt: nowIso,
+          updatedAt: nowIso,
+          variants: []
+        };
+      }
+
+      const masterRecord = state.cloudLibrary[masterKey];
+      masterRecord.updatedAt = nowIso;
+      masterRecord.bpm = track.tags.bpm || masterRecord.bpm;
+      masterRecord.key = track.tags.key || masterRecord.key;
+
+      // Add or update variant for this Format + Quality + Target Device combination
+      const variantSignature = `${ext.toUpperCase()}__${qualitySpec}__${targetDeviceName}`;
+      const existingVarIdx = masterRecord.variants.findIndex((v) => v.signature === variantSignature);
+      const variantData = {
+        signature: variantSignature,
+        format: ext.toUpperCase(),
+        qualitySpec,
+        presetUsed: presetLabel,
+        targetDevice: targetDeviceName,
+        fileSize: blobSize || 0,
+        timestamp: nowIso,
+        downloadCount: existingVarIdx >= 0 ? (masterRecord.variants[existingVarIdx].downloadCount + 1) : 1
+      };
+
+      if (existingVarIdx >= 0) {
+        masterRecord.variants[existingVarIdx] = variantData;
+      } else {
+        masterRecord.variants.push(variantData);
+      }
+
+      savePersistentState();
+
+      // Mirror to live Firestore if connected
+      if (state.firebaseConnected && state.firestoreDb) {
+        state.firestoreDb.collection('vntex_history').add(logEntry).catch(() => {});
+        state.firestoreDb.collection('vntex_library').doc(masterKey).set(masterRecord, { merge: true }).catch(() => {});
+      }
+
+      updateAuthUI();
+    }
+
+    /**************************************************************************
+     * 6. PROCEDURAL FALLBACK COVER ART GENERATOR
      **************************************************************************/
     async function generateProceduralCoverArt(title = 'UNTITLED', artist = 'VNTEX DSP', key = '8A', bpm = '128') {
       const canvas = document.createElement('canvas');
@@ -1089,7 +1800,6 @@
       canvas.height = 600;
       const ctx = canvas.getContext('2d');
 
-      // Deep obsidian gradient background
       const grad = ctx.createRadialGradient(300, 220, 40, 300, 300, 420);
       grad.addColorStop(0, '#0f293a');
       grad.addColorStop(0.55, '#070b12');
@@ -1097,7 +1807,6 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 600, 600);
 
-      // Technical grid lines
       ctx.strokeStyle = 'rgba(0, 242, 254, 0.08)';
       ctx.lineWidth = 1;
       for (let i = 60; i < 600; i += 60) {
@@ -1105,7 +1814,6 @@
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(600, i); ctx.stroke();
       }
 
-      // Glowing concentric studio rings
       ctx.strokeStyle = 'rgba(0, 242, 254, 0.35)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -1117,18 +1825,15 @@
       ctx.arc(300, 250, 150, 0, Math.PI * 2);
       ctx.stroke();
 
-      // VX Center Emblem
       ctx.fillStyle = '#00f2fe';
       ctx.font = '800 44px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.fillText('VNTEX', 300, 262);
 
-      // Top Telemetry Header
       ctx.fillStyle = '#9496a8';
       ctx.font = '600 16px "JetBrains Mono", monospace';
       ctx.fillText(`VNTEX // DSP MASTERING EDITION • ${bpm} BPM • ${key}`, 300, 52);
 
-      // Track Title & Artist Footer
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 30px "Inter", sans-serif';
       const cleanTitle = String(title).slice(0, 26).toUpperCase();
@@ -1161,7 +1866,7 @@
     }
 
     /**************************************************************************
-     * 4. BULLETPROOF BINARY METADATA & COVER ART PARSER (MP3/FLAC/WAV/AIFF/M4A/OGG)
+     * 7. BINARY METADATA & COVER ART PARSER
      **************************************************************************/
     function stripUnsynchronisation(bytes) {
       let out = new Uint8Array(bytes.length);
@@ -1169,14 +1874,13 @@
       for (let i = 0; i < bytes.length; i++) {
         out[w++] = bytes[i];
         if (bytes[i] === 0xFF && i + 1 < bytes.length && bytes[i + 1] === 0x00) {
-          i++; // skip stuffed 0x00 byte
+          i++;
         }
       }
       return out.subarray(0, w);
     }
 
     function pinpointImageMagicBytes(buf) {
-      // Scans payload for JPEG (FF D8 FF), PNG (89 50 4E 47), or WebP (RIFF....WEBP)
       for (let i = 0; i < Math.min(buf.length - 8, 512); i++) {
         if (buf[i] === 0xFF && buf[i + 1] === 0xD8 && buf[i + 2] === 0xFF) {
           return { bytes: buf.slice(i), mime: 'image/jpeg' };
@@ -1208,7 +1912,6 @@
         if (state.artworkMode === 'preserve-raw') {
           return { bytes: rawBytes, mime: rawMime, url: tempUrl, width: w, height: h, source: 'Embedded Binary Artwork' };
         }
-        // Normalize to clean baseline JPEG for universal CDJ/Finder compatibility
         const maxDim = Math.min(1200, Math.max(w, h));
         const scale = maxDim / Math.max(w, h);
         const targetW = Math.max(1, Math.round(w * scale));
@@ -1249,7 +1952,7 @@
       if (offset + 10 > u8.length) return result;
       if (u8[offset] !== 0x49 || u8[offset + 1] !== 0x44 || u8[offset + 2] !== 0x33) return result;
 
-      const version = u8[offset + 3]; // 2, 3, or 4
+      const version = u8[offset + 3];
       const flags = u8[offset + 5];
       const tagSize =
         ((u8[offset + 6] & 0x7f) << 21) |
@@ -1289,7 +1992,6 @@
         if (frameSize <= 0 || pos + headerLen + frameSize > end) break;
         let payload = u8.subarray(pos + headerLen, pos + headerLen + frameSize);
 
-        // Strip ID3v2.4 Data Length Indicator or Unsynchronisation if flagged
         if (version === 4 && (frameFlags2 & 0x01)) {
           payload = payload.subarray(4);
         }
@@ -1307,9 +2009,7 @@
         else if (frameId === 'APIC' || frameId === 'PIC') {
           let imgPayload = stripUnsynchronisation(payload);
           const pinpointed = pinpointImageMagicBytes(imgPayload);
-          if (pinpointed) {
-            result.cover = pinpointed;
-          }
+          if (pinpointed) result.cover = pinpointed;
         }
 
         pos += headerLen + frameSize;
@@ -1332,7 +2032,6 @@
         if (pos + len > u8.length) break;
         const block = u8.subarray(pos, pos + len);
         if (type === 4) {
-          // Vorbis Comment
           try {
             const dv = new DataView(block.buffer, block.byteOffset, block.byteLength);
             let p = 0;
@@ -1376,14 +2075,12 @@
       let extractedTags = {};
       let extractedCover = null;
 
-      // 1. Check leading ID3v2 header
       if (u8[0] === 0x49 && u8[1] === 0x44 && u8[2] === 0x33) {
         const id3 = parseID3v2Block(u8, 0);
         extractedTags = { ...extractedTags, ...id3.tags };
         if (id3.cover) extractedCover = id3.cover;
       }
 
-      // 2. Check FLAC (either at offset 0 or after ID3 header)
       for (let i = 0; i < Math.min(u8.length - 4, 262144); i++) {
         if (u8[i] === 0x66 && u8[i + 1] === 0x4C && u8[i + 2] === 0x61 && u8[i + 3] === 0x43) {
           const flac = parseFlacMetadata(u8, i);
@@ -1393,12 +2090,11 @@
         }
       }
 
-      // 3. Scan RIFF WAV / IFF AIFF / MP4 covr for embedded ID3 or image magic bytes
       if (!extractedCover) {
         for (let i = 0; i < u8.length - 10; i++) {
           if (u8[i] === 0x49 && u8[i + 1] === 0x44 && u8[i + 2] === 0x33 && (u8[i + 3] === 3 || u8[i + 3] === 4)) {
             const subId3 = parseID3v2Block(u8, i);
-            extractedTags = { ... subId3.tags, ...extractedTags };
+            extractedTags = { ...subId3.tags, ...extractedTags };
             if (subId3.cover) {
               extractedCover = subId3.cover;
               break;
@@ -1407,7 +2103,6 @@
         }
       }
 
-      // 4. Deep fallback scan for M4A 'covr' atom or embedded JPEG/PNG headers
       if (!extractedCover) {
         for (let i = 0; i < u8.length - 16; i++) {
           if (u8[i] === 0x63 && u8[i + 1] === 0x6F && u8[i + 2] === 0x76 && u8[i + 3] === 0x72) {
@@ -1428,7 +2123,8 @@
         year: extractedTags.year || '2026',
         genre: extractedTags.genre || 'Electronic',
         bpm: extractedTags.bpm || '128',
-        key: extractedTags.key || '8A'
+        key: extractedTags.key || '8A',
+        trackNum: ''
       };
 
       let verifiedCover = null;
@@ -1443,7 +2139,7 @@
     }
 
     /**************************************************************************
-     * 5. BINARY METADATA & COVER ART EMBEDDING WRITERS (ID3v2.3, FLAC, WAV, AIFF)
+     * 8. BINARY METADATA & COVER ART EMBEDDING WRITERS (WITH DEVICE TAGS)
      **************************************************************************/
     function encodeSynchsafeInt32(val) {
       return new Uint8Array([
@@ -1467,12 +2163,12 @@
       const clean = String(text || '').trim();
       if (!clean) return new Uint8Array(0);
       const textBytes = new TextEncoder().encode(clean);
-      const payloadLen = 1 + textBytes.length; // 0x03 (UTF-8) or 0x00 (ISO-8859-1)
+      const payloadLen = 1 + textBytes.length;
       const frame = new Uint8Array(10 + payloadLen);
       for (let i = 0; i < 4; i++) frame[i] = frameId.charCodeAt(i);
       frame.set(encodeUint32BE(payloadLen), 4);
       frame[8] = 0; frame[9] = 0;
-      frame[10] = 0x03; // UTF-8 text encoding
+      frame[10] = 0x03;
       frame.set(textBytes, 11);
       return frame;
     }
@@ -1482,21 +2178,24 @@
       const mimeBytes = new TextEncoder().encode(mime);
       const payloadLen = 1 + mimeBytes.length + 1 + 1 + 1 + imageBytes.length;
       const frame = new Uint8Array(10 + payloadLen);
-      frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43; // 'APIC'
+      frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43;
       frame.set(encodeUint32BE(payloadLen), 4);
       frame[8] = 0; frame[9] = 0;
       let p = 10;
-      frame[p++] = 0x00; // ISO-8859-1 description encoding
+      frame[p++] = 0x00;
       frame.set(mimeBytes, p); p += mimeBytes.length;
-      frame[p++] = 0x00; // null-terminated mime
-      frame[p++] = 0x03; // 0x03 = Front Cover
-      frame[p++] = 0x00; // empty description null-terminator
+      frame[p++] = 0x00;
+      frame[p++] = 0x03;
+      frame[p++] = 0x00;
       frame.set(imageBytes, p);
       return frame;
     }
 
     function buildCompleteID3v23Tag(tags, cover) {
       if (state.artworkMode === 'strip-all') return new Uint8Array(0);
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const encoderStamp = activeDev ? `VNTEX DSP // Tuned for ${activeDev.name}` : 'VNTEX DSP Engine';
+
       const frames = [
         buildID3v23TextFrame('TIT2', tags.title),
         buildID3v23TextFrame('TPE1', tags.artist),
@@ -1505,16 +2204,17 @@
         buildID3v23TextFrame('TCON', tags.genre),
         buildID3v23TextFrame('TBPM', tags.bpm),
         buildID3v23TextFrame('TKEY', tags.key),
-        buildID3v23TextFrame('TENC', 'VNTEX DSP Engine')
+        buildID3v23TextFrame('TRCK', tags.trackNum || ''),
+        buildID3v23TextFrame('TENC', encoderStamp)
       ];
       if (cover && cover.bytes) {
         frames.push(buildID3v23ApicFrame(cover.bytes, cover.mime || 'image/jpeg'));
       }
       const bodyLen = frames.reduce((acc, f) => acc + f.length, 0);
       const tag = new Uint8Array(10 + bodyLen);
-      tag[0] = 0x49; tag[1] = 0x44; tag[2] = 0x33; // 'ID3'
-      tag[3] = 0x03; tag[4] = 0x00; // v2.3.0
-      tag[5] = 0x00; // flags
+      tag[0] = 0x49; tag[1] = 0x44; tag[2] = 0x33;
+      tag[3] = 0x03; tag[4] = 0x00;
+      tag[5] = 0x00;
       tag.set(encodeSynchsafeInt32(bodyLen), 6);
       let offset = 10;
       for (const f of frames) {
@@ -1525,7 +2225,7 @@
     }
 
     /**************************************************************************
-     * 6. REAL WEB AUDIO API TRANSCODING & CONTAINER ENCODERS
+     * 9. REAL WEB AUDIO API TRANSCODING & CONTAINER ENCODERS
      **************************************************************************/
     async function resampleAudioBuffer(sourceBuffer, targetSampleRate, targetChannels) {
       const lengthInSamples = Math.max(1, Math.ceil(sourceBuffer.duration * targetSampleRate));
@@ -1584,7 +2284,7 @@
       const sampleRate = audioBuffer.sampleRate;
       const numFrames = audioBuffer.length;
       const bytesPerSample = bitDepth === 32 ? 4 : bitDepth === 24 ? 3 : 2;
-      const formatCode = bitDepth === 32 ? 3 : 1; // 3 = IEEE Float, 1 = PCM
+      const formatCode = bitDepth === 32 ? 3 : 1;
       const dataByteLen = numFrames * numChannels * bytesPerSample;
 
       const id3ChunkPayload = buildCompleteID3v23Tag(tags, cover);
@@ -1644,8 +2344,8 @@
     }
 
     function encodeFLACWithMetadata(audioBuffer, tags, cover) {
-      // Builds a valid fLaC header with Block 0 (STREAMINFO), Block 4 (VORBIS_COMMENT), Block 6 (PICTURE) + audio payload
       const enc = new TextEncoder();
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
       const comments = [
         `TITLE=${tags.title || ''}`,
         `ARTIST=${tags.artist || ''}`,
@@ -1654,6 +2354,7 @@
         `GENRE=${tags.genre || ''}`,
         `BPM=${tags.bpm || ''}`,
         `INITIALKEY=${tags.key || ''}`,
+        `TARGET_RIG=${activeDev ? activeDev.name : 'Standard Studio'}`,
         `ENCODER=VNTEX DSP Engine`
       ];
       const vendor = enc.encode('VNTEX DSP Engine');
@@ -1680,16 +2381,16 @@
         const mimeBytes = enc.encode(cover.mime || 'image/jpeg');
         const picBodyLen = 4 + 4 + mimeBytes.length + 4 + 16 + 4 + cover.bytes.length;
         picBlock = new Uint8Array(4 + picBodyLen);
-        picBlock[0] = 0x80 | 6; // Last metadata block + Type 6 (PICTURE)
+        picBlock[0] = 0x80 | 6;
         picBlock[1] = (picBodyLen >> 16) & 0xff;
         picBlock[2] = (picBodyLen >> 8) & 0xff;
         picBlock[3] = picBodyLen & 0xff;
         const pdv = new DataView(picBlock.buffer);
         let pp = 4;
-        pdv.setUint32(pp, 3, false); pp += 4; // Front Cover
+        pdv.setUint32(pp, 3, false); pp += 4;
         pdv.setUint32(pp, mimeBytes.length, false); pp += 4;
         picBlock.set(mimeBytes, pp); pp += mimeBytes.length;
-        pdv.setUint32(pp, 0, false); pp += 4; // Description len 0
+        pdv.setUint32(pp, 0, false); pp += 4;
         pdv.setUint32(pp, cover.width || 600, false); pp += 4;
         pdv.setUint32(pp, cover.height || 600, false); pp += 4;
         pdv.setUint32(pp, 24, false); pp += 4;
@@ -1699,7 +2400,7 @@
       }
 
       const pcmBlob = encodeWAVBuffer(audioBuffer, 16, tags, null);
-      return new Blob([ new Uint8Array([0x66, 0x4C, 0x61, 0x43]), vorbisBlock, picBlock, pcmBlob ], { type: 'audio/flac' });
+      return new Blob([new Uint8Array([0x66, 0x4C, 0x61, 0x43]), vorbisBlock, picBlock, pcmBlob], { type: 'audio/flac' });
     }
 
     async function transcodeTrackToTarget(track) {
@@ -1717,7 +2418,6 @@
       if (fmt === 'flac') {
         return encodeFLACWithMetadata(resampled, track.tags, track.cover);
       }
-      // AIFF / M4A / OGG / OPUS embed ID3v2.3 + PCM/Encoded stream
       const id3Header = buildCompleteID3v23Tag(track.tags, track.cover);
       const wavPayload = encodeWAVBuffer(resampled, 16, track.tags, track.cover);
       const mimeMap = {
@@ -1730,13 +2430,15 @@
     }
 
     /**************************************************************************
-     * 7. CUSTOM FILENAME TOKEN ENGINE
+     * 10. CUSTOM FILENAME TOKEN ENGINE (WITH [Device] & [Track#] SUPPORT)
      **************************************************************************/
     function buildExportFilename(track, index, ext) {
       const tpl = (state.filenameTemplate || '[Artist] - [Title]').trim();
       const sanitize = (str) => String(str || '').replace(/[\\/:*?"<>|]/g, '').trim();
-      const trackNum = String(index + 1).padStart(2, '0');
+      const trackNum = track.tags.trackNum || String(index + 1).padStart(2, '0');
       const origBase = track.originalName.replace(/\.[^/.]+$/, '');
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const devShort = activeDev ? activeDev.id.toUpperCase() : 'STUDIO';
 
       let resolved = tpl
         .replace(/\[Track#\]/gi, trackNum)
@@ -1746,6 +2448,7 @@
         .replace(/\[BPM\]/gi, sanitize(track.tags.bpm || '128'))
         .replace(/\[Key\]/gi, sanitize(track.tags.key || '8A'))
         .replace(/\[Year\]/gi, sanitize(track.tags.year || '2026'))
+        .replace(/\[Device\]/gi, sanitize(devShort))
         .replace(/\[Original\]/gi, sanitize(origBase));
 
       if (!resolved) resolved = sanitize(origBase) || `VNTEX_Track_${trackNum}`;
@@ -1755,17 +2458,16 @@
     function updateNamingPreviewUI() {
       const tpl = state.filenameTemplate || '[Artist] - [Title]';
       document.getElementById('namingPatternDisplay').textContent = tpl;
-      document.getElementById('activeNamingBadge').textContent = tpl;
       const sampleTrack = state.tracks[0] || {
         originalName: 'Uno_Midnight_Telemetry.wav',
-        tags: { artist: 'Uno', title: 'Midnight Telemetry', album: 'VNTEX Lab', bpm: '128', key: '8A', year: '2026' }
+        tags: { artist: 'Uno', title: 'Midnight Telemetry', album: 'VNTEX Lab', bpm: '128', key: '8A', year: '2026', trackNum: '01' }
       };
       const previewStr = buildExportFilename(sampleTrack, 0, state.outputFormat);
       document.getElementById('templateLivePreview').textContent = previewStr;
     }
 
     /**************************************************************************
-     * 8. WAVEFORM RENDERER WITH RESIZE OBSERVER (RESPONSIVE HI-DPI)
+     * 11. WAVEFORM RENDERER WITH RESIZE OBSERVER
      **************************************************************************/
     function computeWaveformPeaks(audioBuffer, numBars = 96) {
       const ch0 = audioBuffer.getChannelData(0);
@@ -1825,7 +2527,7 @@
     });
 
     /**************************************************************************
-     * 9. AUDIO PLAYBACK & CLICK-TO-SCRUB ENGINE
+     * 12. AUDIO PLAYBACK & SCRUBBING
      **************************************************************************/
     function getAudioContext() {
       if (!state.audioCtx) {
@@ -1850,9 +2552,7 @@
       state.currentlyPlayingId = null;
       if (prevId) {
         const prevTrack = state.tracks.find((t) => t.id === prevId);
-        if (prevTrack) {
-          updatePlayButtonUI(prevTrack.id, false);
-        }
+        if (prevTrack) updatePlayButtonUI(prevTrack.id, false);
       }
     }
 
@@ -1911,9 +2611,338 @@
       return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
     }
 
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     /**************************************************************************
-     * 10. UI RENDERING & TRACK ROW GENERATION
+     * 13. UI RENDERING: TRACK QUEUE, AUTH HEADER, DEVICE RIG, CLOUD CRATE & ADMIN
      **************************************************************************/
+    function updateAuthUI() {
+      const avatarEl = document.getElementById('headerUserAvatar');
+      const nameEl = document.getElementById('headerUserName');
+      const statusEl = document.getElementById('headerUserStatus');
+      const dotEl = document.getElementById('cloudSyncIndicatorDot');
+      const msgEl = document.getElementById('cloudStatusMessage');
+
+      const masterCount = Object.keys(state.cloudLibrary).length;
+      const historyCount = state.downloadHistory.length;
+      document.getElementById('libraryCountBadge').textContent = masterCount;
+      document.getElementById('masterTabCount').textContent = masterCount;
+      document.getElementById('historyTabCount').textContent = historyCount;
+
+      const loggedOutView = document.getElementById('authLoggedOutView');
+      const loggedInView = document.getElementById('authLoggedInView');
+
+      if (state.user) {
+        const initials = (state.user.displayName || 'UN').slice(0, 2).toUpperCase();
+        avatarEl.textContent = initials;
+        nameEl.textContent = state.user.displayName;
+        statusEl.textContent = state.firebaseConnected ? 'Firebase Sync' : 'Studio Profile';
+        dotEl.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]';
+        msgEl.innerHTML = `Authenticated as <strong class="text-[var(--text-primary)]">${escapeHtml(state.user.displayName)}</strong> (${escapeHtml(state.user.email)}) • Cloud Crate tracks <strong>${masterCount} master(s)</strong> &amp; <strong>${historyCount} format download(s)</strong>.`;
+
+        loggedOutView.classList.add('hidden');
+        loggedInView.classList.remove('hidden');
+        document.getElementById('profileModalAvatar').textContent = initials;
+        document.getElementById('profileModalName').textContent = state.user.displayName;
+        document.getElementById('profileModalEmail').textContent = state.user.email;
+        document.getElementById('profileModalStats').textContent =
+          `${masterCount} Master Track(s) in Cloud Crate • ${historyCount} Timestamped Format Downloads`;
+      } else {
+        avatarEl.innerHTML = '<i class="fa-regular fa-user"></i>';
+        nameEl.textContent = 'Sign In';
+        statusEl.textContent = 'Guest Mode';
+        dotEl.className = 'w-2 h-2 rounded-full bg-amber-400';
+        msgEl.innerHTML = `Running in <strong>Guest Studio Mode</strong> — conversions are unrestricted. <button type="button" id="ribbonSignInLinkDynamic" class="underline text-[var(--accent-primary)] font-semibold">Sign in with Google or Email</button> to sync your Device Rig, Download History &amp; Derived Track Variants.`;
+        const dynLink = document.getElementById('ribbonSignInLinkDynamic');
+        if (dynLink) dynLink.onclick = () => document.getElementById('authProfileModal').classList.remove('hidden');
+
+        loggedOutView.classList.remove('hidden');
+        loggedInView.classList.add('hidden');
+      }
+
+      renderHeaderDeviceSelect();
+      renderDeviceRegistryGrid();
+    }
+
+    function renderHeaderDeviceSelect() {
+      const sel = document.getElementById('headerDeviceSelect');
+      const currentVal = state.activeDeviceId;
+      sel.innerHTML = `<option value="none" class="bg-[#08080c] text-white">No Device Lock (Manual)</option>`;
+      DEVICE_PROFILES.forEach((dev) => {
+        const isOwned = state.ownedDevices.includes(dev.id);
+        const opt = document.createElement('option');
+        opt.value = dev.id;
+        opt.className = 'bg-[#08080c] text-white';
+        opt.textContent = `${isOwned ? '★ ' : ''}${dev.name}`;
+        if (dev.id === currentVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const pill = document.getElementById('activeDeviceTelemetryPill');
+      if (activeDev) {
+        pill.innerHTML = `<i class="fa-solid fa-headphones-simple mr-1"></i>Target Rig: <strong>${escapeHtml(activeDev.name)}</strong>`;
+      } else {
+        pill.innerHTML = `<i class="fa-solid fa-microchip mr-1"></i>Target Rig: Standard Studio`;
+      }
+    }
+
+    function renderDeviceRegistryGrid() {
+      const grid = document.getElementById('deviceRegistryGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      DEVICE_PROFILES.forEach((dev) => {
+        const isOwned = state.ownedDevices.includes(dev.id);
+        const isActive = state.activeDeviceId === dev.id;
+        const card = document.createElement('div');
+        card.className = `preset-card p-3 flex flex-col justify-between gap-2 ${isActive ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" data-own-device="${dev.id}" ${isOwned ? 'checked' : ''} class="accent-cyan-400 cursor-pointer" title="Mark as part of my studio gear" />
+              <div>
+                <div class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(dev.name)}</div>
+                <div class="text-[10px] font-mono-tech text-[var(--text-muted)]">${escapeHtml(dev.category)}</div>
+              </div>
+            </div>
+            <span class="font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-panel)] text-[var(--accent-primary)] border border-[var(--border-hairline)]">
+              .${dev.format.toUpperCase()}
+            </span>
+          </div>
+          <p class="text-[11px] text-[var(--text-secondary)] leading-snug">${escapeHtml(dev.specSummary)}</p>
+          <div class="flex items-center justify-between pt-1 border-t border-[var(--border-hairline)]">
+            <span class="text-[10px] font-mono-tech ${isOwned ? 'text-emerald-400' : 'text-[var(--text-muted)]'}">
+              ${isOwned ? '✓ In Your Studio Rig' : 'Available Profile'}
+            </span>
+            <button type="button" data-activate-device="${dev.id}" class="hardware-well px-2.5 py-1 text-[10px] font-mono-tech ${isActive ? 'text-[var(--accent-primary)] border-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'} hover:text-[var(--text-primary)]">
+              ${isActive ? '● Active Target' : 'Set Active Target'}
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      grid.querySelectorAll('[data-own-device]').forEach((cb) => {
+        cb.onchange = () => {
+          const id = cb.getAttribute('data-own-device');
+          if (cb.checked) {
+            if (!state.ownedDevices.includes(id)) state.ownedDevices.push(id);
+          } else {
+            state.ownedDevices = state.ownedDevices.filter((x) => x !== id);
+          }
+          savePersistentState();
+          renderHeaderDeviceSelect();
+          renderDeviceRegistryGrid();
+        };
+      });
+
+      grid.querySelectorAll('[data-activate-device]').forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-activate-device');
+          activateDeviceProfile(state.activeDeviceId === id ? 'none' : id);
+          renderDeviceRegistryGrid();
+        };
+      });
+    }
+
+    function activateDeviceProfile(deviceId) {
+      state.activeDeviceId = deviceId;
+      const dev = DEVICE_PROFILES.find((d) => d.id === deviceId);
+      if (dev) {
+        state.outputFormat = dev.format;
+        state.bitrate = dev.bitrate;
+        state.bitDepth = dev.bitDepth;
+        state.sampleRate = dev.sampleRate;
+        state.channels = dev.channels;
+        state.artworkMode = dev.artworkMode;
+        state.activePreset = 'device-custom';
+
+        document.getElementById('bitrateSelect').value = String(state.bitrate);
+        document.getElementById('bitDepthSelect').value = String(state.bitDepth);
+        document.getElementById('sampleRateSelect').value = String(state.sampleRate);
+        document.getElementById('channelSelect').value = String(state.channels);
+        document.getElementById('artworkModeSelect').value = state.artworkMode;
+      }
+      savePersistentState();
+      renderHeaderDeviceSelect();
+      updateEncoderControlsUI();
+      renderTrackList();
+    }
+
+    function renderCloudLibraryModal() {
+      const searchQ = (document.getElementById('librarySearchInput')?.value || '').toLowerCase().trim();
+      const fmtFilter = document.getElementById('libraryFormatFilter')?.value || 'all';
+
+      // 1. Render Master Tracks with Derived Format Variants
+      const mastersContainer = document.getElementById('cloudMastersView');
+      const mastersList = Object.values(state.cloudLibrary).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+      const filteredMasters = mastersList.filter((m) => {
+        const textMatch = !searchQ ||
+          m.title.toLowerCase().includes(searchQ) ||
+          m.artist.toLowerCase().includes(searchQ) ||
+          m.key.toLowerCase().includes(searchQ) ||
+          m.variants.some((v) => v.targetDevice.toLowerCase().includes(searchQ));
+        const fmtMatch = fmtFilter === 'all' || m.variants.some((v) => v.format.toLowerCase() === fmtFilter);
+        return textMatch && fmtMatch;
+      });
+
+      if (filteredMasters.length === 0) {
+        mastersContainer.innerHTML = `
+          <div class="hardware-well p-8 text-center space-y-2">
+            <div class="text-sm font-bold text-[var(--text-secondary)]">No Master Tracks Logged in Cloud Crate Yet</div>
+            <p class="text-xs text-[var(--text-muted)]">Convert any track (or click "Demo" and convert in multiple formats like .MP3 and .WAV) to see automatic derived variant linking here.</p>
+          </div>
+        `;
+      } else {
+        mastersContainer.innerHTML = filteredMasters.map((m) => {
+          const variantPills = m.variants.map((v) => `
+            <div class="hardware-well px-2.5 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-tech border-l-2 border-l-[var(--accent-primary)]">
+              <div class="flex items-center gap-2">
+                <span class="px-1.5 py-0.5 rounded bg-[var(--bg-panel-elevated)] text-[var(--accent-primary)] font-bold">.${escapeHtml(v.format)}</span>
+                <span class="text-[var(--text-primary)]">${escapeHtml(v.qualitySpec)}</span>
+                <span class="text-[var(--text-muted)]">•</span>
+                <span class="text-emerald-400"><i class="fa-solid fa-headphones-simple mr-1"></i>${escapeHtml(v.targetDevice)}</span>
+              </div>
+              <div class="flex items-center gap-2 text-[10px] text-[var(--text-secondary)]">
+                <span>${formatBytes(v.fileSize)}</span>
+                <span>•</span>
+                <span>x${v.downloadCount || 1}</span>
+                <span>•</span>
+                <span>${new Date(v.timestamp).toLocaleString()}</span>
+              </div>
+            </div>
+          `).join('');
+
+          return `
+            <div class="hardware-well p-4 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-[var(--text-primary)]">${escapeHtml(m.artist)} — ${escapeHtml(m.title)}</span>
+                    <span class="px-2 py-0.5 rounded font-mono-tech text-[10px] bg-[var(--bg-panel-elevated)] text-[var(--led-readout)] border border-[var(--border-hairline)]">
+                      ${m.variants.length} Format Variant${m.variants.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <div class="text-[11px] text-[var(--text-secondary)] font-mono-tech mt-0.5">
+                    Album: ${escapeHtml(m.album)} • ${escapeHtml(m.bpm)} BPM • Key ${escapeHtml(m.key)}
+                  </div>
+                </div>
+                <span class="text-[10px] font-mono-tech text-[var(--text-muted)]">
+                  Last Synced: ${new Date(m.updatedAt).toLocaleString()}
+                </span>
+              </div>
+              <div class="space-y-1.5">
+                ${variantPills}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Render Timestamped Download History Table
+      const historyBody = document.getElementById('downloadHistoryTableBody');
+      const filteredHistory = state.downloadHistory.filter((h) => {
+        const textMatch = !searchQ ||
+          h.trackTitle.toLowerCase().includes(searchQ) ||
+          h.artist.toLowerCase().includes(searchQ) ||
+          h.targetDevice.toLowerCase().includes(searchQ);
+        const fmtMatch = fmtFilter === 'all' || h.outputFormat.toLowerCase() === fmtFilter;
+        return textMatch && fmtMatch;
+      });
+
+      if (filteredHistory.length === 0) {
+        historyBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-[var(--text-muted)]">No download history entries match the current filter.</td></tr>`;
+      } else {
+        historyBody.innerHTML = filteredHistory.map((h) => `
+          <tr>
+            <td class="py-2.5 px-3 text-[var(--text-muted)]">${new Date(h.timestamp).toLocaleString()}</td>
+            <td class="py-2.5 px-3 font-bold text-[var(--text-primary)]">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+            <td class="py-2.5 px-3 text-[var(--led-readout)]">${escapeHtml(h.bpm)} BPM • ${escapeHtml(h.key)}</td>
+            <td class="py-2.5 px-3"><span class="text-[var(--accent-primary)] font-bold">.${escapeHtml(h.outputFormat)}</span> (${escapeHtml(h.qualitySpec)})</td>
+            <td class="py-2.5 px-3 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
+            <td class="py-2.5 px-3">${formatBytes(h.fileSize)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function renderAdminDashboard() {
+      const totalUsers = Math.max(1, state.usersRegistry.length + (state.user ? 0 : 1));
+      const totalConversions = state.downloadHistory.length;
+      const totalMasters = Object.keys(state.cloudLibrary).length;
+      const totalBytes = state.downloadHistory.reduce((acc, h) => acc + (h.fileSize || 0), 0);
+
+      document.getElementById('adminKpiUsers').textContent = String(totalUsers);
+      document.getElementById('adminKpiConversions').textContent = String(totalConversions);
+      document.getElementById('adminKpiMasters').textContent = String(totalMasters);
+      document.getElementById('adminKpiVolume').textContent = formatBytes(totalBytes);
+
+      // Format distribution bars
+      const counts = { MP3: 0, FLAC: 0, WAV: 0, AIFF: 0, M4A: 0, OGG: 0, OPUS: 0 };
+      state.downloadHistory.forEach((h) => {
+        const k = (h.outputFormat || 'MP3').toUpperCase();
+        if (counts[k] !== undefined) counts[k]++;
+      });
+      const maxCount = Math.max(1, ...Object.values(counts));
+      const barsEl = document.getElementById('adminFormatBars');
+      barsEl.innerHTML = Object.entries(counts).map(([fmt, count]) => {
+        const pct = Math.round((count / maxCount) * 100);
+        return `
+          <div class="space-y-1 font-mono-tech text-[11px]">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-primary)] font-bold">.${fmt}</span>
+              <span class="text-[var(--led-readout)]">${count} export(s)</span>
+            </div>
+            <div class="w-full h-2 rounded bg-[var(--bg-void)] overflow-hidden">
+              <div class="h-full bg-[var(--accent-primary)]" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Live API JSON Payload Preview
+      const apiPayload = {
+        service: 'VNTEX Admin Telemetry API v3.0',
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        firebaseBackendConnected: state.firebaseConnected,
+        metrics: {
+          registeredUsers: totalUsers,
+          totalConversions,
+          uniqueMasterTracks: totalMasters,
+          totalBytesProcessed: totalBytes,
+          formatDistribution: counts
+        },
+        recentEvents: state.downloadHistory.slice(0, 5)
+      };
+      document.getElementById('adminApiJsonPreview').textContent = JSON.stringify(apiPayload, null, 2);
+
+      // Global Activity Table
+      const tbody = document.getElementById('adminActivityTableBody');
+      if (state.downloadHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-[var(--text-muted)]">No conversion events recorded yet. Convert a track to populate live telemetry.</td></tr>`;
+      } else {
+        tbody.innerHTML = state.downloadHistory.slice(0, 25).map((h) => `
+          <tr>
+            <td class="py-2 px-2.5 text-[var(--text-muted)]">${new Date(h.timestamp).toLocaleTimeString()}</td>
+            <td class="py-2 px-2.5 text-[var(--text-primary)]">${escapeHtml(h.userEmail)}</td>
+            <td class="py-2 px-2.5">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+            <td class="py-2 px-2.5 text-[var(--accent-primary)] font-bold">.${escapeHtml(h.outputFormat)}</td>
+            <td class="py-2 px-2.5 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
+            <td class="py-2 px-2.5">${formatBytes(h.fileSize)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
     function renderTrackList() {
       const container = document.getElementById('trackListContainer');
       const emptyState = document.getElementById('emptyQueueState');
@@ -1942,6 +2971,9 @@
 
       state.tracks.forEach((track, idx) => {
         const exportName = buildExportFilename(track, idx, state.outputFormat);
+        const masterKey = getMasterTrackKey(track.tags.artist, track.tags.title);
+        const existingVariantsCount = state.cloudLibrary[masterKey]?.variants?.length || 0;
+
         const row = document.createElement('div');
         row.className = 'hardware-well p-3 sm:p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5 transition';
 
@@ -1952,8 +2984,11 @@
             ? `<span class="px-2 py-0.5 rounded font-mono-tech text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 animate-pulse">● ENCODING...</span>`
             : `<span class="px-2 py-0.5 rounded font-mono-tech text-[10px] bg-[var(--bg-panel)] text-[var(--text-secondary)] border border-[var(--border-hairline)]">QUEUED</span>`;
 
+        const variantPillHtml = existingVariantsCount > 0
+          ? `<span class="px-1.5 py-0.5 rounded bg-[var(--bg-panel)] text-amber-400 border border-amber-400/30" title="Logged in Cloud Crate with ${existingVariantsCount} format variant(s)"><i class="fa-solid fa-layer-group mr-1"></i>${existingVariantsCount} Variant${existingVariantsCount === 1 ? '' : 's'}</span>`
+          : '';
+
         row.innerHTML = `
-          <!-- Left: Cover Art + Play Button + Track Metadata -->
           <div class="flex items-center gap-3 min-w-0 lg:w-5/12">
             <div class="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-[var(--border-highlight)] group">
               <img src="${track.cover.url}" alt="Cover Art" class="w-full h-full object-cover" />
@@ -1976,12 +3011,12 @@
                 <span class="px-1.5 py-0.5 rounded bg-[var(--bg-panel)] text-emerald-400 border border-[var(--border-hairline)]">
                   <i class="fa-solid fa-image mr-1"></i>${track.cover.width}×${track.cover.height}
                 </span>
+                ${variantPillHtml}
                 <span class="text-[var(--text-muted)] truncate hidden sm:inline">→ ${escapeHtml(exportName)}</span>
               </div>
             </div>
           </div>
 
-          <!-- Center: Responsive Interactive Waveform Scrubber -->
           <div class="flex-1 flex flex-col justify-center gap-1 min-w-0">
             <div class="waveform-well h-11 px-2 py-1 relative cursor-pointer" data-scrub-id="${track.id}" title="Click anywhere on waveform to scrub audio">
               <canvas data-waveform-id="${track.id}" class="w-full h-full block"></canvas>
@@ -1992,7 +3027,6 @@
             </div>
           </div>
 
-          <!-- Right: Per-Track Action Controls -->
           <div class="flex items-center justify-end gap-1.5 shrink-0">
             <button type="button" data-edit-id="${track.id}" class="hardware-well px-2.5 py-2 text-xs font-mono-tech hover:border-[var(--accent-primary)] transition" title="Edit Metadata & Cover Art">
               <i class="fa-solid fa-sliders mr-1 text-[var(--accent-primary)]"></i>Tags
@@ -2032,16 +3066,7 @@
       updateNamingPreviewUI();
     }
 
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
     function bindTrackRowEvents() {
-      // Play / Pause
       state.tracks.forEach((track) => {
         const playBtn = document.getElementById(`play-btn-${track.id}`);
         if (playBtn) {
@@ -2053,7 +3078,6 @@
         }
       });
 
-      // Waveform Scrubbing
       document.querySelectorAll('[data-scrub-id]').forEach((el) => {
         el.onclick = (e) => {
           const id = el.getAttribute('data-scrub-id');
@@ -2065,12 +3089,10 @@
         };
       });
 
-      // Edit Tags Modal
       document.querySelectorAll('[data-edit-id]').forEach((btn) => {
         btn.onclick = () => openTagEditorModal(btn.getAttribute('data-edit-id'));
       });
 
-      // Single Convert
       document.querySelectorAll('[data-convert-single]').forEach((btn) => {
         btn.onclick = async () => {
           const track = state.tracks.find((t) => t.id === btn.getAttribute('data-convert-single'));
@@ -2078,7 +3100,6 @@
         };
       });
 
-      // Download Converted Track
       document.querySelectorAll('[data-download-id]').forEach((btn) => {
         btn.onclick = () => {
           const idx = state.tracks.findIndex((t) => t.id === btn.getAttribute('data-download-id'));
@@ -2090,12 +3111,10 @@
         };
       });
 
-      // Binary Inspector
       document.querySelectorAll('[data-inspect-id]').forEach((btn) => {
         btn.onclick = () => openBinaryInspector(btn.getAttribute('data-inspect-id'));
       });
 
-      // Remove Track
       document.querySelectorAll('[data-remove-id]').forEach((btn) => {
         btn.onclick = () => {
           const id = btn.getAttribute('data-remove-id');
@@ -2118,7 +3137,7 @@
     }
 
     /**************************************************************************
-     * 11. PRESET & FORMAT SYNCHRONIZATION
+     * 14. PRESET & FORMAT SYNCHRONIZATION
      **************************************************************************/
     const PRESET_DEFINITIONS = {
       'fast-web': {
@@ -2170,7 +3189,6 @@
       state.channels = def.channels;
       state.artworkMode = def.artworkMode;
 
-      // Sync UI Selectors
       document.getElementById('bitrateSelect').value = String(state.bitrate);
       document.getElementById('bitDepthSelect').value = String(state.bitDepth);
       document.getElementById('sampleRateSelect').value = String(state.sampleRate);
@@ -2182,23 +3200,22 @@
     }
 
     function updateEncoderControlsUI() {
-      // Preset highlight
       document.querySelectorAll('#presetBar .preset-card').forEach((card) => {
         card.classList.toggle('active', card.getAttribute('data-preset') === state.activePreset);
       });
 
-      // Format button highlight
       document.querySelectorAll('#formatButtonGroup .format-pill').forEach((btn) => {
         btn.classList.toggle('active', btn.getAttribute('data-format') === state.outputFormat);
       });
 
-      // Toggle Bitrate vs BitDepth control visibility inside Advanced Drawer
       const isLossless = ['flac', 'wav', 'aiff'].includes(state.outputFormat);
       document.getElementById('bitrateControlWrapper').classList.toggle('hidden', isLossless);
       document.getElementById('bitDepthControlWrapper').classList.toggle('hidden', !isLossless);
 
-      // Update Live Pipeline Readout
-      const presetTitle = PRESET_DEFINITIONS[state.activePreset]?.label || 'Custom DSP';
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const presetTitle = activeDev
+        ? activeDev.name
+        : (PRESET_DEFINITIONS[state.activePreset]?.label || 'Custom DSP');
       const rateKhz = (Number(state.sampleRate) / 1000).toFixed(1) + ' kHz';
       const chText = Number(state.channels) === 1 ? 'Mono' : 'Stereo';
       const qualityText = isLossless
@@ -2209,7 +3226,6 @@
       document.getElementById('liveConfigText').textContent =
         `${presetTitle} • ${state.outputFormat.toUpperCase()} • ${qualityText} • ${rateKhz} • ${chText} • ${artText}`;
 
-      // Update Format Specs Drawer
       const spec = FORMAT_SPECS[state.outputFormat] || FORMAT_SPECS.mp3;
       document.getElementById('specFormatBadge').textContent = spec.badge;
       document.getElementById('specCoverArtPill').textContent = spec.coverArtPill;
@@ -2224,7 +3240,7 @@
     }
 
     /**************************************************************************
-     * 12. FILE INGESTION, DEMO TRACK GENERATOR & CONVERSION RUNNER
+     * 15. FILE INGESTION, DEMO TRACK GENERATOR & CONVERSION RUNNER
      **************************************************************************/
     async function ingestFiles(fileList) {
       const files = Array.from(fileList || []);
@@ -2268,7 +3284,7 @@
       const demos = [
         { title: 'Obsidian Telemetry', artist: 'Uno', album: 'VNTEX Lab Sessions', bpm: '128', key: '8A', freq: 110 },
         { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', album: 'Booth Utility Vol. 2', bpm: '126', key: '9A', freq: 98 },
-        { title: 'Renkin Phase VIP', artist: 'VNTEX DSP', album: 'Hardware Archives', bpm: '130', key: '5A', freq: 130.8 }
+        { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', album: 'Hardware Archives', bpm: '130', key: '5A', freq: 130.8 }
       ];
 
       for (const d of demos) {
@@ -2301,7 +3317,8 @@
             year: '2026',
             genre: 'Electronic / Club',
             bpm: d.bpm,
-            key: d.key
+            key: d.key,
+            trackNum: ''
           },
           cover,
           status: 'queued',
@@ -2322,6 +3339,9 @@
       track.convertedBlob = blob;
       track.convertedExt = state.outputFormat;
       track.status = 'done';
+
+      // Log to Cloud Crate Library (linking derived variants) & Download History
+      recordTrackConversionToCloud(track, blob.size, state.outputFormat);
       renderTrackList();
     }
 
@@ -2334,7 +3354,7 @@
       }
       btnLabel.textContent = 'Convert Batch Files';
       document.getElementById('batchStatusBanner').textContent =
-        `Batch complete: ${state.tracks.length} file(s) encoded to .${state.outputFormat.toUpperCase()} with embedded tags & cover art.`;
+        `Batch complete: ${state.tracks.length} file(s) encoded to .${state.outputFormat.toUpperCase()} & synced to Cloud Crate.`;
     }
 
     async function downloadBatchAsZip() {
@@ -2353,7 +3373,7 @@
     }
 
     /**************************************************************************
-     * 13. BINARY TAG INSPECTOR & PER-TRACK TAG EDITOR MODALS
+     * 16. BINARY TAG INSPECTOR & PER-TRACK TAG EDITOR MODALS
      **************************************************************************/
     function openTagEditorModal(trackId) {
       const track = state.tracks.find((t) => t.id === trackId);
@@ -2378,6 +3398,7 @@
       if (!track || !track.convertedBlob) return;
       const fakeFile = new File([track.convertedBlob], `output.${track.convertedExt}`, { type: track.convertedBlob.type });
       const verified = await extractBinaryMetadataAndCover(fakeFile);
+      const activeDev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
 
       const content = document.getElementById('inspectorModalContent');
       content.innerHTML = `
@@ -2395,18 +3416,29 @@
           <div><span class="text-[var(--text-muted)]">TALB / ALBUM:</span> <strong class="text-[var(--text-primary)]">${escapeHtml(verified.tags.album)}</strong></div>
           <div><span class="text-[var(--text-muted)]">TBPM / BPM:</span> <strong class="text-[var(--led-readout)]">${escapeHtml(verified.tags.bpm)} BPM</strong></div>
           <div><span class="text-[var(--text-muted)]">TKEY / KEY:</span> <strong class="text-[var(--led-readout)]">${escapeHtml(verified.tags.key)}</strong></div>
-          <div><span class="text-[var(--text-muted)]">TENC / ENCODER:</span> <strong class="text-emerald-400">VNTEX DSP Engine</strong></div>
+          <div><span class="text-[var(--text-muted)]">TARGET RIG:</span> <strong class="text-emerald-400">${escapeHtml(activeDev ? activeDev.name : 'Standard Studio')}</strong></div>
         </div>
       `;
       document.getElementById('inspectorModal').classList.remove('hidden');
     }
 
     /**************************************************************************
-     * 14. EVENT LISTENERS & INITIALIZATION
+     * 17. EVENT LISTENERS & INITIALIZATION
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      updateEncoderControlsUI();
+      tryInitializeFirebase();
+      if (state.activeDeviceId && state.activeDeviceId !== 'none') {
+        activateDeviceProfile(state.activeDeviceId);
+      } else {
+        updateEncoderControlsUI();
+      }
+      updateAuthUI();
       updateNamingPreviewUI();
+
+      // Header Device Rig Selector
+      document.getElementById('headerDeviceSelect').addEventListener('change', (e) => {
+        activateDeviceProfile(e.target.value);
+      });
 
       // UI Skin Switcher
       const skinSelect = document.getElementById('skinSelect');
@@ -2417,9 +3449,212 @@
         state.tracks.forEach((t) => drawTrackWaveform(t, t.playProgress || 0));
       });
 
+      // Auth & Profile Modal
+      const authModal = document.getElementById('authProfileModal');
+      const showAuthToast = (msg) => {
+        const el = document.getElementById('authModalToast');
+        el.textContent = msg;
+        setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3500);
+      };
+
+      document.getElementById('openAuthProfileBtn').addEventListener('click', () => {
+        renderDeviceRegistryGrid();
+        authModal.classList.remove('hidden');
+      });
+      const ribbonLink = document.getElementById('ribbonSignInLink');
+      if (ribbonLink) ribbonLink.addEventListener('click', () => authModal.classList.remove('hidden'));
+      document.getElementById('closeAuthProfileModalBtn').addEventListener('click', () => authModal.classList.add('hidden'));
+      document.getElementById('doneAuthModalBtn').addEventListener('click', () => authModal.classList.add('hidden'));
+
+      // Google Sign-In (Live Firebase Popup OR Instant Studio OAuth Profile)
+      document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+        if (state.firebaseConnected && state.firebaseAuth) {
+          try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await state.firebaseAuth.signInWithPopup(provider);
+            showAuthToast('✓ Signed in with Google via Firebase Auth.');
+            return;
+          } catch (err) {
+            console.warn('Firebase Google Popup fallback to Local Cloud Studio Auth:', err.message);
+          }
+        }
+        const alias = document.getElementById('authDisplayNameInput').value.trim() || 'DJ Uno';
+        const email = document.getElementById('authEmailInput').value.trim() || 'uno@vntex.studio';
+        state.user = {
+          uid: 'usr_' + Math.random().toString(36).slice(2, 10),
+          displayName: alias,
+          email,
+          provider: 'google.com',
+          lastLogin: new Date().toISOString()
+        };
+        registerUserInTelemetry(state.user);
+        savePersistentState();
+        updateAuthUI();
+        showAuthToast(`✓ Signed in as ${state.user.displayName} (Google Studio Profile Synced).`);
+      });
+
+      // Email/Password Form Auth
+      document.getElementById('emailAuthForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmailInput').value.trim();
+        const pass = document.getElementById('authPasswordInput').value;
+        const alias = document.getElementById('authDisplayNameInput').value.trim() || email.split('@')[0] || 'Producer';
+
+        if (state.firebaseConnected && state.firebaseAuth) {
+          try {
+            await state.firebaseAuth.signInWithEmailAndPassword(email, pass);
+            showAuthToast('✓ Signed in via Firebase Email Auth.');
+            return;
+          } catch {
+            try {
+              const cred = await state.firebaseAuth.createUserWithEmailAndPassword(email, pass);
+              if (cred.user) await cred.user.updateProfile({ displayName: alias });
+              showAuthToast('✓ Created Firebase Account & Signed In.');
+              return;
+            } catch (err2) {
+              console.warn('Fallback to Local Studio Auth:', err2.message);
+            }
+          }
+        }
+
+        state.user = {
+          uid: 'usr_' + Math.random().toString(36).slice(2, 10),
+          displayName: alias,
+          email,
+          provider: 'password',
+          lastLogin: new Date().toISOString()
+        };
+        registerUserInTelemetry(state.user);
+        savePersistentState();
+        updateAuthUI();
+        showAuthToast(`✓ Studio Profile active for ${alias}.`);
+      });
+
+      document.getElementById('signOutBtn').addEventListener('click', async () => {
+        if (state.firebaseConnected && state.firebaseAuth) {
+          try { await state.firebaseAuth.signOut(); } catch {}
+        }
+        state.user = null;
+        savePersistentState();
+        updateAuthUI();
+        showAuthToast('Signed out to Guest Mode.');
+      });
+
+      // Firebase Config Connector
+      document.getElementById('toggleFirebaseConfigBtn').addEventListener('click', () => {
+        const box = document.getElementById('firebaseConfigCollapse');
+        box.classList.toggle('hidden');
+        const existing = localStorage.getItem(STORAGE_KEYS.FIREBASE_CONFIG);
+        if (existing) document.getElementById('firebaseConfigTextarea').value = existing;
+      });
+
+      document.getElementById('saveFirebaseConfigBtn').addEventListener('click', () => {
+        const val = document.getElementById('firebaseConfigTextarea').value.trim();
+        try {
+          const parsed = JSON.parse(val);
+          if (!parsed.apiKey || !parsed.projectId) throw new Error('Missing apiKey or projectId');
+          localStorage.setItem(STORAGE_KEYS.FIREBASE_CONFIG, JSON.stringify(parsed));
+          if (tryInitializeFirebase()) {
+            updateAuthUI();
+            showAuthToast('✓ Connected live Firebase Auth & Firestore project!');
+          }
+        } catch (e) {
+          showAuthToast('Invalid Firebase JSON format — check apiKey and projectId.');
+        }
+      });
+
+      document.getElementById('clearFirebaseConfigBtn').addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEYS.FIREBASE_CONFIG);
+        state.firebaseConnected = false;
+        updateAuthUI();
+        showAuthToast('Switched to VNTEX Local Cloud Sync.');
+      });
+
+      // Cloud Library & Download History Modal
+      const cloudModal = document.getElementById('cloudLibraryModal');
+      document.getElementById('openCloudLibraryBtn').addEventListener('click', () => {
+        renderCloudLibraryModal();
+        cloudModal.classList.remove('hidden');
+      });
+      document.getElementById('closeCloudLibraryBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
+
+      const tabMastersBtn = document.getElementById('tabCloudMastersBtn');
+      const tabHistoryBtn = document.getElementById('tabDownloadHistoryBtn');
+      const mastersView = document.getElementById('cloudMastersView');
+      const historyView = document.getElementById('downloadHistoryView');
+
+      tabMastersBtn.addEventListener('click', () => {
+        tabMastersBtn.classList.add('active');
+        tabHistoryBtn.classList.remove('active');
+        mastersView.classList.remove('hidden');
+        historyView.classList.add('hidden');
+      });
+
+      tabHistoryBtn.addEventListener('click', () => {
+        tabHistoryBtn.classList.add('active');
+        tabMastersBtn.classList.remove('active');
+        historyView.classList.remove('hidden');
+        mastersView.classList.add('hidden');
+      });
+
+      document.getElementById('librarySearchInput').addEventListener('input', renderCloudLibraryModal);
+      document.getElementById('libraryFormatFilter').addEventListener('change', renderCloudLibraryModal);
+
+      document.getElementById('exportHistoryJsonBtn').addEventListener('click', () => {
+        const exportObj = {
+          user: state.user,
+          exportedAt: new Date().toISOString(),
+          cloudLibraryMasters: state.cloudLibrary,
+          downloadHistory: state.downloadHistory
+        };
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        triggerBlobDownload(blob, `VNTEX_Cloud_Crate_${new Date().toISOString().slice(0, 10)}.json`);
+      });
+
+      document.getElementById('clearUserHistoryBtn').addEventListener('click', () => {
+        state.cloudLibrary = {};
+        state.downloadHistory = [];
+        savePersistentState();
+        updateAuthUI();
+        renderCloudLibraryModal();
+        renderTrackList();
+      });
+
+      // Admin Portal Modal
+      const adminModal = document.getElementById('adminPortalModal');
+      document.getElementById('openAdminPortalBtn').addEventListener('click', () => {
+        renderAdminDashboard();
+        adminModal.classList.remove('hidden');
+      });
+      document.getElementById('closeAdminPortalBtn').addEventListener('click', () => adminModal.classList.add('hidden'));
+
+      document.getElementById('unlockAdminBtn').addEventListener('click', () => {
+        const pin = document.getElementById('adminPinInput').value.trim();
+        if (pin === 'VNTEX-ADMIN' || pin === '2026') {
+          document.getElementById('adminPinGateView').classList.add('hidden');
+          document.getElementById('adminDashboardView').classList.remove('hidden');
+          document.getElementById('adminPinError').classList.add('hidden');
+          renderAdminDashboard();
+        } else {
+          document.getElementById('adminPinError').classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('copyApiPayloadBtn').addEventListener('click', () => {
+        const text = document.getElementById('adminApiJsonPreview').textContent;
+        navigator.clipboard?.writeText(text);
+        const btn = document.getElementById('copyApiPayloadBtn');
+        btn.textContent = '✓ Copied JSON';
+        setTimeout(() => { btn.textContent = 'Copy API JSON'; }, 2000);
+      });
+
       // Preset Bar Clicks
       document.querySelectorAll('#presetBar .preset-card').forEach((card) => {
-        card.addEventListener('click', () => applyPreset(card.getAttribute('data-preset')));
+        card.addEventListener('click', () => {
+          state.activeDeviceId = 'none';
+          renderHeaderDeviceSelect();
+          applyPreset(card.getAttribute('data-preset'));
+        });
       });
 
       // Output Format Pills
@@ -2432,7 +3667,7 @@
         });
       });
 
-      // Collapsible Drawers (Advanced DSP Options & Format Specs)
+      // Collapsible Drawers
       const advDrawer = document.getElementById('advancedOptionsDrawer');
       const advChevron = document.getElementById('advancedDrawerChevron');
       document.getElementById('toggleAdvancedDrawerBtn').addEventListener('click', () => {
@@ -2501,7 +3736,7 @@
         renderTrackList();
       });
 
-      // Batch Automation Modal
+      // Batch Automation & Regex Modal
       const automationModal = document.getElementById('automationModal');
       const tplInput = document.getElementById('filenameTemplateInput');
       const showAutomationToast = (msg) => {
@@ -2554,6 +3789,29 @@
         });
       });
 
+      // Custom Regex Engine
+      document.getElementById('runRegexReplaceBtn').addEventListener('click', () => {
+        const pat = document.getElementById('regexPatternInput').value;
+        const rep = document.getElementById('regexReplaceInput').value;
+        const target = document.getElementById('regexTargetSelect').value;
+        if (!pat) return;
+        try {
+          const rx = new RegExp(pat, 'gi');
+          state.tracks.forEach((t) => {
+            if (target === 'all' || target === 'title') {
+              t.tags.title = t.tags.title.replace(rx, rep).trim();
+            }
+            if (target === 'all' || target === 'artist') {
+              t.tags.artist = t.tags.artist.replace(rx, rep).trim();
+            }
+          });
+          renderTrackList();
+          showAutomationToast(`✓ Applied custom Regex across ${state.tracks.length} track(s).`);
+        } catch (err) {
+          showAutomationToast(`Invalid Regex syntax: ${err.message}`);
+        }
+      });
+
       // Batch Text Cleanup Macros
       const toTitleCase = (str) =>
         String(str || '').replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
@@ -2561,7 +3819,7 @@
       document.querySelectorAll('.cleanup-macro-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const action = btn.getAttribute('data-cleanup');
-          state.tracks.forEach((t) => {
+          state.tracks.forEach((t, idx) => {
             if (action === 'strip-underscores') {
               t.tags.title = t.tags.title.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
               t.tags.artist = t.tags.artist.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
@@ -2577,10 +3835,24 @@
                 .replace(/\[(official|lyric|music|hd|hq|audio|video|visualizer)[^\]]*\]/gi, '')
                 .replace(/\s+/g, ' ')
                 .trim();
+            } else if (action === 'auto-number') {
+              t.tags.trackNum = String(idx + 1).padStart(2, '0');
+              if (!state.filenameTemplate.includes('[Track#]')) {
+                state.filenameTemplate = `[Track#] - ${state.filenameTemplate}`;
+                tplInput.value = state.filenameTemplate;
+              }
+            } else if (action === 'reset-tags-from-filename') {
+              const base = t.originalName.replace(/\.[^/.]+$/, '');
+              const parts = base.split(' - ');
+              if (parts.length > 1) {
+                t.tags.artist = parts[0].trim();
+                t.tags.title = parts.slice(1).join(' - ').trim();
+              }
             }
           });
+          updateNamingPreviewUI();
           renderTrackList();
-          showAutomationToast(`✓ Applied "${action}" across ${state.tracks.length} track(s).`);
+          showAutomationToast(`✓ Executed "${action}" across ${state.tracks.length} track(s).`);
         });
       });
 
