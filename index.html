@@ -9,6 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Firebase v10 Compat SDKs for Live Google OAuth & Email Verification -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <style>
     :root {
@@ -60,7 +63,8 @@
 
     .hardware-well:focus-within,
     input.hardware-well:focus,
-    select.hardware-well:focus {
+    select.hardware-well:focus,
+    textarea.hardware-well:focus {
       outline: none;
       border-color: var(--accent-primary);
     }
@@ -79,7 +83,7 @@
     }
 
     .btn-convert-primary:disabled {
-      opacity: 0.3;
+      opacity: 0.28;
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -147,7 +151,7 @@
           </button>
 
           <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
-            <i class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
+            <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
             <span id="headerAccountLabel">Sign In</span>
           </button>
         </div>
@@ -296,11 +300,10 @@
   </div>
 
   <!-- ==========================================================================
-       VIEW 2: REDESIGNED ADMIN CONSOLE (ONLY AT #admin)
+       VIEW 2: ADMIN CONSOLE (ONLY AT #admin)
        ========================================================================== -->
   <div id="adminPortalWrapper" class="hidden min-h-screen bg-[#030305] text-[#f3f4f8]">
     
-    <!-- Top Admin Navigation Header -->
     <header class="border-b border-[#181824] bg-[#030305]/95 backdrop-blur-md sticky top-0 z-30">
       <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         
@@ -308,20 +311,16 @@
           <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">
             VX
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-extrabold text-sm text-white">VNTEX // ADMIN CONSOLE</span>
-              <span id="adminRoleHeaderBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
-                LOCKED
-              </span>
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">VNTEX // ADMIN CONSOLE</span>
+            <span id="adminRoleHeaderBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
+              LOCKED
+            </span>
           </div>
         </div>
 
-        <!-- Admin Header Actions (Visible Once Unlocked) -->
         <div id="adminHeaderToolbar" class="hidden flex flex-wrap items-center gap-2">
           
-          <!-- Active Security Role Switcher (Test Standard Admin vs Master Owner) -->
           <div class="hardware-well px-2.5 py-1 flex items-center gap-1.5 text-xs">
             <i class="fa-solid fa-key text-amber-400 text-[10px]"></i>
             <span class="text-[10px] font-mono-tech uppercase text-gray-400">Role:</span>
@@ -339,6 +338,10 @@
 
           <button id="openDeviceConfigModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50 transition">
             <i class="fa-solid fa-sliders mr-1"></i>Device Presets
+          </button>
+
+          <button id="openFirebaseSetupModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-orange-400 hover:border-orange-400/50 transition">
+            <i class="fa-solid fa-fire mr-1"></i>Firebase OAuth Setup
           </button>
 
           <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-emerald-400 hover:border-emerald-400/50 transition">
@@ -380,15 +383,14 @@
       <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid passcode. Try VNTEX-ADMIN or VNTEX-OWNER.</p>
     </div>
 
-    <!-- 2. UNLOCKED ADMIN DASHBOARD (TWO PRIMARY MONITORS: ACTIVITY & USERS) -->
+    <!-- 2. UNLOCKED ADMIN DASHBOARD -->
     <div id="adminDashboardContent" class="hidden max-w-6xl mx-auto px-4 py-6 space-y-6">
 
-      <!-- Top KPI Summary Row -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="studio-panel p-4">
           <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Users</div>
           <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400 mt-1">0</div>
-          <div class="text-[10px] font-mono-tech text-gray-500 mt-0.5">Authenticated Accounts</div>
+          <div id="kpiVerifiedSub" class="text-[10px] font-mono-tech text-emerald-400 mt-0.5">0 Email Verified</div>
         </div>
         <div class="studio-panel p-4">
           <div class="font-mono-tech text-[10px] uppercase text-gray-400">Signed-In Conversions</div>
@@ -425,12 +427,8 @@
         </div>
       </div>
 
-      <!-- ====================================================================
-           MONITOR A: USERS MONITOR (LIST VIEW & TILE GRID VIEW)
-           ==================================================================== -->
+      <!-- MONITOR A: USERS MONITOR -->
       <section id="adminMonitor-users" class="space-y-4">
-        
-        <!-- Filter Bar + List/Tile View Toggle -->
         <div class="studio-panel p-3.5 flex flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2 flex-1">
             <div class="relative flex-1 min-w-[200px] max-w-sm">
@@ -446,7 +444,6 @@
             </select>
           </div>
 
-          <!-- List vs. Tile Grid View Toggle -->
           <div class="flex items-center gap-1.5">
             <button id="viewModeListBtn" type="button" class="tab-pill active px-3 py-1.5 text-xs font-mono-tech flex items-center gap-1.5">
               <i class="fa-solid fa-list"></i>
@@ -459,16 +456,15 @@
           </div>
         </div>
 
-        <!-- Users List View -->
         <div id="adminUsersListView" class="studio-panel overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse font-mono-tech text-xs">
               <thead>
                 <tr class="border-b border-[#181824] text-gray-400 bg-[#040406]">
                   <th class="py-3 px-4">User</th>
+                  <th class="py-3 px-4">Security / Verified</th>
                   <th class="py-3 px-4">Access Tier</th>
                   <th class="py-3 px-4">System Role</th>
-                  <th class="py-3 px-4">Active Device Rig</th>
                   <th class="py-3 px-4">Conversions</th>
                   <th class="py-3 px-4 text-right">Profile</th>
                 </tr>
@@ -478,17 +474,11 @@
           </div>
         </div>
 
-        <!-- Users Tile Grid View -->
         <div id="adminUsersGridView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
       </section>
 
-      <!-- ====================================================================
-           MONITOR B: ACTIVITY MONITOR (AUTHENTICATED CONVERSIONS ONLY)
-           ==================================================================== -->
+      <!-- MONITOR B: ACTIVITY MONITOR -->
       <section id="adminMonitor-activity" class="hidden space-y-5">
-        
-        <!-- Format Distribution + Active Rig Breakdown -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div class="lg:col-span-6 studio-panel p-5 space-y-3">
             <div class="flex items-center justify-between">
@@ -507,12 +497,11 @@
           </div>
         </div>
 
-        <!-- Chronological Authenticated Activity Log -->
         <div class="studio-panel p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 class="font-mono-tech uppercase text-xs text-white">Authenticated User Conversion Stream</h3>
-              <p class="text-[11px] text-gray-400">Only conversions performed by signed-in users are recorded by the API.</p>
+              <p class="text-[11px] text-gray-400">Only conversions performed by signed-in, verified users are recorded by the API.</p>
             </div>
             <input id="adminActivitySearchInput" type="text" placeholder="Filter by user, track, or format..." class="hardware-well px-3 py-1.5 text-xs w-64" />
           </div>
@@ -533,9 +522,232 @@
             </table>
           </div>
         </div>
-
       </section>
 
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       REUSABLE PRODUCTION AUTH MODAL (SIGN IN | CREATE ACCOUNT | VERIFY EMAIL)
+       ========================================================================== -->
+  <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-[var(--accent-primary)] text-xs"></i>
+          <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Identity &amp; Security</h3>
+        </div>
+        <button id="closeAccountModalBtn" type="button" class="hardware-well w-7 h-7 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- STATE 1: LOGGED OUT (SEPARATE SIGN IN & CREATE ACCOUNT TABS) -->
+      <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
+        
+        <!-- Mode Switcher Tabs -->
+        <div class="grid grid-cols-2 gap-2 p-1 hardware-well">
+          <button id="authTabSignInBtn" type="button" class="tab-pill active py-2 font-mono-tech font-bold text-xs">
+            Sign In
+          </button>
+          <button id="authTabSignUpBtn" type="button" class="tab-pill py-2 font-mono-tech font-bold text-xs">
+            Create Account
+          </button>
+        </div>
+
+        <!-- Google OAuth Button -->
+        <button id="googleOAuthBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2.5 hover:bg-gray-100 transition shadow">
+          <i class="fa-brands fa-google text-rose-500 text-sm"></i>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="relative flex py-0.5 items-center">
+          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
+          <span id="authDividerLabel" class="flex-shrink mx-3 text-[10px] font-mono-tech uppercase text-[var(--text-muted)]">Or Email &amp; Password</span>
+          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
+        </div>
+
+        <!-- Alert / Error Banner -->
+        <div id="authAlertBox" class="hidden hardware-well p-3 border-l-2 border-l-rose-500 text-rose-400 font-mono-tech text-[11px] leading-relaxed"></div>
+
+        <!-- FORM A: SIGN IN (EXISTING ACCOUNTS ONLY) -->
+        <form id="signInForm" class="space-y-3" autocomplete="on">
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
+            <input id="signInEmailInput" type="email" required placeholder="you@domain.com" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Password</label>
+            <div class="relative">
+              <input id="signInPasswordInput" type="password" required placeholder="Enter your password" class="hardware-well w-full pl-3 pr-9 py-2 text-xs" />
+              <button type="button" data-toggle-pass="signInPasswordInput" class="absolute right-2.5 top-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button id="signInSubmitBtn" type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+            Sign In to Account
+          </button>
+        </form>
+
+        <!-- FORM B: CREATE ACCOUNT (ENFORCED PASSWORD COMPLEXITY) -->
+        <form id="signUpForm" class="hidden space-y-3" autocomplete="off">
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Name</label>
+            <input id="signUpNameInput" type="text" required placeholder="e.g. DJ Uno" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
+            <input id="signUpEmailInput" type="email" required placeholder="you@domain.com" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[10px] font-mono-tech uppercase text-[var(--text-secondary)]">Create Strong Password</label>
+              <span id="passwordStrengthLabel" class="font-mono-tech text-[10px] text-[var(--text-muted)]">Enter password</span>
+            </div>
+            <div class="relative">
+              <input id="signUpPasswordInput" type="password" required placeholder="Minimum 8 chars, mixed case, # &amp; symbol" class="hardware-well w-full pl-3 pr-9 py-2 text-xs" />
+              <button type="button" data-toggle-pass="signUpPasswordInput" class="absolute right-2.5 top-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+
+            <!-- 4-Bar Strength Meter -->
+            <div class="grid grid-cols-4 gap-1.5 pt-2">
+              <div id="pwBar1" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
+              <div id="pwBar2" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
+              <div id="pwBar3" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
+              <div id="pwBar4" class="h-1.5 rounded bg-[var(--border-hairline)] transition-colors"></div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Confirm Password</label>
+            <input id="signUpConfirmInput" type="password" required placeholder="Re-enter password" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+
+          <!-- Mandatory Security Checklist -->
+          <div class="hardware-well p-3 space-y-1 font-mono-tech text-[10px]">
+            <div class="text-[var(--text-secondary)] uppercase mb-1">Password Security Requirements:</div>
+            <div id="reqLength" class="text-[var(--text-muted)]">○ At least 8 characters</div>
+            <div id="reqUpper" class="text-[var(--text-muted)]">○ Uppercase &amp; lowercase letters (A-z)</div>
+            <div id="reqNumber" class="text-[var(--text-muted)]">○ At least one number (0-9)</div>
+            <div id="reqSymbol" class="text-[var(--text-muted)]">○ At least one special symbol (!@#$%^&amp;*)</div>
+            <div id="reqMatch" class="text-[var(--text-muted)]">○ Passwords match</div>
+          </div>
+
+          <button id="signUpSubmitBtn" type="submit" disabled class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+            Create Account &amp; Verify Email
+          </button>
+        </form>
+
+      </div>
+
+      <!-- STATE 2: EMAIL VERIFICATION GATE (BLOCKS UNVERIFIED ACCOUNTS) -->
+      <div id="emailVerificationPanel" class="hidden p-5 space-y-4 text-xs">
+        <div class="w-11 h-11 rounded-xl hardware-well mx-auto flex items-center justify-center text-[var(--accent-primary)] text-lg">
+          <i class="fa-solid fa-envelope-circle-check"></i>
+        </div>
+
+        <div class="text-center space-y-1">
+          <h4 class="text-sm font-bold text-[var(--text-primary)]">Verify Your Email Address</h4>
+          <p id="verificationSubtext" class="text-[11px] text-[var(--text-secondary)] leading-relaxed"></p>
+        </div>
+
+        <!-- Simulated Dispatch / Demo Inbox Preview (For Local Standalone Mode) -->
+        <div id="standaloneOtpNotice" class="hardware-well p-3 border-l-2 border-l-[var(--accent-primary)] space-y-1 font-mono-tech text-[11px]">
+          <div class="text-[10px] uppercase text-[var(--text-secondary)]">Verification Dispatch (Template Preview):</div>
+          <div>Your 6-digit security verification code is: <strong id="generatedOtpCodeDisplay" class="text-[var(--accent-primary)] text-sm tracking-widest"></strong></div>
+        </div>
+
+        <!-- 6-Digit Code Entry Form -->
+        <form id="verifyOtpForm" class="space-y-3">
+          <input id="otpCodeInput" type="text" maxlength="6" placeholder="Enter 6-digit code" class="hardware-well w-full px-3 py-2.5 text-center font-mono-tech text-sm tracking-widest" />
+          <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+            Verify Email &amp; Unlock Studio Hub
+          </button>
+        </form>
+
+        <!-- Live Firebase Link Check Button (Shown when Firebase Auth is active) -->
+        <button id="firebaseCheckVerifiedBtn" type="button" class="hidden btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+          I've Clicked the Verification Link in My Email
+        </button>
+
+        <div class="flex items-center justify-between pt-2 border-t border-[var(--border-hairline)] font-mono-tech text-[11px]">
+          <button id="resendVerificationBtn" type="button" class="text-[var(--accent-primary)] hover:underline">
+            Resend Code / Email
+          </button>
+          <button id="cancelVerificationBtn" type="button" class="text-rose-400 hover:underline">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- STATE 3: AUTHENTICATED & VERIFIED PROFILE -->
+      <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
+        <div class="hardware-well p-3.5 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></span>
+              <span id="accountModalTierPill" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
+            </div>
+            <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5"></div>
+            <div class="text-[10px] font-mono-tech text-emerald-400 mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Verified Studio Identity (SHA-256 / OAuth)</span>
+            </div>
+          </div>
+          <button id="logoutBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-rose-400">
+            Sign Out
+          </button>
+        </div>
+
+        <button id="goToStudioHubFromAccountBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+          Open Studio Hub
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       ADMIN MODAL: FIREBASE OAUTH & EMAIL VERIFICATION CONNECTOR
+       ========================================================================== -->
+  <div id="firebaseSetupModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="studio-panel w-full max-w-xl overflow-hidden border border-orange-400/40">
+      <div class="px-5 py-4 border-b border-[#181824] flex items-center justify-between bg-[#040406]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-fire text-orange-400"></i>
+          <h3 class="text-sm font-bold text-white">Live Google OAuth &amp; Firebase Auth Configuration</h3>
+        </div>
+        <button id="closeFirebaseSetupBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <div class="hardware-well p-3.5 space-y-1.5 text-[11px] text-gray-300 leading-relaxed">
+          <div class="font-bold text-white">How to Enable Real Google Sign-In Popups on GitHub Pages:</div>
+          <div>1. Go to <a href="https://console.firebase.google.com" target="_blank" class="text-cyan-400 underline">console.firebase.google.com</a> → Create a project → Enable <strong>Authentication</strong> (Google &amp; Email/Password).</div>
+          <div>2. In Firebase <strong>Authentication → Settings → Authorized domains</strong>, add <code class="text-amber-400 font-mono-tech">djavent3.github.io</code>.</div>
+          <div>3. Copy your Web App's <code class="text-cyan-400 font-mono-tech">firebaseConfig</code> JSON object and paste it below:</div>
+        </div>
+
+        <textarea id="firebaseConfigJsonInput" rows="5" class="hardware-well w-full p-3 font-mono-tech text-[11px] text-emerald-400" placeholder='{"apiKey":"AIzaSy...","authDomain":"your-project.firebaseapp.com","projectId":"your-project","appId":"1:123456:web:abcdef"}'></textarea>
+
+        <div id="firebaseConfigStatusMsg" class="font-mono-tech text-[11px] text-emerald-400"></div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button id="disconnectFirebaseBtn" type="button" class="hardware-well px-3 py-2 font-mono-tech text-xs text-rose-400">
+            Disconnect / Use Local Crypto Auth
+          </button>
+          <button id="saveFirebaseConfigBtn" type="button" class="px-4 py-2 rounded bg-orange-400 text-black font-mono-tech font-bold text-xs">
+            Save &amp; Activate Live Firebase OAuth
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -545,7 +757,6 @@
   <div id="adminUserInspectorModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
     <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[#262638]">
       
-      <!-- Modal Header: User Snapshot -->
       <div class="px-5 py-4 border-b border-[#181824] flex flex-wrap items-center justify-between gap-3 bg-[#040406]">
         <div class="flex items-center gap-3">
           <div id="inspectUserAvatar" class="w-11 h-11 rounded-xl bg-cyan-400/10 border border-cyan-400/40 flex items-center justify-center font-mono-tech font-extrabold text-sm text-cyan-400">
@@ -553,11 +764,11 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 id="inspectUserName" class="text-sm font-bold text-white">DJ Uno</h3>
+              <h3 id="inspectUserName" class="text-sm font-bold text-white"></h3>
               <span id="inspectUserTierBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
               <span id="inspectUserRoleBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">USER</span>
             </div>
-            <div id="inspectUserEmail" class="font-mono-tech text-xs text-gray-400 mt-0.5">uno@vntex.studio</div>
+            <div id="inspectUserEmail" class="font-mono-tech text-xs text-gray-400 mt-0.5"></div>
           </div>
         </div>
 
@@ -574,10 +785,8 @@
         </div>
       </div>
 
-      <!-- Modal Body -->
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
 
-        <!-- TAB 1: THIS USER'S CONVERSION ACTIVITY -->
         <div id="userModalTab-activity" class="space-y-4">
           <div class="grid grid-cols-3 gap-3">
             <div class="hardware-well p-3">
@@ -589,8 +798,8 @@
               <div id="inspectUserActiveRig" class="font-mono-tech text-xs font-bold text-white mt-1 truncate">Standard Studio</div>
             </div>
             <div class="hardware-well p-3">
-              <div class="font-mono-tech text-[10px] uppercase text-gray-400">Last Active</div>
-              <div id="inspectUserLastLogin" class="font-mono-tech text-xs text-gray-300 mt-1">—</div>
+              <div class="font-mono-tech text-[10px] uppercase text-gray-400">Email Verification</div>
+              <div id="inspectUserVerifiedStatus" class="font-mono-tech text-xs text-emerald-400 mt-1">Verified</div>
             </div>
           </div>
 
@@ -610,10 +819,7 @@
           </div>
         </div>
 
-        <!-- TAB 2: USER PERMISSIONS & MASTER OWNER SECURITY LOCKS -->
         <div id="userModalTab-permissions" class="hidden space-y-5">
-          
-          <!-- Standard Admin Controls (Apply Immediately) -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <h4 class="font-mono-tech uppercase text-[11px] text-cyan-400">
@@ -660,7 +866,6 @@
             </div>
           </div>
 
-          <!-- High-Security Locked Permissions (Requires Master Owner Sign-Off) -->
           <div class="space-y-3 pt-4 border-t border-[#181824]">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2">
@@ -678,7 +883,6 @@
           </div>
 
           <div id="permStatusToast" class="text-xs font-mono-tech text-emerald-400"></div>
-
         </div>
 
       </div>
@@ -726,9 +930,8 @@
       </div>
 
       <div class="p-5 overflow-y-auto flex-1 space-y-5 text-xs">
-        <!-- Add / Edit Device Form -->
         <form id="adminDeviceForm" class="hardware-well p-4 space-y-3">
-          <div class="font-mono-tech uppercase text-[10px] text-cyan-400" id="deviceFormHeading">Add or Update Device Preset</div>
+          <div class="font-mono-tech uppercase text-[10px] text-cyan-400">Add or Update Device Preset</div>
           <input id="devFormId" type="hidden" value="" />
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <input id="devFormName" type="text" required placeholder="Device/DAW Name (e.g. Serato DJ Pro)" class="hardware-well px-3 py-2 text-xs" />
@@ -769,75 +972,10 @@
           </div>
         </form>
 
-        <!-- Existing Devices Table -->
         <div class="space-y-2">
           <div class="font-mono-tech uppercase text-[10px] text-gray-400">Configured Studio Hub Dropdown Presets</div>
           <div id="adminDeviceListContainer" class="space-y-2"></div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       USER MODAL 1: ACCOUNT LOGIN / SIGN UP (NO DUMMY EMAIL AUTO-FILL)
-       ========================================================================== -->
-  <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between">
-        <h3 class="text-sm font-bold text-[var(--text-primary)]">VNTEX Studio Account</h3>
-        <button id="closeAccountModalBtn" type="button" class="hardware-well w-7 h-7 flex items-center justify-center text-xs">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
-        <p class="text-[var(--text-secondary)] leading-relaxed">
-          Sign in to unlock <strong>Studio Hub</strong> (Device Rig Dropdown, Batch Automation, Custom UI Palettes &amp; Cloud Crate). Guest conversions are not tracked.
-        </p>
-
-        <form id="emailLoginForm" class="space-y-2.5">
-          <div>
-            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Name</label>
-            <input id="loginNameInput" type="text" required placeholder="Enter your name or alias" class="hardware-well w-full px-3 py-2 text-xs" />
-          </div>
-          <div>
-            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
-            <input id="loginEmailInput" type="email" required placeholder="you@domain.com" class="hardware-well w-full px-3 py-2 text-xs" />
-          </div>
-          <div>
-            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Password</label>
-            <input id="loginPasswordInput" type="password" required placeholder="••••••••" class="hardware-well w-full px-3 py-2 text-xs" />
-          </div>
-          <div class="pt-1 flex flex-col gap-2">
-            <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-              Sign In / Create Account
-            </button>
-            <button id="googleLoginBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-100 transition">
-              <i class="fa-brands fa-google text-rose-500"></i>
-              <span>Sign In with Google Account</span>
-            </button>
-          </div>
-          <p id="loginFormError" class="text-[11px] font-mono-tech text-rose-400 hidden"></p>
-        </form>
-      </div>
-
-      <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
-        <div class="hardware-well p-3.5 flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2">
-              <span id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></span>
-              <span id="accountModalTierPill" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
-            </div>
-            <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5"></div>
-          </div>
-          <button id="logoutBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-rose-400">
-            Sign Out
-          </button>
-        </div>
-
-        <button id="goToStudioHubFromAccountBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-          Open Studio Hub
-        </button>
       </div>
     </div>
   </div>
@@ -870,7 +1008,6 @@
 
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
 
-        <!-- Permission Disabled Notice (Shown if Admin disabled a specific feature for this user) -->
         <div id="hubPermissionNotice" class="hidden hardware-well p-4 border-l-2 border-l-rose-400 text-rose-300 font-mono-tech text-xs"></div>
 
         <!-- TAB 1: STREAMLINED DEVICE RIG DROPDOWN -->
@@ -886,7 +1023,6 @@
 
           <select id="studioHubDeviceDropdown" class="hardware-well w-full px-3.5 py-3 text-xs font-bold text-[var(--text-primary)] cursor-pointer"></select>
 
-          <!-- Selected Device Telemetry Card -->
           <div id="selectedDeviceSummaryCard" class="hardware-well p-4 space-y-2 border-l-2 border-l-[var(--accent-primary)]">
             <div class="flex items-center justify-between">
               <span id="devSummaryName" class="font-bold text-sm text-[var(--text-primary)]">Standard Studio (Manual Control)</span>
@@ -1055,35 +1191,118 @@
 
   <script>
     /**************************************************************************
-     * 1. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
+     * 1. REUSABLE WEB APP AUTHENTICATION ENGINE (VNTEXAuthEngine)
+     *    - Salted SHA-256 Web Crypto API Hashing
+     *    - Enforced Password Complexity Policy
+     *    - Brute-Force Rate Limiting (5 attempts -> 30s lockout)
+     *    - Mandatory Email Verification Gate (6-digit OTP + Firebase Native)
+     *    - Live Firebase Google OAuth Popup Support
+     **************************************************************************/
+    const VNTEXAuthEngine = {
+      failedAttempts: 0,
+      lockoutUntil: 0,
+      firebaseAuth: null,
+      isFirebaseActive: false,
+
+      initFirebase(configJsonString) {
+        if (!configJsonString) return false;
+        try {
+          const cfg = JSON.parse(configJsonString);
+          if (!cfg.apiKey || !cfg.authDomain) return false;
+          if (!firebase.apps.length) {
+            firebase.initializeApp(cfg);
+          }
+          this.firebaseAuth = firebase.auth();
+          this.isFirebaseActive = true;
+          return true;
+        } catch (err) {
+          console.warn('Firebase configuration invalid:', err);
+          this.isFirebaseActive = false;
+          return false;
+        }
+      },
+
+      // Evaluates password against 5 strict security rules
+      evaluatePasswordPolicy(password, confirmPassword = '') {
+        const pw = String(password || '');
+        const rules = {
+          length: pw.length >= 8,
+          mixedCase: /[A-Z]/.test(pw) && /[a-z]/.test(pw),
+          number: /[0-9]/.test(pw),
+          symbol: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/.test(pw),
+          match: pw.length > 0 && pw === String(confirmPassword || '')
+        };
+        const score = [rules.length, rules.mixedCase, rules.number, rules.symbol].filter(Boolean).length;
+        const allValid = rules.length && rules.mixedCase && rules.number && rules.symbol && rules.match;
+        return { rules, score, allValid };
+      },
+
+      // Cryptographic Salted SHA-256 Hash via browser SubtleCrypto
+      async hashPassword(password, salt) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(`${salt}::VNTEX_PEPPER_2026::${password}`);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+      },
+
+      generateSalt() {
+        const arr = new Uint8Array(16);
+        crypto.getRandomValues(arr);
+        return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
+      },
+
+      generateSixDigitOtp() {
+        const arr = new Uint32Array(1);
+        crypto.getRandomValues(arr);
+        return String(100000 + (arr[0] % 900000));
+      },
+
+      checkLockout() {
+        const now = Date.now();
+        if (this.lockoutUntil > now) {
+          const rem = Math.ceil((this.lockoutUntil - now) / 1000);
+          throw new Error(`Too many failed login attempts. Account locked for ${rem}s.`);
+        }
+      },
+
+      recordFailedAttempt() {
+        this.failedAttempts++;
+        if (this.failedAttempts >= 5) {
+          this.lockoutUntil = Date.now() + 30000;
+          this.failedAttempts = 0;
+        }
+      }
+    };
+
+    /**************************************************************************
+     * 2. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
      **************************************************************************/
     const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v4',
-      USERS_REGISTRY: 'vntex_users_registry_v4',
-      LIBRARY: 'vntex_cloud_library_v4',
-      HISTORY: 'vntex_download_history_v4',
-      DEVICE_PRESETS: 'vntex_device_presets_v4',
-      ACTIVE_DEVICE: 'vntex_active_device_v4',
-      CUSTOM_PALETTES: 'vntex_custom_palettes_v4',
-      ACTIVE_PALETTE: 'vntex_active_palette_v4',
-      APPROVAL_QUEUE: 'vntex_master_approvals_v4'
+      USER: 'vntex_auth_user_v5',
+      USERS_REGISTRY: 'vntex_users_registry_v5',
+      LIBRARY: 'vntex_cloud_library_v5',
+      HISTORY: 'vntex_download_history_v5',
+      DEVICE_PRESETS: 'vntex_device_presets_v5',
+      ACTIVE_DEVICE: 'vntex_active_device_v5',
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v5',
+      ACTIVE_PALETTE: 'vntex_active_palette_v5',
+      APPROVAL_QUEUE: 'vntex_master_approvals_v5',
+      FIREBASE_CFG: 'vntex_firebase_cfg_v5'
     };
 
     const DEFAULT_DEVICE_PROFILES = [
       { id: 'none', name: 'Standard Studio (Manual Control)', category: 'Default', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: 'Manual control over container format, bitrate, and sample rate.' },
-      // DJ Equipment & Software
       { id: 'cdj-3000', name: 'Pioneer CDJ-3000 / NXS2 Club Rig', category: 'DJ Equipment & Software', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Uncompressed AIFF • Full CDJ Screen Artwork & ID3v2.3 Tags' },
       { id: 'ddj-grv6', name: 'Pioneer DDJ-GRV6 Controller', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Strict ID3v2.3 + Groove Circuit Stems Ready' },
       { id: 'ddj-flx4', name: 'Pioneer DDJ-FLX4 Controller', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Rekordbox & Serato Hardware Locked' },
       { id: 'rekordbox', name: 'Pioneer Rekordbox DJ Crate', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Camelot Key (TKEY) & TBPM Priority Framing' },
       { id: 'serato-dj', name: 'Serato DJ Pro', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Baseline JPEG Cover Art + Crate Metadata' },
       { id: 'traktor-pro', name: 'Native Instruments Traktor Pro 4', category: 'DJ Equipment & Software', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Lossless FLAC • Native Vorbis Comment Key & BPM Tags' },
-      // DAWs & Production
       { id: 'logic-pro-x', name: 'Apple Logic Pro X', category: 'DAWs & Production', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Apple AIFF Master • Native macOS Finder Cover Art' },
       { id: 'fl-studio', name: 'FL Studio 2024 / DAW Stem', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, desc: '32-Bit IEEE Float WAV • 48kHz • Zero Headroom Clipping for Mixer Stems' },
       { id: 'ableton-live', name: 'Ableton Live 12 Suite', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Uncompressed PCM WAV • Warp Engine & Simpler Ready' },
       { id: 'pro-tools', name: 'Avid Pro Tools Studio', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Broadcast Wave (RIFF/BWF) • Session Interleaved Stereo' },
-      // Mastering & Hi-Fi
       { id: 'yamaha-hs', name: 'Yamaha HS Studio Reference Hi-Fi', category: 'Mastering & Hi-Fi', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, desc: '24-Bit / 96kHz Archival Lossless FLAC • Bit-Perfect Reference Audio' }
     ];
 
@@ -1132,10 +1351,9 @@
       playbackStartTime: 0,
       playbackOffset: 0,
       playbackRaf: null,
-      // Admin Console State
       adminUnlocked: false,
-      adminActingRole: 'admin', // 'admin' or 'owner'
-      adminUsersViewMode: 'list', // 'list' or 'grid'
+      adminActingRole: 'admin',
+      adminUsersViewMode: 'list',
       inspectingUserEmail: null
     };
 
@@ -1152,9 +1370,10 @@
     }
 
     function ensureUserPermissionsStruct(u) {
+      if (u.emailVerified === undefined) u.emailVerified = true;
       if (!u.permissions) {
         u.permissions = {
-          tier: 'paid', // 'paid' or 'free'
+          tier: 'paid',
           automation: true,
           palettes: true,
           rig: true,
@@ -1166,8 +1385,12 @@
       return u;
     }
 
+    function isUserFullyVerified(u) {
+      return !!(u && u.email && u.emailVerified === true);
+    }
+
     /**************************************************************************
-     * 2. ROUTE HANDLER (#admin VS USER APP) & BLANK PASSWORD GATE
+     * 3. ROUTE HANDLER (#admin VS USER APP)
      **************************************************************************/
     function checkRouteMode() {
       const isAdminRoute = window.location.hash.toLowerCase() === '#admin';
@@ -1178,7 +1401,6 @@
         userApp.classList.add('hidden');
         adminPortal.classList.remove('hidden');
         if (!state.adminUnlocked) {
-          // Ensure password input is always completely blank when locked
           const pinInput = document.getElementById('adminPinInput');
           if (pinInput) pinInput.value = '';
           document.getElementById('adminPinGate').classList.remove('hidden');
@@ -1194,7 +1416,7 @@
     }
 
     /**************************************************************************
-     * 3. REDESIGNED ADMIN CONSOLE (USERS MONITOR, ACTIVITY & OWNER LOCKS)
+     * 4. ADMIN CONSOLE (USERS MONITOR, ACTIVITY & OWNER LOCKS)
      **************************************************************************/
     function renderAdminDashboard() {
       if (!state.adminUnlocked) return;
@@ -1212,13 +1434,14 @@
       }
       document.getElementById('adminRoleSelect').value = state.adminActingRole;
 
-      // Filter out any legacy guest entries just in case
       const authHistory = state.downloadHistory.filter((h) => h.userEmail && h.userEmail !== 'guest@local.studio');
       const users = state.usersRegistry.map(ensureUserPermissionsStruct);
+      const verifiedCount = users.filter((u) => u.emailVerified).length;
       const paidCount = users.filter((u) => u.permissions.tier === 'paid').length;
       const pendingApprovals = state.approvalRequests.filter((r) => r.status === 'pending');
 
       document.getElementById('kpiUsers').textContent = String(users.length);
+      document.getElementById('kpiVerifiedSub').textContent = `${verifiedCount} Email Verified`;
       document.getElementById('kpiConversions').textContent = String(authHistory.length);
       document.getElementById('kpiPaidUsers').textContent = String(paidCount);
       document.getElementById('kpiPendingLocks').textContent = String(pendingApprovals.length);
@@ -1257,16 +1480,17 @@
 
       const listBody = document.getElementById('adminUsersListBody');
       if (filtered.length === 0) {
-        const emptyHtml = `<tr><td colspan="6" class="py-8 text-center text-gray-500">No registered users match your filter. Click "+ Seed Demo Data" in the top bar to populate sample users.</td></tr>`;
-        listBody.innerHTML = emptyHtml;
+        listBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500">No registered users match your filter.</td></tr>`;
         gridView.innerHTML = `<div class="col-span-3 studio-panel p-8 text-center text-gray-500 font-mono-tech text-xs">No registered users found.</div>`;
         return;
       }
 
-      // Render List View Rows
       listBody.innerHTML = filtered.map((u) => {
         const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
         const isPaid = u.permissions.tier === 'paid';
+        const verifiedHtml = u.emailVerified
+          ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Verified (${escapeHtml(u.provider || 'SHA-256')})</span>`
+          : `<span class="text-amber-400"><i class="fa-solid fa-clock mr-1"></i>Unverified</span>`;
         const tierBadge = isPaid
           ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px]">PAID PRO</span>`
           : `<span class="px-2 py-0.5 rounded bg-gray-500/15 text-gray-400 border border-gray-500/30 text-[10px]">FREE</span>`;
@@ -1280,9 +1504,9 @@
               <div class="font-bold text-white">${escapeHtml(u.displayName)}</div>
               <div class="text-[11px] text-gray-400">${escapeHtml(u.email)}</div>
             </td>
+            <td class="py-3 px-4 text-[11px]">${verifiedHtml}</td>
             <td class="py-3 px-4">${tierBadge}</td>
             <td class="py-3 px-4">${roleBadge}</td>
-            <td class="py-3 px-4 text-cyan-400">${escapeHtml(u.activeRigName || 'Standard Studio')}</td>
             <td class="py-3 px-4 font-bold text-white">${userConvs} file(s)</td>
             <td class="py-3 px-4 text-right">
               <button type="button" class="hardware-well px-3 py-1 text-[11px] text-cyan-400 hover:border-cyan-400">
@@ -1293,7 +1517,6 @@
         `;
       }).join('');
 
-      // Render Tile Grid Cards
       gridView.innerHTML = filtered.map((u) => {
         const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
         const initials = (u.displayName || 'U').slice(0, 2).toUpperCase();
@@ -1318,12 +1541,12 @@
 
             <div class="hardware-well p-2.5 grid grid-cols-2 gap-2 font-mono-tech text-[11px]">
               <div>
-                <div class="text-[9px] uppercase text-gray-500">Conversions</div>
-                <div class="text-white font-bold">${userConvs} Tracks</div>
+                <div class="text-[9px] uppercase text-gray-500">Security</div>
+                <div class="${u.emailVerified ? 'text-emerald-400' : 'text-amber-400'} font-bold">${u.emailVerified ? '✓ Verified' : '⏳ Pending'}</div>
               </div>
               <div>
-                <div class="text-[9px] uppercase text-gray-500">Role</div>
-                <div class="${u.permissions.isAdmin ? 'text-amber-400' : 'text-cyan-400'} font-bold">${u.permissions.isAdmin ? 'ADMIN' : 'USER'}</div>
+                <div class="text-[9px] uppercase text-gray-500">Conversions</div>
+                <div class="text-white font-bold">${userConvs} Tracks</div>
               </div>
             </div>
 
@@ -1341,7 +1564,6 @@
     }
 
     function renderAdminActivityMonitor(authHistory) {
-      // Format Bars
       const fmtCounts = { MP3: 0, WAV: 0, AIFF: 0, FLAC: 0, M4A: 0, OGG: 0, OPUS: 0 };
       const rigCounts = {};
       authHistory.forEach((h) => {
@@ -1380,7 +1602,6 @@
             </div>
           `).join('');
 
-      // Activity Stream Table
       const q = (document.getElementById('adminActivitySearchInput')?.value || '').toLowerCase().trim();
       const filteredLogs = authHistory.filter((h) =>
         !q ||
@@ -1405,9 +1626,6 @@
           `).join('');
     }
 
-    /**************************************************************************
-     * 4. USER PROFILE INSPECTOR & MASTER OWNER SECURITY LOCK WORKFLOW
-     **************************************************************************/
     function openAdminUserInspector(email) {
       const user = state.usersRegistry.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
       if (!user) return;
@@ -1427,11 +1645,10 @@
       roleEl.textContent = user.permissions.isAdmin ? 'ADMIN' : 'USER';
       roleEl.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${user.permissions.isAdmin ? 'bg-amber-400/20 text-amber-400' : 'bg-cyan-400/20 text-cyan-400'}`;
 
-      // Populate Tab 1: User's Specific Activity
       const userLogs = state.downloadHistory.filter((h) => h.userEmail.toLowerCase() === user.email.toLowerCase());
       document.getElementById('inspectUserTotalConv').textContent = `${userLogs.length} Track(s)`;
       document.getElementById('inspectUserActiveRig').textContent = user.activeRigName || 'Standard Studio';
-      document.getElementById('inspectUserLastLogin').textContent = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Today';
+      document.getElementById('inspectUserVerifiedStatus').textContent = user.emailVerified ? '✓ Verified Email' : '⏳ Unverified';
 
       const actBody = document.getElementById('inspectUserActivityBody');
       actBody.innerHTML = userLogs.length === 0
@@ -1446,7 +1663,6 @@
             </tr>
           `).join('');
 
-      // Populate Tab 2: Standard Permissions
       document.getElementById('permTierSelect').value = user.permissions.tier;
       document.getElementById('permAutomationCheck').checked = !!user.permissions.automation;
       document.getElementById('permPalettesCheck').checked = !!user.permissions.palettes;
@@ -1501,7 +1717,6 @@
         `;
       }).join('');
 
-      // Bind Standard Admin Request Lock Buttons
       container.querySelectorAll('[data-request-lock]').forEach((btn) => {
         btn.onclick = () => {
           const permKey = btn.getAttribute('data-request-lock');
@@ -1525,7 +1740,6 @@
         };
       });
 
-      // Bind Direct Master Owner Override Buttons
       container.querySelectorAll('[data-owner-toggle-lock]').forEach((btn) => {
         btn.onclick = () => {
           const permKey = btn.getAttribute('data-owner-toggle-lock');
@@ -1549,6 +1763,7 @@
     function syncActiveUserIfMatching(updatedUserRecord) {
       if (state.user && state.user.email.toLowerCase() === updatedUserRecord.email.toLowerCase()) {
         state.user.permissions = { ...updatedUserRecord.permissions };
+        state.user.emailVerified = updatedUserRecord.emailVerified;
       }
     }
 
@@ -1721,8 +1936,8 @@
      * 6. AUTHENTICATED-ONLY TELEMETRY & USER GATING
      **************************************************************************/
     function recordConversionTelemetry(track, blobSize, ext) {
-      // STRICT RULE: Do not track or log conversions when user is not signed in
-      if (!state.user || !state.user.email) {
+      // STRICT RULE: Only record conversions when user is signed in AND email-verified
+      if (!isUserFullyVerified(state.user)) {
         return;
       }
 
@@ -1747,7 +1962,7 @@
       };
       state.downloadHistory.unshift(logEntry);
 
-      const masterKey = `${ state.user.email }__${track.tags.artist}__${track.tags.title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const masterKey = `${state.user.email}__${track.tags.artist}__${track.tags.title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (!state.cloudLibrary[masterKey]) {
         state.cloudLibrary[masterKey] = {
           masterKey,
@@ -1769,39 +1984,73 @@
     function updateAccountAndGatingUI() {
       const lockIcon = document.getElementById('studioHubLockIcon');
       const accountLabel = document.getElementById('headerAccountLabel');
+      const accountIcon = document.getElementById('headerAccountIcon');
       const rigBadge = document.getElementById('activeRigBadge');
 
-      if (state.user) {
-        ensureUserPermissionsStruct(state.user);
-        const userMasters = Object.values(state.cloudLibrary).filter((m) => !m.ownerEmail || m.ownerEmail.toLowerCase() === state.user.email.toLowerCase());
-        document.getElementById('hubCrateCount').textContent = String(userMasters.length);
+      const loggedOutPanel = document.getElementById('loggedOutPanel');
+      const verifyPanel = document.getElementById('emailVerificationPanel');
+      const loggedInPanel = document.getElementById('loggedInPanel');
 
-        lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
-        accountLabel.textContent = state.user.displayName;
-        document.getElementById('loggedOutPanel').classList.add('hidden');
-        document.getElementById('loggedInPanel').classList.remove('hidden');
-        document.getElementById('accountModalName').textContent = state.user.displayName;
-        document.getElementById('accountModalEmail').textContent = state.user.email;
-
-        const tierPill = document.getElementById('accountModalTierPill');
-        const isPaid = state.user.permissions.tier === 'paid';
-        tierPill.textContent = isPaid ? 'PAID PRO' : 'FREE TIER';
-        tierPill.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`;
-
-        const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
-        if (dev && dev.id !== 'none') {
-          rigBadge.textContent = `Rig: ${dev.name}`;
-          rigBadge.classList.remove('hidden');
-        } else {
-          rigBadge.classList.add('hidden');
-        }
-      } else {
+      if (!state.user) {
         document.getElementById('hubCrateCount').textContent = '0';
         lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
+        accountIcon.className = 'fa-regular fa-user text-[var(--accent-primary)] text-[11px]';
         accountLabel.textContent = 'Sign In';
         rigBadge.classList.add('hidden');
-        document.getElementById('loggedOutPanel').classList.remove('hidden');
-        document.getElementById('loggedInPanel').classList.add('hidden');
+
+        loggedOutPanel.classList.remove('hidden');
+        verifyPanel.classList.add('hidden');
+        loggedInPanel.classList.add('hidden');
+        return;
+      }
+
+      ensureUserPermissionsStruct(state.user);
+
+      // If signed in but email is NOT verified yet, show the verification gate
+      if (!state.user.emailVerified) {
+        lockIcon.className = 'fa-solid fa-envelope-circle-check text-[11px] text-amber-400';
+        accountIcon.className = 'fa-solid fa-clock text-amber-400 text-[11px]';
+        accountLabel.textContent = 'Verify Email';
+        rigBadge.classList.add('hidden');
+
+        loggedOutPanel.classList.add('hidden');
+        loggedInPanel.classList.add('hidden');
+        verifyPanel.classList.remove('hidden');
+
+        document.getElementById('verificationSubtext').innerHTML =
+          `We sent a verification challenge to <strong class="text-[var(--text-primary)]">${escapeHtml(state.user.email)}</strong>. Verify your address to unlock Studio Hub.`;
+        document.getElementById('generatedOtpCodeDisplay').textContent = state.user.pendingOtp || '482910';
+        return;
+      }
+
+      // Fully Authenticated & Email Verified
+      const userMasters = Object.values(state.cloudLibrary).filter(
+        (m) => !m.ownerEmail || m.ownerEmail.toLowerCase() === state.user.email.toLowerCase()
+      );
+      document.getElementById('hubCrateCount').textContent = String(userMasters.length);
+
+      lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
+      accountIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-[11px]';
+      accountLabel.textContent = state.user.displayName;
+
+      loggedOutPanel.classList.add('hidden');
+      verifyPanel.classList.add('hidden');
+      loggedInPanel.classList.remove('hidden');
+
+      document.getElementById('accountModalName').textContent = state.user.displayName;
+      document.getElementById('accountModalEmail').textContent = state.user.email;
+
+      const tierPill = document.getElementById('accountModalTierPill');
+      const isPaid = state.user.permissions.tier === 'paid';
+      tierPill.textContent = isPaid ? 'PAID PRO' : 'FREE TIER';
+      tierPill.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`;
+
+      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+      if (dev && dev.id !== 'none') {
+        rigBadge.textContent = `Rig: ${dev.name}`;
+        rigBadge.classList.remove('hidden');
+      } else {
+        rigBadge.classList.add('hidden');
       }
     }
 
@@ -2403,46 +2652,342 @@
       renderTrackList();
     }
 
-    function registerUserLogin(name, email, provider) {
-      const existingIdx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
-      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
-      if (existingIdx >= 0) {
-        const existing = ensureUserPermissionsStruct(state.usersRegistry[existingIdx]);
-        existing.displayName = name || existing.displayName;
-        existing.lastLogin = new Date().toISOString();
-        existing.activeRigName = dev ? dev.name : 'Standard Studio';
-        state.user = existing;
-      } else {
-        const newUser = ensureUserPermissionsStruct({
-          uid: 'usr_' + Math.random().toString(36).slice(2, 10),
-          displayName: name,
-          email,
-          provider,
-          activeRigName: dev ? dev.name : 'Standard Studio',
-          lastLogin: new Date().toISOString()
-        });
-        state.usersRegistry.push(newUser);
-        state.user = newUser;
-      }
-      saveState();
-      updateAccountAndGatingUI();
-    }
-
     /**************************************************************************
      * 10. INITIALIZATION & EVENT LISTENERS
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase if saved config exists
+      const savedFbCfg = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
+      if (savedFbCfg) {
+        VNTEXAuthEngine.initFirebase(savedFbCfg);
+        document.getElementById('firebaseConfigJsonInput').value = savedFbCfg;
+      }
+
       checkRouteMode();
       window.addEventListener('hashchange', checkRouteMode);
 
-      if (state.user && state.activePalette) {
+      if (isUserFullyVerified(state.user) && state.activePalette) {
         applyPaletteColors(state.activePalette);
       }
       syncEncoderSelects();
       renderStudioHubDeviceDropdown();
       updateAccountAndGatingUI();
 
-      // 1. Blank Admin Passcode Gate
+      // Password Visibility Eye Toggles
+      document.querySelectorAll('[data-toggle-pass]').forEach((btn) => {
+        btn.onclick = () => {
+          const input = document.getElementById(btn.getAttribute('data-toggle-pass'));
+          if (!input) return;
+          const isPass = input.type === 'password';
+          input.type = isPass ? 'text' : 'password';
+          btn.innerHTML = isPass ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+        };
+      });
+
+      // Sign In vs. Create Account Tab Switcher
+      const tabSignInBtn = document.getElementById('authTabSignInBtn');
+      const tabSignUpBtn = document.getElementById('authTabSignUpBtn');
+      const signInForm = document.getElementById('signInForm');
+      const signUpForm = document.getElementById('signUpForm');
+      const authAlert = document.getElementById('authAlertBox');
+
+      function showAuthError(msg) {
+        authAlert.textContent = msg;
+        authAlert.classList.remove('hidden');
+      }
+      function clearAuthError() {
+        authAlert.textContent = '';
+        authAlert.classList.add('hidden');
+      }
+
+      tabSignInBtn.onclick = () => {
+        clearAuthError();
+        tabSignInBtn.classList.add('active');
+        tabSignUpBtn.classList.remove('active');
+        signInForm.classList.remove('hidden');
+        signUpForm.classList.add('hidden');
+      };
+
+      tabSignUpBtn.onclick = () => {
+        clearAuthError();
+        tabSignUpBtn.classList.add('active');
+        tabSignInBtn.classList.remove('active');
+        signUpForm.classList.remove('hidden');
+        signInForm.classList.add('hidden');
+      };
+
+      // Live Password Complexity Checker on Keystroke
+      const pwInput = document.getElementById('signUpPasswordInput');
+      const pwConfirmInput = document.getElementById('signUpConfirmInput');
+      const signUpSubmitBtn = document.getElementById('signUpSubmitBtn');
+
+      function updatePasswordComplexityUI() {
+        const { rules, score, allValid } = VNTEXAuthEngine.evaluatePasswordPolicy(pwInput.value, pwConfirmInput.value);
+
+        const setRuleUI = (id, passed, text) => {
+          const el = document.getElementById(id);
+          el.textContent = `${passed ? '✓' : '○'} ${text}`;
+          el.className = passed ? 'text-emerald-400 font-bold' : 'text-[var(--text-muted)]';
+        };
+
+        setRuleUI('reqLength', rules.length, 'At least 8 characters');
+        setRuleUI('reqUpper', rules.mixedCase, 'Uppercase & lowercase letters (A-z)');
+        setRuleUI('reqNumber', rules.number, 'At least one number (0-9)');
+        setRuleUI('reqSymbol', rules.symbol, 'At least one special symbol (!@#$%^&*)');
+        setRuleUI('reqMatch', rules.match, 'Passwords match');
+
+        const colors = ['bg-rose-500', 'bg-amber-400', 'bg-cyan-400', 'bg-emerald-400'];
+        const labels = ['Too Weak', 'Fair', 'Good', 'Strong & Secure'];
+        const lblEl = document.getElementById('passwordStrengthLabel');
+        lblEl.textContent = pwInput.value.length ? labels[Math.max(0, score - 1)] : 'Enter password';
+        lblEl.className = `font-mono-tech text-[10px] ${score === 4 ? 'text-emerald-400 font-bold' : 'text-[var(--text-secondary)]'}`;
+
+        [1, 2, 3, 4].forEach((n) => {
+          const bar = document.getElementById(`pwBar${n}`);
+          bar.className = `h-1.5 rounded transition-colors ${n <= score ? colors[Math.max(0, score - 1)] : 'bg-[var(--border-hairline)]'}`;
+        });
+
+        signUpSubmitBtn.disabled = !allValid;
+      }
+
+      pwInput.addEventListener('input', updatePasswordComplexityUI);
+      pwConfirmInput.addEventListener('input', updatePasswordComplexityUI);
+
+      // CREATE ACCOUNT HANDLER (Salted SHA-256 + Mandatory Email Verification Gate)
+      signUpForm.onsubmit = async (e) => {
+        e.preventDefault();
+        clearAuthError();
+        const name = document.getElementById('signUpNameInput').value.trim();
+        const email = document.getElementById('signUpEmailInput').value.trim().toLowerCase();
+        const pass = pwInput.value;
+        const conf = pwConfirmInput.value;
+
+        const { allValid } = VNTEXAuthEngine.evaluatePasswordPolicy(pass, conf);
+        if (!allValid) {
+          showAuthError('Password does not meet all security requirements.');
+          return;
+        }
+
+        // Check if account already exists in registry
+        const existing = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
+        if (existing) {
+          showAuthError('An account with this email already exists. Please switch to Sign In.');
+          return;
+        }
+
+        // If Live Firebase Auth is configured, also register in Firebase & send real email link
+        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
+          try {
+            const cred = await VNTEXAuthEngine.firebaseAuth.createUserWithEmailAndPassword(email, pass);
+            if (cred.user) {
+              await cred.user.updateProfile({ displayName: name });
+              await cred.user.sendEmailVerification();
+            }
+          } catch (fbErr) {
+            showAuthError(fbErr.message);
+            return;
+          }
+        }
+
+        const salt = VNTEXAuthEngine.generateSalt();
+        const passwordHash = await VNTEXAuthEngine.hashPassword(pass, salt);
+        const otp = VNTEXAuthEngine.generateSixDigitOtp();
+        const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+
+        const newUser = ensureUserPermissionsStruct({
+          uid: 'usr_' + Math.random().toString(36).slice(2, 10),
+          displayName: name,
+          email,
+          provider: VNTEXAuthEngine.isFirebaseActive ? 'Firebase Email' : 'SHA-256 Crypto',
+          salt,
+          passwordHash,
+          emailVerified: false,
+          pendingOtp: otp,
+          activeRigName: dev ? dev.name : 'Standard Studio',
+          lastLogin: new Date().toISOString()
+        });
+
+        state.usersRegistry.push(newUser);
+        state.user = newUser;
+        saveState();
+        updateAccountAndGatingUI();
+      };
+
+      // SIGN IN HANDLER (Verifies Existing Account & Salted SHA-256 Hash)
+      signInForm.onsubmit = async (e) => {
+        e.preventDefault();
+        clearAuthError();
+        try {
+          VNTEXAuthEngine.checkLockout();
+        } catch (lockErr) {
+          showAuthError(lockErr.message);
+          return;
+        }
+
+        const email = document.getElementById('signInEmailInput').value.trim().toLowerCase();
+        const pass = document.getElementById('signInPasswordInput').value;
+
+        // Live Firebase Auth check if connected
+        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
+          try {
+            const cred = await VNTEXAuthEngine.firebaseAuth.signInWithEmailAndPassword(email, pass);
+            const fbUser = cred.user;
+            let regUser = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
+            if (!regUser) {
+              regUser = ensureUserPermissionsStruct({
+                uid: fbUser.uid,
+                displayName: fbUser.displayName || email.split('@')[0],
+                email,
+                provider: 'Firebase Auth',
+                emailVerified: fbUser.emailVerified,
+                lastLogin: new Date().toISOString()
+              });
+              state.usersRegistry.push(regUser);
+            } else {
+              regUser.emailVerified = fbUser.emailVerified;
+              regUser.lastLogin = new Date().toISOString();
+            }
+            state.user = regUser;
+            saveState();
+            updateAccountAndGatingUI();
+            if (regUser.emailVerified) document.getElementById('accountModal').classList.add('hidden');
+            return;
+          } catch (fbErr) {
+            VNTEXAuthEngine.recordFailedAttempt();
+            showAuthError('Invalid email or password.');
+            return;
+          }
+        }
+
+        // Local Salted SHA-256 Verification
+        const account = state.usersRegistry.find((u) => u.email.toLowerCase() === email);
+        if (!account) {
+          VNTEXAuthEngine.recordFailedAttempt();
+          showAuthError('No account found with that email address. Click "Create Account" above to register.');
+          return;
+        }
+
+        const computedHash = await VNTEXAuthEngine.hashPassword(pass, account.salt || '');
+        if (computedHash !== account.passwordHash) {
+          VNTEXAuthEngine.recordFailedAttempt();
+          showAuthError('Incorrect password. Please verify your credentials.');
+          return;
+        }
+
+        VNTEXAuthEngine.failedAttempts = 0;
+        account.lastLogin = new Date().toISOString();
+        state.user = account;
+        saveState();
+        updateAccountAndGatingUI();
+        if (account.emailVerified) {
+          document.getElementById('accountModal').classList.add('hidden');
+        }
+      };
+
+      // EMAIL VERIFICATION OTP SUBMIT
+      document.getElementById('verifyOtpForm').onsubmit = (e) => {
+        e.preventDefault();
+        if (!state.user) return;
+        const entered = document.getElementById('otpCodeInput').value.trim();
+        if (entered === String(state.user.pendingOtp)) {
+          state.user.emailVerified = true;
+          delete state.user.pendingOtp;
+          const idx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === state.user.email.toLowerCase());
+          if (idx >= 0) state.usersRegistry[idx] = state.user;
+          saveState();
+          document.getElementById('otpCodeInput').value = '';
+          updateAccountAndGatingUI();
+          document.getElementById('accountModal').classList.add('hidden');
+          openStudioHubAuthenticated();
+        } else {
+          alert('Invalid 6-digit verification code. Check the code displayed above.');
+        }
+      };
+
+      document.getElementById('resendVerificationBtn').onclick = async () => {
+        if (!state.user) return;
+        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth?.currentUser) {
+          try { await VNTEXAuthEngine.firebaseAuth.currentUser.sendEmailVerification(); } catch {}
+        }
+        state.user.pendingOtp = VNTEXAuthEngine.generateSixDigitOtp();
+        saveState();
+        updateAccountAndGatingUI();
+      };
+
+      document.getElementById('cancelVerificationBtn').onclick = () => {
+        state.user = null;
+        saveState();
+        updateAccountAndGatingUI();
+      };
+
+      // GOOGLE OAUTH SIGN-IN HANDLER
+      document.getElementById('googleOAuthBtn').onclick = async () => {
+        clearAuthError();
+        if (!VNTEXAuthEngine.isFirebaseActive || !VNTEXAuthEngine.firebaseAuth) {
+          showAuthError(
+            'Google OAuth requires your Firebase Web API Key. Unlock #admin -> "Firebase OAuth Setup" to paste your Firebase config, or use Email & Strong Password below.'
+          );
+          return;
+        }
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          const result = await VNTEXAuthEngine.firebaseAuth.signInWithPopup(provider);
+          const gUser = result.user;
+          if (!gUser || !gUser.email) throw new Error('Google sign-in did not return an email.');
+
+          let regUser = state.usersRegistry.find((u) => u.email.toLowerCase() === gUser.email.toLowerCase());
+          const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+          if (!regUser) {
+            regUser = ensureUserPermissionsStruct({
+              uid: gUser.uid,
+              displayName: gUser.displayName || gUser.email.split('@')[0],
+              email: gUser.email.toLowerCase(),
+              provider: 'Google OAuth',
+              emailVerified: true,
+              activeRigName: dev ? dev.name : 'Standard Studio',
+              lastLogin: new Date().toISOString()
+            });
+            state.usersRegistry.push(regUser);
+          } else {
+            regUser.emailVerified = true;
+            regUser.provider = 'Google OAuth';
+            regUser.lastLogin = new Date().toISOString();
+          }
+          state.user = regUser;
+          saveState();
+          updateAccountAndGatingUI();
+          document.getElementById('accountModal').classList.add('hidden');
+          openStudioHubAuthenticated();
+        } catch (err) {
+          showAuthError(`Google Sign-In Error: ${err.message}`);
+        }
+      };
+
+      // Admin Firebase Setup Modal Events
+      const fbModal = document.getElementById('firebaseSetupModal');
+      document.getElementById('openFirebaseSetupModalBtn').onclick = () => fbModal.classList.remove('hidden');
+      document.getElementById('closeFirebaseSetupBtn').onclick = () => fbModal.classList.add('hidden');
+
+      document.getElementById('saveFirebaseConfigBtn').onclick = () => {
+        const raw = document.getElementById('firebaseConfigJsonInput').value.trim();
+        const statusEl = document.getElementById('firebaseConfigStatusMsg');
+        if (VNTEXAuthEngine.initFirebase(raw)) {
+          localStorage.setItem(STORAGE_KEYS.FIREBASE_CFG, raw);
+          statusEl.textContent = '✓ Live Firebase Auth & Google OAuth Popup Activated!';
+          statusEl.className = 'font-mono-tech text-[11px] text-emerald-400';
+        } else {
+          statusEl.textContent = '✕ Invalid Firebase Config JSON. Ensure apiKey and authDomain are present.';
+          statusEl.className = 'font-mono-tech text-[11px] text-rose-400';
+        }
+      };
+
+      document.getElementById('disconnectFirebaseBtn').onclick = () => {
+        localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
+        VNTEXAuthEngine.isFirebaseActive = false;
+        document.getElementById('firebaseConfigStatusMsg').textContent = 'Switched to Standalone SHA-256 Crypto Auth.';
+      };
+
+      // Admin Passcode Gate
       document.getElementById('adminUnlockForm').onsubmit = (e) => {
         e.preventDefault();
         const pin = document.getElementById('adminPinInput').value.trim();
@@ -2471,7 +3016,6 @@
         checkRouteMode();
       };
 
-      // Switch between Users Monitor & Activity Monitor
       document.querySelectorAll('.admin-monitor-tab').forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll('.admin-monitor-tab').forEach((b) => b.classList.remove('active'));
@@ -2482,7 +3026,6 @@
         };
       });
 
-      // List vs. Tile Grid View Toggle
       document.getElementById('viewModeListBtn').onclick = () => {
         state.adminUsersViewMode = 'list';
         document.getElementById('viewModeListBtn').classList.add('active');
@@ -2500,7 +3043,6 @@
       document.getElementById('adminUserTierFilter').onchange = () => renderAdminDashboard();
       document.getElementById('adminActivitySearchInput').oninput = () => renderAdminDashboard();
 
-      // User Inspector Modal Events
       document.getElementById('closeAdminUserInspectorBtn').onclick = () => {
         document.getElementById('adminUserInspectorModal').classList.add('hidden');
       };
@@ -2515,7 +3057,6 @@
         };
       });
 
-      // Standard Admin Permission Changes
       ['permTierSelect', 'permAutomationCheck', 'permPalettesCheck', 'permRigCheck'].forEach((id) => {
         document.getElementById(id).onchange = () => {
           const u = state.usersRegistry.find((x) => x.email.toLowerCase() === String(state.inspectingUserEmail).toLowerCase());
@@ -2533,7 +3074,6 @@
         };
       });
 
-      // Master Owner Approval Queue Modal
       document.getElementById('openMasterQueueBtn').onclick = () => {
         renderMasterApprovalModal();
         document.getElementById('masterApprovalModal').classList.remove('hidden');
@@ -2542,7 +3082,6 @@
         document.getElementById('masterApprovalModal').classList.add('hidden');
       };
 
-      // Admin Device Config Manager Modal
       document.getElementById('openDeviceConfigModalBtn').onclick = () => {
         renderAdminDeviceManagerList();
         document.getElementById('adminDeviceManagerModal').classList.remove('hidden');
@@ -2578,15 +3117,19 @@
         renderStudioHubDeviceDropdown();
       };
 
-      // Seed Demo Users & Authenticated Activity Button
-      document.getElementById('seedDemoTelemetryBtn').onclick = () => {
+      document.getElementById('seedDemoTelemetryBtn').onclick = async () => {
         const now = new Date().toISOString();
+        const salt1 = VNTEXAuthEngine.generateSalt();
+        const hash1 = await VNTEXAuthEngine.hashPassword('Studio#2026', salt1);
         state.usersRegistry = [
           {
             uid: 'usr_uno01',
             displayName: 'Darren (DJ Uno)',
             email: 'darren@auburn.edu',
-            provider: 'google',
+            provider: 'SHA-256 Crypto',
+            salt: salt1,
+            passwordHash: hash1,
+            emailVerified: true,
             activeRigName: 'Pioneer DDJ-GRV6 Controller',
             lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: true, unlimitedApiOverride: true, bypassStorageQuotas: true }
@@ -2595,38 +3138,18 @@
             uid: 'usr_dave02',
             displayName: 'DJ Dave',
             email: 'dave@booth.audio',
-            provider: 'email',
+            provider: 'SHA-256 Crypto',
+            salt: salt1,
+            passwordHash: hash1,
+            emailVerified: true,
             activeRigName: 'Pioneer CDJ-3000 / NXS2 Club Rig',
             lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false, unlimitedApiOverride: false, bypassStorageQuotas: false }
-          },
-          {
-            uid: 'usr_alex03',
-            displayName: 'Alex Mercer',
-            email: 'alex@studio.io',
-            provider: 'email',
-            activeRigName: 'Apple Logic Pro X',
-            lastLogin: now,
-            permissions: { tier: 'free', automation: false, palettes: false, rig: true, isAdmin: false, unlimitedApiOverride: false, bypassStorageQuotas: false }
           }
         ];
         state.downloadHistory = [
           { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
-          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 },
-          { id: 'log_103', timestamp: now, userEmail: 'alex@studio.io', artist: 'Alex Mercer', trackTitle: 'Analog Warmth Stem', bpm: '122', key: '5A', outputFormat: 'WAV', qualitySpec: '24-Bit', targetDevice: 'Apple Logic Pro X', fileSize: 26100000 }
-        ];
-        state.approvalRequests = [
-          {
-            id: 'req_demo1',
-            timestamp: now,
-            targetEmail: 'dave@booth.audio',
-            targetName: 'DJ Dave',
-            permKey: 'isAdmin',
-            permLabel: 'Promote to Platform Admin',
-            desiredValue: true,
-            requestedBy: 'Standard Admin',
-            status: 'pending'
-          }
+          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
         ];
         saveState();
         renderAdminDashboard();
@@ -2734,15 +3257,21 @@
         renderTrackList();
       };
 
-      // Account Login & Studio Hub Gating
+      // Account Modal & Gated Studio Hub (Requires Verified Email!)
       const accountModal = document.getElementById('accountModal');
       const studioHubModal = document.getElementById('studioHubModal');
 
-      document.getElementById('openAccountBtn').onclick = () => accountModal.classList.remove('hidden');
+      document.getElementById('openAccountBtn').onclick = () => {
+        clearAuthError();
+        updateAccountAndGatingUI();
+        accountModal.classList.remove('hidden');
+      };
       document.getElementById('closeAccountModalBtn').onclick = () => accountModal.classList.add('hidden');
 
       const openStudioHubAuthenticated = () => {
-        if (!state.user) {
+        if (!isUserFullyVerified(state.user)) {
+          clearAuthError();
+          updateAccountAndGatingUI();
           accountModal.classList.remove('hidden');
           return;
         }
@@ -2759,34 +3288,10 @@
       };
       document.getElementById('closeStudioHubBtn').onclick = () => studioHubModal.classList.add('hidden');
 
-      // Authentic Sign-In (Uses user's actual entered Name & Email, no dummy @vntex.studio auto-fill)
-      document.getElementById('emailLoginForm').onsubmit = (e) => {
-        e.preventDefault();
-        const name = document.getElementById('loginNameInput').value.trim();
-        const email = document.getElementById('loginEmailInput').value.trim();
-        if (!name || !email) return;
-        registerUserLogin(name, email, 'email');
-        accountModal.classList.add('hidden');
-        openStudioHubAuthenticated();
-      };
-
-      document.getElementById('googleLoginBtn').onclick = () => {
-        const name = document.getElementById('loginNameInput').value.trim();
-        const email = document.getElementById('loginEmailInput').value.trim();
-        const errEl = document.getElementById('loginFormError');
-        if (!name || !email) {
-          errEl.textContent = 'Please enter your Name and Google Email above to link your Google profile.';
-          errEl.classList.remove('hidden');
-          document.getElementById('loginNameInput').focus();
-          return;
+      document.getElementById('logoutBtn').onclick = async () => {
+        if (VNTEXAuthEngine.isFirebaseActive && VNTEXAuthEngine.firebaseAuth) {
+          try { await VNTEXAuthEngine.firebaseAuth.signOut(); } catch {}
         }
-        errEl.classList.add('hidden');
-        registerUserLogin(name, email, 'google');
-        accountModal.classList.add('hidden');
-        openStudioHubAuthenticated();
-      };
-
-      document.getElementById('logoutBtn').onclick = () => {
         state.user = null;
         state.activeDeviceId = 'none';
         applyPaletteColors(BUILTIN_PALETTES.obsidian);
@@ -2795,7 +3300,7 @@
         accountModal.classList.add('hidden');
       };
 
-      // Studio Hub Tabs with Admin Permission Checks
+      // Studio Hub Tabs
       document.querySelectorAll('.hub-tab-btn').forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll('.hub-tab-btn').forEach((b) => b.classList.remove('active'));
@@ -2827,7 +3332,6 @@
         };
       });
 
-      // Built-In Skins & Custom Palette Pickers
       document.querySelectorAll('[data-builtin-skin]').forEach((btn) => {
         btn.onclick = () => applyPaletteColors(BUILTIN_PALETTES[btn.getAttribute('data-builtin-skin')]);
       });
@@ -2859,7 +3363,6 @@
         renderSavedPalettes();
       };
 
-      // Automation Inside Studio Hub
       const tplInput = document.getElementById('filenameTemplateInput');
       tplInput.oninput = () => { state.filenameTemplate = tplInput.value; };
       document.querySelectorAll('.token-chip').forEach((c) => {
@@ -2902,7 +3405,6 @@
         updateAccountAndGatingUI();
       };
 
-      // Per-Track Tag Editor Modal
       document.getElementById('closeTagEditorBtn').onclick = () => document.getElementById('tagEditorModal').classList.add('hidden');
       const editCoverIn = document.getElementById('editCoverFileInput');
       document.getElementById('changeTrackCoverBtn').onclick = () => editCoverIn.click();
