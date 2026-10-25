@@ -92,6 +92,11 @@
       transition: all 0.15s ease;
     }
 
+    .tab-pill:hover {
+      border-color: var(--border-highlight);
+      color: var(--text-primary);
+    }
+
     .tab-pill.active {
       border-color: var(--accent-primary);
       color: var(--accent-primary);
@@ -122,7 +127,7 @@
        ========================================================================== -->
   <div id="userAppWrapper">
 
-    <!-- ULTRA-CLEAN HEADER (ONLY LOGO + ACCOUNT / STUDIO HUB) -->
+    <!-- ULTRA-CLEAN HEADER -->
     <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         
@@ -150,7 +155,7 @@
       </div>
     </header>
 
-    <!-- MAIN WORKSPACE (1. DROPZONE FIRST -> 2. CONSOLIDATED BAR -> 3. QUEUE) -->
+    <!-- MAIN USER WORKSPACE (1. DROPZONE FIRST -> 2. CONSOLIDATED BAR -> 3. QUEUE) -->
     <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
       <!-- 1. FILE DROPZONE (FIRST THING ON SCREEN) -->
@@ -192,7 +197,7 @@
                 <option value="fl-daw" class="bg-[#08080c] text-white">🎹 FL Studio / DAW (32-Bit WAV)</option>
                 <option value="master-hifi" class="bg-[#08080c] text-white">💎 Master Hi-Fi (24/96 FLAC)</option>
                 <option value="fast-web" class="bg-[#08080c] text-white">⚡ Fast Web (128k MP3)</option>
-                <option value="custom" class="bg-[#08080c] text-white">⚙️ Custom Settings</option>
+                <option value="custom" class="bg-[#08080c] text-white">⚙️ Custom / Device Rig</option>
               </select>
             </div>
 
@@ -291,135 +296,490 @@
   </div>
 
   <!-- ==========================================================================
-       VIEW 2: STANDALONE DEVELOPER ADMIN API CONSOLE (ONLY AT #admin)
+       VIEW 2: REDESIGNED ADMIN CONSOLE (ONLY AT #admin)
        ========================================================================== -->
-  <div id="adminPortalWrapper" class="hidden min-h-screen bg-[#030305] text-white">
-    <header class="border-b border-[#181824] bg-[#030305]/95 sticky top-0 z-30">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">VX</div>
-          <span class="font-extrabold text-sm text-white">VNTEX // ADMIN API &amp; TELEMETRY CONSOLE</span>
-          <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/30">PRIVATE ROUTE</span>
+  <div id="adminPortalWrapper" class="hidden min-h-screen bg-[#030305] text-[#f3f4f8]">
+    
+    <!-- Top Admin Navigation Header -->
+    <header class="border-b border-[#181824] bg-[#030305]/95 backdrop-blur-md sticky top-0 z-30">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">
+            VX
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-sm text-white">VNTEX // ADMIN CONSOLE</span>
+              <span id="adminRoleHeaderBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
+                LOCKED
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-amber-400 hover:border-amber-400/50">
-            + Seed Test Activity
+
+        <!-- Admin Header Actions (Visible Once Unlocked) -->
+        <div id="adminHeaderToolbar" class="hidden flex flex-wrap items-center gap-2">
+          
+          <!-- Active Security Role Switcher (Test Standard Admin vs Master Owner) -->
+          <div class="hardware-well px-2.5 py-1 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-key text-amber-400 text-[10px]"></i>
+            <span class="text-[10px] font-mono-tech uppercase text-gray-400">Role:</span>
+            <select id="adminRoleSelect" class="bg-transparent font-mono-tech text-xs font-bold text-amber-400 focus:outline-none cursor-pointer">
+              <option value="admin" class="bg-[#08080c] text-white">Standard Admin</option>
+              <option value="owner" class="bg-[#08080c] text-amber-400">Master Owner (You)</option>
+            </select>
+          </div>
+
+          <button id="openMasterQueueBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech flex items-center gap-1.5 text-amber-400 hover:border-amber-400/60 transition">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Owner Approvals</span>
+            <span id="pendingApprovalsBadge" class="px-1.5 py-0.2 rounded bg-amber-400 text-black font-extrabold text-[10px]">0</span>
           </button>
-          <button id="refreshAdminBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50">
-            Refresh
+
+          <button id="openDeviceConfigModalBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400 hover:border-cyan-400/50 transition">
+            <i class="fa-solid fa-sliders mr-1"></i>Device Presets
           </button>
+
+          <button id="seedDemoTelemetryBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-emerald-400 hover:border-emerald-400/50 transition">
+            + Seed Demo Data
+          </button>
+
           <button id="exitAdminRouteBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-gray-300 hover:text-white">
-            ← Back to Converter
+            ← Converter
           </button>
         </div>
+
       </div>
     </header>
 
-    <!-- Admin Passcode Lock Gate -->
+    <!-- 1. BLANK ADMIN PASSCODE LOCK GATE -->
     <div id="adminPinGate" class="max-w-md mx-auto mt-20 p-6 studio-panel text-center space-y-4">
       <div class="w-12 h-12 rounded-xl hardware-well mx-auto flex items-center justify-center text-amber-400 text-lg">
-        <i class="fa-solid fa-shield-halved"></i>
+        <i class="fa-solid fa-lock"></i>
       </div>
       <div class="space-y-1">
-        <h2 class="text-base font-bold text-white">Developer Admin Authentication</h2>
-        <p class="text-xs text-gray-400">
-          Enter your developer passcode to unlock platform metrics &amp; JSON API payloads (Default: <code class="text-amber-400 font-mono-tech">VNTEX-ADMIN</code>).
+        <h2 class="text-base font-bold text-white">Admin Console Authentication</h2>
+        <p class="text-xs text-gray-400 leading-relaxed">
+          Enter <code class="text-cyan-400 font-mono-tech">VNTEX-ADMIN</code> for Standard Admin access, or <code class="text-amber-400 font-mono-tech">VNTEX-OWNER</code> for Master Owner sign-off privileges.
         </p>
       </div>
-      <form id="adminUnlockForm" class="flex gap-2">
-        <input id="adminPinInput" type="password" value="VNTEX-ADMIN" class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center text-white" />
-        <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs">
-          Unlock API
+      <form id="adminUnlockForm" class="flex gap-2" autocomplete="off">
+        <input
+          id="adminPinInput"
+          type="password"
+          value=""
+          autocomplete="new-password"
+          placeholder="Enter passcode..."
+          class="hardware-well flex-1 px-3 py-2 text-xs font-mono-tech text-center text-white"
+        />
+        <button type="submit" class="px-4 py-2 rounded bg-amber-400 text-black font-mono-tech font-bold text-xs hover:brightness-110 transition">
+          Sign In
         </button>
       </form>
-      <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid Passcode</p>
+      <p id="adminPinError" class="text-xs font-mono-tech text-rose-400 hidden">Invalid passcode. Try VNTEX-ADMIN or VNTEX-OWNER.</p>
     </div>
 
-    <!-- Unlocked Admin Telemetry Dashboard -->
+    <!-- 2. UNLOCKED ADMIN DASHBOARD (TWO PRIMARY MONITORS: ACTIVITY & USERS) -->
     <div id="adminDashboardContent" class="hidden max-w-6xl mx-auto px-4 py-6 space-y-6">
-      
+
+      <!-- Top KPI Summary Row -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="studio-panel p-4">
-          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Accounts</div>
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Users</div>
           <div id="kpiUsers" class="font-mono-tech text-2xl font-extrabold text-cyan-400 mt-1">0</div>
+          <div class="text-[10px] font-mono-tech text-gray-500 mt-0.5">Authenticated Accounts</div>
         </div>
         <div class="studio-panel p-4">
-          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Total Conversions</div>
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Signed-In Conversions</div>
           <div id="kpiConversions" class="font-mono-tech text-2xl font-extrabold text-white mt-1">0</div>
+          <div class="text-[10px] font-mono-tech text-emerald-400 mt-0.5">● Guest Runs Excluded</div>
         </div>
         <div class="studio-panel p-4">
-          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Cloud Master Tracks</div>
-          <div id="kpiMasters" class="font-mono-tech text-2xl font-extrabold text-amber-400 mt-1">0</div>
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Paid Pro Accounts</div>
+          <div id="kpiPaidUsers" class="font-mono-tech text-2xl font-extrabold text-emerald-400 mt-1">0</div>
+          <div class="text-[10px] font-mono-tech text-gray-500 mt-0.5">Active Subscriptions</div>
         </div>
         <div class="studio-panel p-4">
-          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Data Processed</div>
-          <div id="kpiVolume" class="font-mono-tech text-2xl font-extrabold text-emerald-400 mt-1">0 KB</div>
+          <div class="font-mono-tech text-[10px] uppercase text-gray-400">Pending Owner Locks</div>
+          <div id="kpiPendingLocks" class="font-mono-tech text-2xl font-extrabold text-amber-400 mt-1">0</div>
+          <div class="text-[10px] font-mono-tech text-amber-400/80 mt-0.5">Awaiting Master Approval</div>
         </div>
       </div>
 
-      <!-- REST API Endpoint Inspector -->
-      <div class="studio-panel p-5 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono-tech text-[10px] font-bold">GET</span>
-            <select id="endpointSelect" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
-              <option value="overview">/api/v1/admin/overview</option>
-              <option value="users">/api/v1/admin/users</option>
-              <option value="library">/api/v1/admin/cloud-library</option>
-              <option value="logs">/api/v1/admin/download-logs</option>
-            </select>
-          </div>
-          <button id="copyJsonBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-cyan-400">
-            Copy JSON Payload
+      <!-- Primary Monitor Switcher (1. USERS MONITOR | 2. ACTIVITY MONITOR) -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#181824] pb-3">
+        <div class="flex items-center gap-2">
+          <button type="button" data-admin-monitor="users" class="admin-monitor-tab tab-pill active px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
+            <i class="fa-solid fa-users"></i>
+            <span>Users Monitor</span>
+          </button>
+          <button type="button" data-admin-monitor="activity" class="admin-monitor-tab tab-pill px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
+            <i class="fa-solid fa-wave-square"></i>
+            <span>Activity Monitor</span>
           </button>
         </div>
-        <pre id="jsonDisplay" class="hardware-well p-4 font-mono-tech text-[11px] text-emerald-400 overflow-x-auto max-h-60"></pre>
-      </div>
 
-      <!-- Registered Studio Accounts Table -->
-      <div class="studio-panel p-5 space-y-3">
-        <h2 class="font-mono-tech uppercase text-xs text-cyan-400">Registered Studio Accounts</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse font-mono-tech text-xs">
-            <thead>
-              <tr class="border-b border-[#181824] text-gray-400">
-                <th class="py-2 px-3">UID</th>
-                <th class="py-2 px-3">Name</th>
-                <th class="py-2 px-3">Email</th>
-                <th class="py-2 px-3">Provider</th>
-                <th class="py-2 px-3">Last Active</th>
-              </tr>
-            </thead>
-            <tbody id="usersBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
-          </table>
+        <div class="text-[11px] font-mono-tech text-gray-400">
+          Click any user profile to inspect activity or modify permissions.
         </div>
       </div>
 
-      <!-- Conversion Activity Logs Table -->
-      <div class="studio-panel p-5 space-y-3">
-        <h2 class="font-mono-tech uppercase text-xs text-amber-400">Recent Conversion &amp; Device-Tuned Logs</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse font-mono-tech text-xs">
-            <thead>
-              <tr class="border-b border-[#181824] text-gray-400">
-                <th class="py-2 px-3">Timestamp</th>
-                <th class="py-2 px-3">User</th>
-                <th class="py-2 px-3">Track</th>
-                <th class="py-2 px-3">Format</th>
-                <th class="py-2 px-3">Target Rig</th>
-                <th class="py-2 px-3">Size</th>
-              </tr>
-            </thead>
-            <tbody id="logsBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
-          </table>
+      <!-- ====================================================================
+           MONITOR A: USERS MONITOR (LIST VIEW & TILE GRID VIEW)
+           ==================================================================== -->
+      <section id="adminMonitor-users" class="space-y-4">
+        
+        <!-- Filter Bar + List/Tile View Toggle -->
+        <div class="studio-panel p-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <div class="relative flex-1 min-w-[200px] max-w-sm">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"></i>
+              <input id="adminUserSearchInput" type="text" placeholder="Search users by name, email, or tier..." class="hardware-well w-full pl-8 pr-3 py-1.5 text-xs" />
+            </div>
+
+            <select id="adminUserTierFilter" class="hardware-well px-3 py-1.5 text-xs font-mono-tech">
+              <option value="all">All Access Tiers</option>
+              <option value="paid">Paid Pro Only</option>
+              <option value="free">Free Tier Only</option>
+              <option value="admin">Admins Only</option>
+            </select>
+          </div>
+
+          <!-- List vs. Tile Grid View Toggle -->
+          <div class="flex items-center gap-1.5">
+            <button id="viewModeListBtn" type="button" class="tab-pill active px-3 py-1.5 text-xs font-mono-tech flex items-center gap-1.5">
+              <i class="fa-solid fa-list"></i>
+              <span>List</span>
+            </button>
+            <button id="viewModeGridBtn" type="button" class="tab-pill px-3 py-1.5 text-xs font-mono-tech flex items-center gap-1.5">
+              <i class="fa-solid fa-grip"></i>
+              <span>Tile Grid</span>
+            </button>
+          </div>
         </div>
-      </div>
+
+        <!-- Users List View -->
+        <div id="adminUsersListView" class="studio-panel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse font-mono-tech text-xs">
+              <thead>
+                <tr class="border-b border-[#181824] text-gray-400 bg-[#040406]">
+                  <th class="py-3 px-4">User</th>
+                  <th class="py-3 px-4">Access Tier</th>
+                  <th class="py-3 px-4">System Role</th>
+                  <th class="py-3 px-4">Active Device Rig</th>
+                  <th class="py-3 px-4">Conversions</th>
+                  <th class="py-3 px-4 text-right">Profile</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersListBody" class="divide-y divide-[#181824] text-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Users Tile Grid View -->
+        <div id="adminUsersGridView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+      </section>
+
+      <!-- ====================================================================
+           MONITOR B: ACTIVITY MONITOR (AUTHENTICATED CONVERSIONS ONLY)
+           ==================================================================== -->
+      <section id="adminMonitor-activity" class="hidden space-y-5">
+        
+        <!-- Format Distribution + Active Rig Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-6 studio-panel p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-mono-tech uppercase text-xs text-cyan-400">Authenticated Format Distribution</h3>
+              <span class="font-mono-tech text-[10px] text-gray-400">Signed-In Exports</span>
+            </div>
+            <div id="adminFormatBars" class="space-y-2.5"></div>
+          </div>
+
+          <div class="lg:col-span-6 studio-panel p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-mono-tech uppercase text-xs text-amber-400">Popular Hardware &amp; DAW Rigs</h3>
+              <span class="font-mono-tech text-[10px] text-gray-400">By Conversion Volume</span>
+            </div>
+            <div id="adminRigBars" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+        <!-- Chronological Authenticated Activity Log -->
+        <div class="studio-panel p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-mono-tech uppercase text-xs text-white">Authenticated User Conversion Stream</h3>
+              <p class="text-[11px] text-gray-400">Only conversions performed by signed-in users are recorded by the API.</p>
+            </div>
+            <input id="adminActivitySearchInput" type="text" placeholder="Filter by user, track, or format..." class="hardware-well px-3 py-1.5 text-xs w-64" />
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse font-mono-tech text-xs">
+              <thead>
+                <tr class="border-b border-[#181824] text-gray-400">
+                  <th class="py-2.5 px-3">Timestamp</th>
+                  <th class="py-2.5 px-3">Signed-In User</th>
+                  <th class="py-2.5 px-3">Track</th>
+                  <th class="py-2.5 px-3">Output Spec</th>
+                  <th class="py-2.5 px-3">Device Rig</th>
+                  <th class="py-2.5 px-3">File Size</th>
+                </tr>
+              </thead>
+              <tbody id="adminActivityTableBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
 
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 1: ACCOUNT LOGIN / SIGN UP (UNLOCKS PRO STUDIO HUB)
+       ADMIN MODAL A: USER PROFILE INSPECTOR (ACTIVITY TAB + PERMISSIONS TAB)
+       ========================================================================== -->
+  <div id="adminUserInspectorModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[#262638]">
+      
+      <!-- Modal Header: User Snapshot -->
+      <div class="px-5 py-4 border-b border-[#181824] flex flex-wrap items-center justify-between gap-3 bg-[#040406]">
+        <div class="flex items-center gap-3">
+          <div id="inspectUserAvatar" class="w-11 h-11 rounded-xl bg-cyan-400/10 border border-cyan-400/40 flex items-center justify-center font-mono-tech font-extrabold text-sm text-cyan-400">
+            UN
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="inspectUserName" class="text-sm font-bold text-white">DJ Uno</h3>
+              <span id="inspectUserTierBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
+              <span id="inspectUserRoleBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">USER</span>
+            </div>
+            <div id="inspectUserEmail" class="font-mono-tech text-xs text-gray-400 mt-0.5">uno@vntex.studio</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" data-user-modal-tab="activity" class="user-modal-tab-btn tab-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
+            1. User Activity
+          </button>
+          <button type="button" data-user-modal-tab="permissions" class="user-modal-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            2. Permissions &amp; Locks
+          </button>
+          <button id="closeAdminUserInspectorBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
+
+        <!-- TAB 1: THIS USER'S CONVERSION ACTIVITY -->
+        <div id="userModalTab-activity" class="space-y-4">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="hardware-well p-3">
+              <div class="font-mono-tech text-[10px] uppercase text-gray-400">Total Conversions</div>
+              <div id="inspectUserTotalConv" class="font-mono-tech text-lg font-bold text-cyan-400 mt-0.5">0</div>
+            </div>
+            <div class="hardware-well p-3">
+              <div class="font-mono-tech text-[10px] uppercase text-gray-400">Active Device Rig</div>
+              <div id="inspectUserActiveRig" class="font-mono-tech text-xs font-bold text-white mt-1 truncate">Standard Studio</div>
+            </div>
+            <div class="hardware-well p-3">
+              <div class="font-mono-tech text-[10px] uppercase text-gray-400">Last Active</div>
+              <div id="inspectUserLastLogin" class="font-mono-tech text-xs text-gray-300 mt-1">—</div>
+            </div>
+          </div>
+
+          <div class="hardware-well overflow-hidden">
+            <table class="w-full text-left border-collapse font-mono-tech text-[11px]">
+              <thead>
+                <tr class="border-b border-[#181824] text-gray-400 bg-[#08080c]">
+                  <th class="py-2.5 px-3">Timestamp</th>
+                  <th class="py-2.5 px-3">Track</th>
+                  <th class="py-2.5 px-3">Format &amp; Spec</th>
+                  <th class="py-2.5 px-3">Target Rig</th>
+                  <th class="py-2.5 px-3">Size</th>
+                </tr>
+              </thead>
+              <tbody id="inspectUserActivityBody" class="divide-y divide-[#181824] text-gray-300"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: USER PERMISSIONS & MASTER OWNER SECURITY LOCKS -->
+        <div id="userModalTab-permissions" class="hidden space-y-5">
+          
+          <!-- Standard Admin Controls (Apply Immediately) -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-mono-tech uppercase text-[11px] text-cyan-400">
+                Standard Account &amp; Feature Permissions (Admin Editable)
+              </h4>
+              <span class="text-[10px] font-mono-tech text-gray-400">Changes apply immediately</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="hardware-well p-3.5 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-white">Membership Plan Tier</div>
+                  <div class="text-[11px] text-gray-400">Gates pro Studio Hub tools</div>
+                </div>
+                <select id="permTierSelect" class="hardware-well px-2.5 py-1.5 font-mono-tech text-xs text-emerald-400 font-bold">
+                  <option value="paid">Paid Pro Tier</option>
+                  <option value="free">Free Tier</option>
+                </select>
+              </div>
+
+              <label class="hardware-well p-3.5 flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="font-bold text-white">Batch Automation &amp; Naming</div>
+                  <div class="text-[11px] text-gray-400">Token naming &amp; cleanup macros</div>
+                </div>
+                <input id="permAutomationCheck" type="checkbox" class="w-4 h-4 accent-cyan-400" />
+              </label>
+
+              <label class="hardware-well p-3.5 flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="font-bold text-white">Custom UI Palette Studio</div>
+                  <div class="text-[11px] text-gray-400">Create &amp; save custom skins</div>
+                </div>
+                <input id="permPalettesCheck" type="checkbox" class="w-4 h-4 accent-cyan-400" />
+              </label>
+
+              <label class="hardware-well p-3.5 flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="font-bold text-white">Device Rig Auto-Tuning</div>
+                  <div class="text-[11px] text-gray-400">DAW &amp; DJ hardware presets</div>
+                </div>
+                <input id="permRigCheck" type="checkbox" class="w-4 h-4 accent-cyan-400" />
+              </label>
+            </div>
+          </div>
+
+          <!-- High-Security Locked Permissions (Requires Master Owner Sign-Off) -->
+          <div class="space-y-3 pt-4 border-t border-[#181824]">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-lock text-amber-400"></i>
+                <h4 class="font-mono-tech uppercase text-[11px] text-amber-400">
+                  Master Owner Security-Locked Permissions
+                </h4>
+              </div>
+              <span class="font-mono-tech text-[10px] text-amber-400/90">
+                Admins must request approval from Master Owner
+              </span>
+            </div>
+
+            <div id="lockedPermissionsContainer" class="space-y-2.5"></div>
+          </div>
+
+          <div id="permStatusToast" class="text-xs font-mono-tech text-emerald-400"></div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       ADMIN MODAL B: MASTER OWNER APPROVAL QUEUE
+       ========================================================================== -->
+  <div id="masterApprovalModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden border border-amber-400/40">
+      <div class="px-5 py-4 border-b border-[#181824] flex items-center justify-between bg-[#040406]">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-shield-halved text-amber-400"></i>
+          <div>
+            <h3 class="text-sm font-bold text-white">Master Owner Security Approval Queue</h3>
+            <p class="text-[11px] text-gray-400">Review high-privilege permission requests submitted by platform admins.</p>
+          </div>
+        </div>
+        <button id="closeMasterApprovalModalBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto flex-1 space-y-3 text-xs">
+        <div id="masterOwnerNoticeBanner" class="hardware-well p-3 border-l-2 border-l-amber-400 text-[11px] text-gray-300"></div>
+        <div id="approvalQueueList" class="space-y-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       ADMIN MODAL C: DEVICE RIG PRESET CONFIGURATION MANAGER
+       ========================================================================== -->
+  <div id="adminDeviceManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[#262638]">
+      <div class="px-5 py-4 border-b border-[#181824] flex items-center justify-between bg-[#040406]">
+        <div>
+          <h3 class="text-sm font-bold text-white">Admin Device &amp; DAW Preset Registry Manager</h3>
+          <p class="text-[11px] text-gray-400">Add, edit, or remove equipment configurations shown in the user Studio Hub dropdown.</p>
+        </div>
+        <button id="closeDeviceManagerBtn" type="button" class="hardware-well w-8 h-8 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto flex-1 space-y-5 text-xs">
+        <!-- Add / Edit Device Form -->
+        <form id="adminDeviceForm" class="hardware-well p-4 space-y-3">
+          <div class="font-mono-tech uppercase text-[10px] text-cyan-400" id="deviceFormHeading">Add or Update Device Preset</div>
+          <input id="devFormId" type="hidden" value="" />
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <input id="devFormName" type="text" required placeholder="Device/DAW Name (e.g. Serato DJ Pro)" class="hardware-well px-3 py-2 text-xs" />
+            <select id="devFormCategory" class="hardware-well px-3 py-2 text-xs">
+              <option value="DJ Equipment & Software">DJ Equipment &amp; Software</option>
+              <option value="DAWs & Production">DAWs &amp; Production</option>
+              <option value="Mastering & Hi-Fi">Mastering &amp; Hi-Fi</option>
+            </select>
+            <select id="devFormFormat" class="hardware-well px-3 py-2 text-xs font-mono-tech">
+              <option value="mp3">.MP3</option>
+              <option value="wav">.WAV</option>
+              <option value="aiff">.AIFF</option>
+              <option value="flac">.FLAC</option>
+              <option value="m4a">.M4A</option>
+              <option value="ogg">.OGG</option>
+              <option value="opus">.OPUS</option>
+            </select>
+            <select id="devFormBitrate" class="hardware-well px-3 py-2 text-xs font-mono-tech">
+              <option value="320">320 kbps CBR</option>
+              <option value="256">256 kbps CBR</option>
+              <option value="192">192 kbps CBR</option>
+              <option value="128">128 kbps CBR</option>
+            </select>
+            <select id="devFormBitDepth" class="hardware-well px-3 py-2 text-xs font-mono-tech">
+              <option value="16">16-Bit PCM</option>
+              <option value="24" selected>24-Bit Studio</option>
+              <option value="32">32-Bit Float</option>
+            </select>
+            <select id="devFormSampleRate" class="hardware-well px-3 py-2 text-xs font-mono-tech">
+              <option value="44100">44.1 kHz</option>
+              <option value="48000" selected>48.0 kHz</option>
+              <option value="96000">96.0 kHz</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <input id="devFormDesc" type="text" required placeholder="Optimal spec summary (e.g. 24-Bit/48kHz AIFF • Full CDJ Artwork & ID3v2.3)" class="hardware-well flex-1 px-3 py-2 text-xs" />
+            <button type="submit" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">Save Device</button>
+          </div>
+        </form>
+
+        <!-- Existing Devices Table -->
+        <div class="space-y-2">
+          <div class="font-mono-tech uppercase text-[10px] text-gray-400">Configured Studio Hub Dropdown Presets</div>
+          <div id="adminDeviceListContainer" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       USER MODAL 1: ACCOUNT LOGIN / SIGN UP (NO DUMMY EMAIL AUTO-FILL)
        ========================================================================== -->
   <div id="accountModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
@@ -432,36 +792,43 @@
 
       <div id="loggedOutPanel" class="p-5 space-y-4 text-xs">
         <p class="text-[var(--text-secondary)] leading-relaxed">
-          Create a free account or sign in to unlock <strong>Custom UI Palettes</strong>, <strong>Hardware Rig Optimization</strong>, <strong>Batch Automation</strong>, and your <strong>Cloud Crate Library</strong>.
+          Sign in to unlock <strong>Studio Hub</strong> (Device Rig Dropdown, Batch Automation, Custom UI Palettes &amp; Cloud Crate). Guest conversions are not tracked.
         </p>
 
-        <button id="googleLoginBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-100 transition">
-          <i class="fa-brands fa-google text-rose-500"></i>
-          <span>Continue with Google</span>
-        </button>
-
-        <div class="relative flex py-1 items-center">
-          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
-          <span class="flex-shrink mx-3 text-[10px] font-mono-tech uppercase text-[var(--text-muted)]">Or Email</span>
-          <div class="flex-grow border-t border-[var(--border-hairline)]"></div>
-        </div>
-
         <form id="emailLoginForm" class="space-y-2.5">
-          <input id="loginNameInput" type="text" required placeholder="DJ / Producer Name (e.g. DJ Uno)" class="hardware-well w-full px-3 py-2 text-xs" />
-          <input id="loginEmailInput" type="email" required placeholder="Email Address" class="hardware-well w-full px-3 py-2 text-xs" />
-          <input id="loginPasswordInput" type="password" required placeholder="Password" class="hardware-well w-full px-3 py-2 text-xs" />
-          <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-            Sign In &amp; Unlock Studio Hub
-          </button>
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Name</label>
+            <input id="loginNameInput" type="text" required placeholder="Enter your name or alias" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
+            <input id="loginEmailInput" type="email" required placeholder="you@domain.com" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Password</label>
+            <input id="loginPasswordInput" type="password" required placeholder="••••••••" class="hardware-well w-full px-3 py-2 text-xs" />
+          </div>
+          <div class="pt-1 flex flex-col gap-2">
+            <button type="submit" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
+              Sign In / Create Account
+            </button>
+            <button id="googleLoginBtn" type="button" class="w-full py-2.5 px-4 rounded-lg bg-white text-black font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-100 transition">
+              <i class="fa-brands fa-google text-rose-500"></i>
+              <span>Sign In with Google Account</span>
+            </button>
+          </div>
+          <p id="loginFormError" class="text-[11px] font-mono-tech text-rose-400 hidden"></p>
         </form>
       </div>
 
       <div id="loggedInPanel" class="hidden p-5 space-y-4 text-xs">
         <div class="hardware-well p-3.5 flex items-center justify-between">
           <div>
-            <div id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></div>
-            <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)]"></div>
-            <div class="text-[10px] font-mono-tech text-emerald-400 mt-1">● Pro Studio Hub Unlocked</div>
+            <div class="flex items-center gap-2">
+              <span id="accountModalName" class="font-bold text-sm text-[var(--text-primary)]"></span>
+              <span id="accountModalTierPill" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAID PRO</span>
+            </div>
+            <div id="accountModalEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5"></div>
           </div>
           <button id="logoutBtn" type="button" class="hardware-well px-3 py-1.5 font-mono-tech text-rose-400">
             Sign Out
@@ -469,28 +836,28 @@
         </div>
 
         <button id="goToStudioHubFromAccountBtn" type="button" class="btn-convert-primary w-full py-2.5 rounded-lg font-mono-tech text-xs uppercase">
-          Open Studio Hub (Themes, Rig &amp; Automation)
+          Open Studio Hub
         </button>
       </div>
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 2: CONSOLIDATED STUDIO HUB (ONLY ACCESSIBLE TO SIGNED-IN USERS)
+       USER MODAL 2: STUDIO HUB (CLEAN DEVICE DROPDOWN, AUTOMATION, PALETTES)
        ========================================================================== -->
   <div id="studioHubModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="studio-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
+    <div class="studio-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-[var(--border-highlight)]">
       
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" data-hub-tab="themes" class="hub-tab-btn tab-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
-            <i class="fa-solid fa-palette mr-1"></i>UI &amp; Palettes
-          </button>
-          <button type="button" data-hub-tab="rig" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+          <button type="button" data-hub-tab="rig" class="hub-tab-btn tab-pill active px-3 py-1.5 text-xs font-mono-tech font-bold">
             <i class="fa-solid fa-headphones-simple mr-1"></i>Device Rig
           </button>
           <button type="button" data-hub-tab="automation" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
-            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Batch Automation
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Automation
+          </button>
+          <button type="button" data-hub-tab="themes" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
+            <i class="fa-solid fa-palette mr-1"></i>UI Palettes
           </button>
           <button type="button" data-hub-tab="crate" class="hub-tab-btn tab-pill px-3 py-1.5 text-xs font-mono-tech font-bold">
             <i class="fa-solid fa-layer-group mr-1"></i>My Crate (<span id="hubCrateCount">0</span>)
@@ -503,20 +870,85 @@
 
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-5">
 
-        <!-- TAB 1: UI SKINS & CUSTOM PALETTE CREATOR -->
-        <div id="hubTab-themes" class="hub-tab-pane space-y-5">
+        <!-- Permission Disabled Notice (Shown if Admin disabled a specific feature for this user) -->
+        <div id="hubPermissionNotice" class="hidden hardware-well p-4 border-l-2 border-l-rose-400 text-rose-300 font-mono-tech text-xs"></div>
+
+        <!-- TAB 1: STREAMLINED DEVICE RIG DROPDOWN -->
+        <div id="hubTab-rig" class="hub-tab-pane space-y-4">
+          <div class="space-y-1.5">
+            <label for="studioHubDeviceDropdown" class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">
+              Select Target DAW, DJ Controller, or Software Platform
+            </label>
+            <p class="text-[var(--text-secondary)] text-[11px]">
+              Choosing a platform automatically configures the optimal container format, bit depth, sample rate, and ID3/RIFF tagging standard.
+            </p>
+          </div>
+
+          <select id="studioHubDeviceDropdown" class="hardware-well w-full px-3.5 py-3 text-xs font-bold text-[var(--text-primary)] cursor-pointer"></select>
+
+          <!-- Selected Device Telemetry Card -->
+          <div id="selectedDeviceSummaryCard" class="hardware-well p-4 space-y-2 border-l-2 border-l-[var(--accent-primary)]">
+            <div class="flex items-center justify-between">
+              <span id="devSummaryName" class="font-bold text-sm text-[var(--text-primary)]">Standard Studio (Manual Control)</span>
+              <span id="devSummaryBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-panel)] text-[var(--accent-primary)] border border-[var(--border-hairline)]">MANUAL</span>
+            </div>
+            <p id="devSummaryDesc" class="text-[11px] text-[var(--text-secondary)]"></p>
+          </div>
+        </div>
+
+        <!-- TAB 2: BATCH AUTOMATION & NAMING -->
+        <div id="hubTab-automation" class="hub-tab-pane hidden space-y-4">
+          <div class="space-y-2">
+            <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
+            <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well w-full px-3 py-2 font-mono-tech text-xs" />
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" data-token="[Track#]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Track#]</button>
+              <button type="button" data-token="[Artist]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Artist]</button>
+              <button type="button" data-token="[Title]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Title]</button>
+              <button type="button" data-token="[BPM]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[BPM]</button>
+              <button type="button" data-token="[Key]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Key]</button>
+              <button type="button" data-token="[Device]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Device]</button>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Quick Batch Cleanup</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" data-cleanup="strip-underscores" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Strip Underscores</button>
+              <button type="button" data-cleanup="title-case" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Title Case Info</button>
+              <button type="button" data-cleanup="strip-junk" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Remove (Official/HD)</button>
+              <button type="button" data-cleanup="auto-number" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Number Tracks 01..N</button>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Stamp Global Tags Across Queue</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input id="batchArtistInput" type="text" placeholder="Artist" class="hardware-well px-2.5 py-2 text-xs" />
+              <input id="batchAlbumInput" type="text" placeholder="Album" class="hardware-well px-2.5 py-2 text-xs" />
+              <input id="batchBpmInput" type="text" placeholder="BPM" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
+              <input id="batchKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
+            </div>
+            <button id="applyBatchStampBtn" type="button" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">
+              Stamp Tags Across All Loaded Files
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 3: UI SKINS & CUSTOM PALETTE CREATOR -->
+        <div id="hubTab-themes" class="hub-tab-pane hidden space-y-5">
           <div class="space-y-2">
             <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Built-In Studio Skins</label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <button type="button" data-builtin-skin="obsidian" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+              <button type="button" data-builtin-skin="obsidian" class="hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
                 <div class="font-bold text-[var(--text-primary)]">Obsidian OLED</div>
                 <div class="text-[10px] text-[var(--text-secondary)]">Pitch-black &amp; Neon Cyan</div>
               </button>
-              <button type="button" data-builtin-skin="winamp" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+              <button type="button" data-builtin-skin="winamp" class="hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
                 <div class="font-bold text-[#00ff41]">Winamp Brushed Metal</div>
                 <div class="text-[10px] text-[var(--text-secondary)]">Charcoal &amp; Retro LED Green</div>
               </button>
-              <button type="button" data-builtin-skin="slate" class="builtin-skin-btn hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
+              <button type="button" data-builtin-skin="slate" class="hardware-well p-3 text-left hover:border-[var(--accent-primary)]">
                 <div class="font-bold text-[#38bdf8]">Studio Slate Rack</div>
                 <div class="text-[10px] text-[var(--text-secondary)]">Dark Console &amp; Sky Blue</div>
               </button>
@@ -563,7 +995,7 @@
             <div class="flex gap-2">
               <input id="customPaletteNameInput" type="text" placeholder="Palette Name (e.g. Crimson Booth, Cyberpunk Gold)" class="hardware-well flex-1 px-3 py-2 text-xs" />
               <button id="saveCustomPaletteBtn" type="button" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">
-                Save Custom Palette
+                Save Palette
               </button>
             </div>
 
@@ -571,58 +1003,11 @@
           </div>
         </div>
 
-        <!-- TAB 2: HARDWARE & SOFTWARE DEVICE RIG -->
-        <div id="hubTab-rig" class="hub-tab-pane hidden space-y-3">
-          <p class="text-[var(--text-secondary)]">
-            Select your active hardware or software target. VNTEX will automatically tune conversion bitrates, sample rates, and tag headers for your gear.
-          </p>
-          <div id="deviceRigGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
-        </div>
-
-        <!-- TAB 3: BATCH AUTOMATION & NAMING -->
-        <div id="hubTab-automation" class="hub-tab-pane hidden space-y-4">
-          <div class="space-y-2">
-            <label class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Export Filename Pattern</label>
-            <input id="filenameTemplateInput" type="text" value="[Artist] - [Title]" class="hardware-well w-full px-3 py-2 font-mono-tech text-xs" />
-            <div class="flex flex-wrap gap-1.5">
-              <button type="button" data-token="[Track#]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Track#]</button>
-              <button type="button" data-token="[Artist]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Artist]</button>
-              <button type="button" data-token="[Title]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Title]</button>
-              <button type="button" data-token="[BPM]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[BPM]</button>
-              <button type="button" data-token="[Key]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Key]</button>
-              <button type="button" data-token="[Device]" class="token-chip hardware-well px-2 py-1 font-mono-tech text-[10px]">[Device]</button>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
-            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Quick Batch Cleanup</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button type="button" data-cleanup="strip-underscores" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Strip Underscores</button>
-              <button type="button" data-cleanup="title-case" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Title Case Info</button>
-              <button type="button" data-cleanup="strip-junk" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Remove (Official/HD)</button>
-              <button type="button" data-cleanup="auto-number" class="cleanup-btn hardware-well p-2 font-semibold hover:border-[var(--accent-primary)]">Number Tracks 01..N</button>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
-            <label class="block font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">Stamp Global Tags Across Queue</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <input id="batchArtistInput" type="text" placeholder="Artist" class="hardware-well px-2.5 py-2 text-xs" />
-              <input id="batchAlbumInput" type="text" placeholder="Album" class="hardware-well px-2.5 py-2 text-xs" />
-              <input id="batchBpmInput" type="text" placeholder="BPM" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
-              <input id="batchKeyInput" type="text" placeholder="Key (8A)" class="hardware-well px-2.5 py-2 text-xs font-mono-tech" />
-            </div>
-            <button id="applyBatchStampBtn" type="button" class="btn-convert-primary px-4 py-2 rounded font-mono-tech text-xs">
-              Stamp Tags Across All Loaded Files
-            </button>
-          </div>
-        </div>
-
         <!-- TAB 4: CLOUD CRATE & DOWNLOAD HISTORY -->
         <div id="hubTab-crate" class="hub-tab-pane hidden space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-[var(--text-secondary)]">Tracks converted in multiple formats are linked under a single master record.</span>
-            <button id="clearCrateHistoryBtn" type="button" class="hardware-well px-2.5 py-1 text-[11px] font-mono-tech text-rose-400">Clear History</button>
+            <span class="text-[var(--text-secondary)]">Your authenticated conversion history and linked multi-format variants.</span>
+            <button id="clearCrateHistoryBtn" type="button" class="hardware-well px-2.5 py-1 text-[11px] font-mono-tech text-rose-400">Clear Crate</button>
           </div>
           <div id="crateMastersList" class="space-y-2.5"></div>
         </div>
@@ -632,7 +1017,7 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 3: PER-TRACK TAG EDITOR
+       USER MODAL 3: PER-TRACK TAG EDITOR
        ========================================================================== -->
   <div id="tagEditorModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="studio-panel w-full max-w-md overflow-hidden border border-[var(--border-highlight)]">
@@ -670,33 +1055,43 @@
 
   <script>
     /**************************************************************************
-     * 1. SHARED STORAGE & STATE
+     * 1. STORAGE KEYS & DEFAULT DAW / DJ DEVICE PRESETS
      **************************************************************************/
     const STORAGE_KEYS = {
-      USER: 'vntex_auth_user_v3',
-      USERS_REGISTRY: 'vntex_users_registry_v3',
-      LIBRARY: 'vntex_cloud_library_v3',
-      HISTORY: 'vntex_download_history_v3',
-      ACTIVE_DEVICE: 'vntex_active_device_v3',
-      CUSTOM_PALETTES: 'vntex_custom_palettes_v3',
-      ACTIVE_PALETTE: 'vntex_active_palette_v3'
+      USER: 'vntex_auth_user_v4',
+      USERS_REGISTRY: 'vntex_users_registry_v4',
+      LIBRARY: 'vntex_cloud_library_v4',
+      HISTORY: 'vntex_download_history_v4',
+      DEVICE_PRESETS: 'vntex_device_presets_v4',
+      ACTIVE_DEVICE: 'vntex_active_device_v4',
+      CUSTOM_PALETTES: 'vntex_custom_palettes_v4',
+      ACTIVE_PALETTE: 'vntex_active_palette_v4',
+      APPROVAL_QUEUE: 'vntex_master_approvals_v4'
     };
+
+    const DEFAULT_DEVICE_PROFILES = [
+      { id: 'none', name: 'Standard Studio (Manual Control)', category: 'Default', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: 'Manual control over container format, bitrate, and sample rate.' },
+      // DJ Equipment & Software
+      { id: 'cdj-3000', name: 'Pioneer CDJ-3000 / NXS2 Club Rig', category: 'DJ Equipment & Software', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Uncompressed AIFF • Full CDJ Screen Artwork & ID3v2.3 Tags' },
+      { id: 'ddj-grv6', name: 'Pioneer DDJ-GRV6 Controller', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Strict ID3v2.3 + Groove Circuit Stems Ready' },
+      { id: 'ddj-flx4', name: 'Pioneer DDJ-FLX4 Controller', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Rekordbox & Serato Hardware Locked' },
+      { id: 'rekordbox', name: 'Pioneer Rekordbox DJ Crate', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Camelot Key (TKEY) & TBPM Priority Framing' },
+      { id: 'serato-dj', name: 'Serato DJ Pro', category: 'DJ Equipment & Software', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320kbps CBR MP3 • 44.1kHz • Baseline JPEG Cover Art + Crate Metadata' },
+      { id: 'traktor-pro', name: 'Native Instruments Traktor Pro 4', category: 'DJ Equipment & Software', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Lossless FLAC • Native Vorbis Comment Key & BPM Tags' },
+      // DAWs & Production
+      { id: 'logic-pro-x', name: 'Apple Logic Pro X', category: 'DAWs & Production', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Apple AIFF Master • Native macOS Finder Cover Art' },
+      { id: 'fl-studio', name: 'FL Studio 2024 / DAW Stem', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, desc: '32-Bit IEEE Float WAV • 48kHz • Zero Headroom Clipping for Mixer Stems' },
+      { id: 'ableton-live', name: 'Ableton Live 12 Suite', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Uncompressed PCM WAV • Warp Engine & Simpler Ready' },
+      { id: 'pro-tools', name: 'Avid Pro Tools Studio', category: 'DAWs & Production', format: 'wav', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit / 48kHz Broadcast Wave (RIFF/BWF) • Session Interleaved Stereo' },
+      // Mastering & Hi-Fi
+      { id: 'yamaha-hs', name: 'Yamaha HS Studio Reference Hi-Fi', category: 'Mastering & Hi-Fi', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, desc: '24-Bit / 96kHz Archival Lossless FLAC • Bit-Perfect Reference Audio' }
+    ];
 
     const BUILTIN_PALETTES = {
       obsidian: { name: 'Obsidian OLED', void: '#030305', panel: '#08080c', accent1: '#00f2fe', accent2: '#4facfe' },
       winamp:   { name: 'Winamp Metal',  void: '#121316', panel: '#22252c', accent1: '#00ff41', accent2: '#ffb000' },
       slate:    { name: 'Studio Slate',  void: '#0b0e14', panel: '#131822', accent1: '#38bdf8', accent2: '#818cf8' }
     };
-
-    const DEVICE_PROFILES = [
-      { id: 'none', name: 'Standard Studio (No Lock)', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: 'Manual preset & format control' },
-      { id: 'ddj-grv6', name: 'Pioneer DDJ-GRV6', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320k CBR MP3 • 44.1kHz • ID3v2.3 Locked' },
-      { id: 'ddj-flx4', name: 'Pioneer DDJ-FLX4', format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2, desc: '320k CBR MP3 • Rekordbox Safe Tags' },
-      { id: 'cdj-3000', name: 'Pioneer CDJ-3000 Club', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit/48kHz AIFF • Full Screen Artwork' },
-      { id: 'logic-pro-x', name: 'Apple Logic Pro X', format: 'aiff', bitrate: 320, bitDepth: 24, sampleRate: 48000, channels: 2, desc: '24-Bit/48kHz Apple AIFF Master' },
-      { id: 'fl-studio', name: 'FL Studio / DAW Stem', format: 'wav', bitrate: 320, bitDepth: 32, sampleRate: 48000, channels: 2, desc: '32-Bit Float WAV • Zero Clipping' },
-      { id: 'yamaha-hs', name: 'Yamaha HS Reference Hi-Fi', format: 'flac', bitrate: 320, bitDepth: 24, sampleRate: 96000, channels: 2, desc: '24-Bit/96kHz Lossless FLAC' }
-    ];
 
     const PRESET_DEFINITIONS = {
       'cdj-rekordbox': { format: 'mp3', bitrate: 320, bitDepth: 16, sampleRate: 44100, channels: 2 },
@@ -705,13 +1100,21 @@
       'fast-web':      { format: 'mp3', bitrate: 128, bitDepth: 16, sampleRate: 44100, channels: 2 }
     };
 
+    const LOCKED_PERMISSION_DEFS = [
+      { key: 'isAdmin', label: 'Promote to Platform Admin', desc: 'Grants access to #admin console, user list, and preset configuration.' },
+      { key: 'unlimitedApiOverride', label: 'Unlimited Cloud & API Override', desc: 'Unlocks unrestricted batch size and API telemetry priority.' },
+      { key: 'bypassStorageQuotas', label: 'Bypass Cloud Storage Quotas', desc: 'Removes master track variant limits in Cloud Crate.' }
+    ];
+
     const state = {
       user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null'),
       usersRegistry: JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]'),
       cloudLibrary: JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}'),
       downloadHistory: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]'),
+      deviceProfiles: JSON.parse(localStorage.getItem(STORAGE_KEYS.DEVICE_PRESETS) || 'null') || DEFAULT_DEVICE_PROFILES,
       customPalettes: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PALETTES) || '[]'),
       activePalette: JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVE_PALETTE) || 'null'),
+      approvalRequests: JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVAL_QUEUE) || '[]'),
       activeDeviceId: localStorage.getItem(STORAGE_KEYS.ACTIVE_DEVICE) || 'none',
       activePreset: 'cdj-rekordbox',
       outputFormat: 'mp3',
@@ -728,7 +1131,12 @@
       activeSourceNode: null,
       playbackStartTime: 0,
       playbackOffset: 0,
-      playbackRaf: null
+      playbackRaf: null,
+      // Admin Console State
+      adminUnlocked: false,
+      adminActingRole: 'admin', // 'admin' or 'owner'
+      adminUsersViewMode: 'list', // 'list' or 'grid'
+      inspectingUserEmail: null
     };
 
     function saveState() {
@@ -736,82 +1144,669 @@
       localStorage.setItem(STORAGE_KEYS.USERS_REGISTRY, JSON.stringify(state.usersRegistry));
       localStorage.setItem(STORAGE_KEYS.LIBRARY, JSON.stringify(state.cloudLibrary));
       localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.downloadHistory));
+      localStorage.setItem(STORAGE_KEYS.DEVICE_PRESETS, JSON.stringify(state.deviceProfiles));
       localStorage.setItem(STORAGE_KEYS.CUSTOM_PALETTES, JSON.stringify(state.customPalettes));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_PALETTE, JSON.stringify(state.activePalette));
+      localStorage.setItem(STORAGE_KEYS.APPROVAL_QUEUE, JSON.stringify(state.approvalRequests));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_DEVICE, state.activeDeviceId);
     }
 
+    function ensureUserPermissionsStruct(u) {
+      if (!u.permissions) {
+        u.permissions = {
+          tier: 'paid', // 'paid' or 'free'
+          automation: true,
+          palettes: true,
+          rig: true,
+          isAdmin: false,
+          unlimitedApiOverride: false,
+          bypassStorageQuotas: false
+        };
+      }
+      return u;
+    }
+
     /**************************************************************************
-     * 2. PRIVATE #admin ROUTER & TELEMETRY RENDERER
+     * 2. ROUTE HANDLER (#admin VS USER APP) & BLANK PASSWORD GATE
      **************************************************************************/
     function checkRouteMode() {
-      const isAdminRoute = window.location.hash.toLowerCase() === '#admin' ||
-                           window.location.search.toLowerCase().includes('admin');
+      const isAdminRoute = window.location.hash.toLowerCase() === '#admin';
       const userApp = document.getElementById('userAppWrapper');
       const adminPortal = document.getElementById('adminPortalWrapper');
+
       if (isAdminRoute) {
         userApp.classList.add('hidden');
         adminPortal.classList.remove('hidden');
-        renderAdminConsole();
+        if (!state.adminUnlocked) {
+          // Ensure password input is always completely blank when locked
+          const pinInput = document.getElementById('adminPinInput');
+          if (pinInput) pinInput.value = '';
+          document.getElementById('adminPinGate').classList.remove('hidden');
+          document.getElementById('adminDashboardContent').classList.add('hidden');
+          document.getElementById('adminHeaderToolbar').classList.add('hidden');
+        } else {
+          renderAdminDashboard();
+        }
       } else {
         adminPortal.classList.add('hidden');
         userApp.classList.remove('hidden');
       }
     }
 
-    function formatBytes(b) {
-      if (!b) return '0 KB';
-      return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+    /**************************************************************************
+     * 3. REDESIGNED ADMIN CONSOLE (USERS MONITOR, ACTIVITY & OWNER LOCKS)
+     **************************************************************************/
+    function renderAdminDashboard() {
+      if (!state.adminUnlocked) return;
+      document.getElementById('adminPinGate').classList.add('hidden');
+      document.getElementById('adminDashboardContent').classList.remove('hidden');
+      document.getElementById('adminHeaderToolbar').classList.remove('hidden');
+
+      const roleBadge = document.getElementById('adminRoleHeaderBadge');
+      if (state.adminActingRole === 'owner') {
+        roleBadge.textContent = 'MASTER OWNER';
+        roleBadge.className = 'font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/15 text-amber-400 border border-amber-400/40';
+      } else {
+        roleBadge.textContent = 'STANDARD ADMIN';
+        roleBadge.className = 'font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/15 text-cyan-400 border border-cyan-400/40';
+      }
+      document.getElementById('adminRoleSelect').value = state.adminActingRole;
+
+      // Filter out any legacy guest entries just in case
+      const authHistory = state.downloadHistory.filter((h) => h.userEmail && h.userEmail !== 'guest@local.studio');
+      const users = state.usersRegistry.map(ensureUserPermissionsStruct);
+      const paidCount = users.filter((u) => u.permissions.tier === 'paid').length;
+      const pendingApprovals = state.approvalRequests.filter((r) => r.status === 'pending');
+
+      document.getElementById('kpiUsers').textContent = String(users.length);
+      document.getElementById('kpiConversions').textContent = String(authHistory.length);
+      document.getElementById('kpiPaidUsers').textContent = String(paidCount);
+      document.getElementById('kpiPendingLocks').textContent = String(pendingApprovals.length);
+      document.getElementById('pendingApprovalsBadge').textContent = String(pendingApprovals.length);
+
+      renderAdminUsersMonitor(users, authHistory);
+      renderAdminActivityMonitor(authHistory);
     }
 
-    function renderAdminConsole() {
-      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS_REGISTRY) || '[]');
-      const library = JSON.parse(localStorage.getItem(STORAGE_KEYS.LIBRARY) || '{}');
-      const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
-      const vol = history.reduce((s, h) => s + (h.fileSize || 0), 0);
+    function renderAdminUsersMonitor(users, authHistory) {
+      const q = (document.getElementById('adminUserSearchInput')?.value || '').toLowerCase().trim();
+      const tierFilter = document.getElementById('adminUserTierFilter')?.value || 'all';
 
-      document.getElementById('kpiUsers').textContent = users.length;
-      document.getElementById('kpiConversions').textContent = history.length;
-      document.getElementById('kpiMasters').textContent = Object.keys(library).length;
-      document.getElementById('kpiVolume').textContent = formatBytes(vol);
+      const filtered = users.filter((u) => {
+        const matchesText = !q ||
+          (u.displayName || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q);
+        const matchesTier =
+          tierFilter === 'all' ||
+          (tierFilter === 'paid' && u.permissions.tier === 'paid') ||
+          (tierFilter === 'free' && u.permissions.tier === 'free') ||
+          (tierFilter === 'admin' && u.permissions.isAdmin);
+        return matchesText && matchesTier;
+      });
 
-      const mode = document.getElementById('endpointSelect').value;
-      const payloads = {
-        overview: { status: 200, usersCount: users.length, conversionsCount: history.length, mastersCount: Object.keys(library).length, totalBytes: vol },
-        users: { status: 200, users },
-        library: { status: 200, library },
-        logs: { status: 200, logs: history }
-      };
-      document.getElementById('jsonDisplay').textContent = JSON.stringify(payloads[mode], null, 2);
+      const listView = document.getElementById('adminUsersListView');
+      const gridView = document.getElementById('adminUsersGridView');
 
-      document.getElementById('usersBody').innerHTML = users.length === 0
-        ? '<tr><td colspan="5" class="py-4 text-center text-gray-500">No users registered yet. Sign in on the main app or click "+ Seed Test Activity".</td></tr>'
-        : users.map((u) => `
-            <tr>
-              <td class="py-2 px-3 text-gray-500">${escapeHtml(u.uid)}</td>
-              <td class="py-2 px-3 font-bold text-white">${escapeHtml(u.displayName)}</td>
-              <td class="py-2 px-3 text-cyan-400">${escapeHtml(u.email)}</td>
-              <td class="py-2 px-3">${escapeHtml(u.provider)}</td>
-              <td class="py-2 px-3 text-gray-400">${new Date(u.lastLogin).toLocaleString()}</td>
-            </tr>
+      if (state.adminUsersViewMode === 'list') {
+        listView.classList.remove('hidden');
+        gridView.classList.add('hidden');
+      } else {
+        listView.classList.add('hidden');
+        gridView.classList.remove('hidden');
+      }
+
+      const listBody = document.getElementById('adminUsersListBody');
+      if (filtered.length === 0) {
+        const emptyHtml = `<tr><td colspan="6" class="py-8 text-center text-gray-500">No registered users match your filter. Click "+ Seed Demo Data" in the top bar to populate sample users.</td></tr>`;
+        listBody.innerHTML = emptyHtml;
+        gridView.innerHTML = `<div class="col-span-3 studio-panel p-8 text-center text-gray-500 font-mono-tech text-xs">No registered users found.</div>`;
+        return;
+      }
+
+      // Render List View Rows
+      listBody.innerHTML = filtered.map((u) => {
+        const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
+        const isPaid = u.permissions.tier === 'paid';
+        const tierBadge = isPaid
+          ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px]">PAID PRO</span>`
+          : `<span class="px-2 py-0.5 rounded bg-gray-500/15 text-gray-400 border border-gray-500/30 text-[10px]">FREE</span>`;
+        const roleBadge = u.permissions.isAdmin
+          ? `<span class="px-2 py-0.5 rounded bg-amber-400/15 text-amber-400 border border-amber-400/30 text-[10px]"><i class="fa-solid fa-shield-halved mr-1"></i>ADMIN</span>`
+          : `<span class="px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-300 text-[10px]">USER</span>`;
+
+        return `
+          <tr class="hover:bg-[#0e0e16] cursor-pointer transition" data-open-user="${escapeHtml(u.email)}">
+            <td class="py-3 px-4">
+              <div class="font-bold text-white">${escapeHtml(u.displayName)}</div>
+              <div class="text-[11px] text-gray-400">${escapeHtml(u.email)}</div>
+            </td>
+            <td class="py-3 px-4">${tierBadge}</td>
+            <td class="py-3 px-4">${roleBadge}</td>
+            <td class="py-3 px-4 text-cyan-400">${escapeHtml(u.activeRigName || 'Standard Studio')}</td>
+            <td class="py-3 px-4 font-bold text-white">${userConvs} file(s)</td>
+            <td class="py-3 px-4 text-right">
+              <button type="button" class="hardware-well px-3 py-1 text-[11px] text-cyan-400 hover:border-cyan-400">
+                Inspect →
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Render Tile Grid Cards
+      gridView.innerHTML = filtered.map((u) => {
+        const userConvs = authHistory.filter((h) => h.userEmail.toLowerCase() === u.email.toLowerCase()).length;
+        const initials = (u.displayName || 'U').slice(0, 2).toUpperCase();
+        const isPaid = u.permissions.tier === 'paid';
+
+        return `
+          <div data-open-user="${escapeHtml(u.email)}" class="studio-panel p-4 hover:border-cyan-400/60 cursor-pointer transition flex flex-col justify-between gap-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl hardware-well flex items-center justify-center font-mono-tech font-extrabold text-sm text-cyan-400 border border-cyan-400/30">
+                  ${escapeHtml(initials)}
+                </div>
+                <div>
+                  <div class="font-bold text-sm text-white">${escapeHtml(u.displayName)}</div>
+                  <div class="font-mono-tech text-[11px] text-gray-400">${escapeHtml(u.email)}</div>
+                </div>
+              </div>
+              <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded ${isPaid ? 'bg-emerald-500/15 text-emerald-400' : 'bg-gray-500/15 text-gray-400'}">
+                ${isPaid ? 'PAID PRO' : 'FREE'}
+              </span>
+            </div>
+
+            <div class="hardware-well p-2.5 grid grid-cols-2 gap-2 font-mono-tech text-[11px]">
+              <div>
+                <div class="text-[9px] uppercase text-gray-500">Conversions</div>
+                <div class="text-white font-bold">${userConvs} Tracks</div>
+              </div>
+              <div>
+                <div class="text-[9px] uppercase text-gray-500">Role</div>
+                <div class="${u.permissions.isAdmin ? 'text-amber-400' : 'text-cyan-400'} font-bold">${u.permissions.isAdmin ? 'ADMIN' : 'USER'}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] font-mono-tech text-gray-400 pt-1 border-t border-[#181824]">
+              <span class="truncate max-w-[170px]"><i class="fa-solid fa-headphones-simple mr-1 text-cyan-400"></i>${escapeHtml(u.activeRigName || 'Standard Studio')}</span>
+              <span class="text-cyan-400 font-bold">Profile →</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('[data-open-user]').forEach((el) => {
+        el.onclick = () => openAdminUserInspector(el.getAttribute('data-open-user'));
+      });
+    }
+
+    function renderAdminActivityMonitor(authHistory) {
+      // Format Bars
+      const fmtCounts = { MP3: 0, WAV: 0, AIFF: 0, FLAC: 0, M4A: 0, OGG: 0, OPUS: 0 };
+      const rigCounts = {};
+      authHistory.forEach((h) => {
+        const f = (h.outputFormat || 'MP3').toUpperCase();
+        if (fmtCounts[f] !== undefined) fmtCounts[f]++;
+        const r = h.targetDevice || 'Standard Studio';
+        rigCounts[r] = (rigCounts[r] || 0) + 1;
+      });
+
+      const maxFmt = Math.max(1, ...Object.values(fmtCounts));
+      document.getElementById('adminFormatBars').innerHTML = Object.entries(fmtCounts).map(([fmt, count]) => `
+        <div class="space-y-1 font-mono-tech text-xs">
+          <div class="flex justify-between">
+            <span class="font-bold text-white">.${fmt}</span>
+            <span class="text-cyan-400">${count} files</span>
+          </div>
+          <div class="w-full h-2 rounded bg-[#040406] overflow-hidden">
+            <div class="h-full bg-cyan-400" style="width:${Math.round((count / maxFmt) * 100)}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+      const rigEntries = Object.entries(rigCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const maxRig = Math.max(1, ...(rigEntries.map((r) => r[1])));
+      document.getElementById('adminRigBars').innerHTML = rigEntries.length === 0
+        ? `<div class="text-xs text-gray-500 font-mono-tech py-4">No device telemetry recorded yet.</div>`
+        : rigEntries.map(([rig, count]) => `
+            <div class="space-y-1 font-mono-tech text-xs">
+              <div class="flex justify-between">
+                <span class="font-bold text-white truncate">${escapeHtml(rig)}</span>
+                <span class="text-amber-400">${count} exports</span>
+              </div>
+              <div class="w-full h-2 rounded bg-[#040406] overflow-hidden">
+                <div class="h-full bg-amber-400" style="width:${Math.round((count / maxRig) * 100)}%"></div>
+              </div>
+            </div>
           `).join('');
 
-      document.getElementById('logsBody').innerHTML = history.length === 0
-        ? '<tr><td colspan="6" class="py-4 text-center text-gray-500">No conversion logs yet. Convert a track or click "+ Seed Test Activity".</td></tr>'
-        : history.map((h) => `
+      // Activity Stream Table
+      const q = (document.getElementById('adminActivitySearchInput')?.value || '').toLowerCase().trim();
+      const filteredLogs = authHistory.filter((h) =>
+        !q ||
+        h.userEmail.toLowerCase().includes(q) ||
+        h.trackTitle.toLowerCase().includes(q) ||
+        h.artist.toLowerCase().includes(q) ||
+        h.outputFormat.toLowerCase().includes(q)
+      );
+
+      const tbody = document.getElementById('adminActivityTableBody');
+      tbody.innerHTML = filteredLogs.length === 0
+        ? `<tr><td colspan="6" class="py-6 text-center text-gray-500">No authenticated conversion activity recorded yet.</td></tr>`
+        : filteredLogs.map((h) => `
+            <tr>
+              <td class="py-2.5 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
+              <td class="py-2.5 px-3 font-bold text-cyan-400">${escapeHtml(h.userEmail)}</td>
+              <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
+              <td class="py-2.5 px-3 text-emerald-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
+              <td class="py-2.5 px-3 text-gray-300">${escapeHtml(h.targetDevice)}</td>
+              <td class="py-2.5 px-3">${formatBytes(h.fileSize)}</td>
+            </tr>
+          `).join('');
+    }
+
+    /**************************************************************************
+     * 4. USER PROFILE INSPECTOR & MASTER OWNER SECURITY LOCK WORKFLOW
+     **************************************************************************/
+    function openAdminUserInspector(email) {
+      const user = state.usersRegistry.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
+      if (!user) return;
+      ensureUserPermissionsStruct(user);
+      state.inspectingUserEmail = user.email;
+
+      document.getElementById('inspectUserAvatar').textContent = (user.displayName || 'U').slice(0, 2).toUpperCase();
+      document.getElementById('inspectUserName').textContent = user.displayName;
+      document.getElementById('inspectUserEmail').textContent = user.email;
+
+      const isPaid = user.permissions.tier === 'paid';
+      const tierEl = document.getElementById('inspectUserTierBadge');
+      tierEl.textContent = isPaid ? 'PAID PRO' : 'FREE TIER';
+      tierEl.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`;
+
+      const roleEl = document.getElementById('inspectUserRoleBadge');
+      roleEl.textContent = user.permissions.isAdmin ? 'ADMIN' : 'USER';
+      roleEl.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${user.permissions.isAdmin ? 'bg-amber-400/20 text-amber-400' : 'bg-cyan-400/20 text-cyan-400'}`;
+
+      // Populate Tab 1: User's Specific Activity
+      const userLogs = state.downloadHistory.filter((h) => h.userEmail.toLowerCase() === user.email.toLowerCase());
+      document.getElementById('inspectUserTotalConv').textContent = `${userLogs.length} Track(s)`;
+      document.getElementById('inspectUserActiveRig').textContent = user.activeRigName || 'Standard Studio';
+      document.getElementById('inspectUserLastLogin').textContent = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Today';
+
+      const actBody = document.getElementById('inspectUserActivityBody');
+      actBody.innerHTML = userLogs.length === 0
+        ? `<tr><td colspan="5" class="py-6 text-center text-gray-500">This user has not converted any files while signed in yet.</td></tr>`
+        : userLogs.map((h) => `
             <tr>
               <td class="py-2 px-3 text-gray-400">${new Date(h.timestamp).toLocaleString()}</td>
-              <td class="py-2 px-3 text-white">${escapeHtml(h.userEmail)}</td>
               <td class="py-2 px-3 font-bold text-white">${escapeHtml(h.artist)} - ${escapeHtml(h.trackTitle)}</td>
               <td class="py-2 px-3 text-cyan-400">.${escapeHtml(h.outputFormat)} (${escapeHtml(h.qualitySpec)})</td>
               <td class="py-2 px-3 text-emerald-400">${escapeHtml(h.targetDevice)}</td>
               <td class="py-2 px-3">${formatBytes(h.fileSize)}</td>
             </tr>
           `).join('');
+
+      // Populate Tab 2: Standard Permissions
+      document.getElementById('permTierSelect').value = user.permissions.tier;
+      document.getElementById('permAutomationCheck').checked = !!user.permissions.automation;
+      document.getElementById('permPalettesCheck').checked = !!user.permissions.palettes;
+      document.getElementById('permRigCheck').checked = !!user.permissions.rig;
+
+      renderLockedPermissionsForUser(user);
+      document.getElementById('adminUserInspectorModal').classList.remove('hidden');
+    }
+
+    function renderLockedPermissionsForUser(user) {
+      const container = document.getElementById('lockedPermissionsContainer');
+      container.innerHTML = LOCKED_PERMISSION_DEFS.map((def) => {
+        const currentVal = !!user.permissions[def.key];
+        const pendingReq = state.approvalRequests.find(
+          (r) => r.targetEmail.toLowerCase() === user.email.toLowerCase() && r.permKey === def.key && r.status === 'pending'
+        );
+
+        let actionHtml = '';
+        if (pendingReq) {
+          actionHtml = `
+            <span class="px-2.5 py-1 rounded bg-amber-400/15 text-amber-400 border border-amber-400/40 font-mono-tech text-[10px]">
+              ⏳ Pending Master Owner Approval
+            </span>
+          `;
+        } else if (state.adminActingRole === 'owner') {
+          actionHtml = `
+            <button type="button" data-owner-toggle-lock="${def.key}" class="px-3 py-1.5 rounded bg-amber-400 text-black font-mono-tech font-bold text-[10px]">
+              ${currentVal ? 'Revoke (Owner Override)' : 'Grant (Owner Override)'}
+            </button>
+          `;
+        } else {
+          actionHtml = `
+            <button type="button" data-request-lock="${def.key}" class="hardware-well px-3 py-1.5 font-mono-tech text-[10px] text-amber-400 border border-amber-400/40 hover:bg-amber-400/10">
+              <i class="fa-solid fa-lock mr-1"></i>Request Owner Approval to ${currentVal ? 'Revoke' : 'Enable'}
+            </button>
+          `;
+        }
+
+        return `
+          <div class="hardware-well p-3.5 flex flex-wrap items-center justify-between gap-3 border-l-2 ${currentVal ? 'border-l-amber-400' : 'border-l-gray-700'}">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white">${escapeHtml(def.label)}</span>
+                <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded ${currentVal ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}">
+                  ${currentVal ? 'ACTIVE' : 'LOCKED'}
+                </span>
+              </div>
+              <div class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(def.desc)}</div>
+            </div>
+            <div>${actionHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Bind Standard Admin Request Lock Buttons
+      container.querySelectorAll('[data-request-lock]').forEach((btn) => {
+        btn.onclick = () => {
+          const permKey = btn.getAttribute('data-request-lock');
+          const def = LOCKED_PERMISSION_DEFS.find((d) => d.key === permKey);
+          const desiredValue = !user.permissions[permKey];
+          state.approvalRequests.unshift({
+            id: 'req_' + Math.random().toString(36).slice(2, 9),
+            timestamp: new Date().toISOString(),
+            targetEmail: user.email,
+            targetName: user.displayName,
+            permKey,
+            permLabel: def ? def.label : permKey,
+            desiredValue,
+            requestedBy: 'Standard Admin',
+            status: 'pending'
+          });
+          saveState();
+          renderLockedPermissionsForUser(user);
+          renderAdminDashboard();
+          showPermToast(`🔒 Sent approval request to Master Owner queue.`);
+        };
+      });
+
+      // Bind Direct Master Owner Override Buttons
+      container.querySelectorAll('[data-owner-toggle-lock]').forEach((btn) => {
+        btn.onclick = () => {
+          const permKey = btn.getAttribute('data-owner-toggle-lock');
+          user.permissions[permKey] = !user.permissions[permKey];
+          syncActiveUserIfMatching(user);
+          saveState();
+          openAdminUserInspector(user.email);
+          renderAdminDashboard();
+          showPermToast(`✓ Master Owner override applied.`);
+        };
+      });
+    }
+
+    function showPermToast(msg) {
+      const el = document.getElementById('permStatusToast');
+      if (!el) return;
+      el.textContent = msg;
+      setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3200);
+    }
+
+    function syncActiveUserIfMatching(updatedUserRecord) {
+      if (state.user && state.user.email.toLowerCase() === updatedUserRecord.email.toLowerCase()) {
+        state.user.permissions = { ...updatedUserRecord.permissions };
+      }
+    }
+
+    function renderMasterApprovalModal() {
+      const banner = document.getElementById('masterOwnerNoticeBanner');
+      const isOwner = state.adminActingRole === 'owner';
+      banner.innerHTML = isOwner
+        ? `<strong class="text-amber-400">Master Owner Mode Active:</strong> You have full authority to Approve or Deny locked permission requests below.`
+        : `<strong class="text-cyan-400">Standard Admin View:</strong> Pending requests are queued below. Switch your Role dropdown in the top header to <strong>"Master Owner (You)"</strong> to approve or deny them.`;
+
+      const listEl = document.getElementById('approvalQueueList');
+      if (state.approvalRequests.length === 0) {
+        listEl.innerHTML = `<div class="hardware-well p-6 text-center text-gray-500 font-mono-tech">No security lock requests in the queue.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = state.approvalRequests.map((req) => {
+        const isPending = req.status === 'pending';
+        const statusPill =
+          req.status === 'approved'
+            ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono-tech text-[10px]">✓ APPROVED</span>`
+            : req.status === 'denied'
+            ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-mono-tech text-[10px]">✕ DENIED</span>`
+            : `<span class="px-2 py-0.5 rounded bg-amber-400/20 text-amber-400 font-mono-tech text-[10px]">⏳ PENDING</span>`;
+
+        const controlsHtml = (isPending && isOwner)
+          ? `
+            <div class="flex items-center gap-2">
+              <button type="button" data-approve-req="${req.id}" class="px-3 py-1 rounded bg-emerald-400 text-black font-mono-tech font-bold text-[10px]">
+                Approve
+              </button>
+              <button type="button" data-deny-req="${req.id}" class="hardware-well px-3 py-1 font-mono-tech text-[10px] text-rose-400">
+                Deny
+              </button>
+            </div>
+          `
+          : statusPill;
+
+        return `
+          <div class="hardware-well p-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="space-y-0.5">
+              <div class="font-bold text-white">
+                ${req.desiredValue ? 'Grant' : 'Revoke'} <span class="text-amber-400">${escapeHtml(req.permLabel)}</span> for <span class="text-cyan-400">${escapeHtml(req.targetName)}</span> (${escapeHtml(req.targetEmail)})
+              </div>
+              <div class="font-mono-tech text-[10px] text-gray-400">
+                Requested by ${escapeHtml(req.requestedBy)} • ${new Date(req.timestamp).toLocaleString()}
+              </div>
+            </div>
+            <div>${controlsHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-approve-req]').forEach((btn) => {
+        btn.onclick = () => {
+          const req = state.approvalRequests.find((r) => r.id === btn.getAttribute('data-approve-req'));
+          if (!req) return;
+          req.status = 'approved';
+          const u = state.usersRegistry.find((x) => x.email.toLowerCase() === req.targetEmail.toLowerCase());
+          if (u) {
+            ensureUserPermissionsStruct(u);
+            u.permissions[req.permKey] = req.desiredValue;
+            syncActiveUserIfMatching(u);
+          }
+          saveState();
+          renderMasterApprovalModal();
+          renderAdminDashboard();
+        };
+      });
+
+      listEl.querySelectorAll('[data-deny-req]').forEach((btn) => {
+        btn.onclick = () => {
+          const req = state.approvalRequests.find((r) => r.id === btn.getAttribute('data-deny-req'));
+          if (!req) return;
+          req.status = 'denied';
+          saveState();
+          renderMasterApprovalModal();
+          renderAdminDashboard();
+        };
+      });
     }
 
     /**************************************************************************
-     * 3. CUSTOM UI PALETTE ENGINE
+     * 5. STUDIO HUB DEVICE DROPDOWN & ADMIN DEVICE PRESET MANAGER
+     **************************************************************************/
+    function renderStudioHubDeviceDropdown() {
+      const sel = document.getElementById('studioHubDeviceDropdown');
+      if (!sel) return;
+
+      const categories = {};
+      state.deviceProfiles.forEach((d) => {
+        const cat = d.category || 'Other';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(d);
+      });
+
+      sel.innerHTML = Object.entries(categories).map(([cat, items]) => `
+        <optgroup label="${escapeHtml(cat)}" class="bg-[#08080c] text-cyan-400 font-mono-tech">
+          ${items.map((d) => `
+            <option value="${escapeHtml(d.id)}" class="bg-[#08080c] text-white" ${d.id === state.activeDeviceId ? 'selected' : ''}>
+              ${escapeHtml(d.name)} (.${d.format.toUpperCase()})
+            </option>
+          `).join('')}
+        </optgroup>
+      `).join('');
+
+      updateSelectedDeviceSummaryCard();
+    }
+
+    function updateSelectedDeviceSummaryCard() {
+      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId) || state.deviceProfiles[0];
+      if (!dev) return;
+      document.getElementById('devSummaryName').textContent = dev.name;
+      const isLossless = ['flac', 'wav', 'aiff'].includes(dev.format);
+      const specText = dev.id === 'none'
+        ? 'MANUAL'
+        : `.${dev.format.toUpperCase()} • ${isLossless ? dev.bitDepth + '-Bit' : dev.bitrate + 'k'} • ${(dev.sampleRate / 1000).toFixed(1)}kHz`;
+      document.getElementById('devSummaryBadge').textContent = specText;
+      document.getElementById('devSummaryDesc').textContent = dev.desc || '';
+    }
+
+    function renderAdminDeviceManagerList() {
+      const container = document.getElementById('adminDeviceListContainer');
+      if (!container) return;
+      container.innerHTML = state.deviceProfiles.filter((d) => d.id !== 'none').map((d) => `
+        <div class="hardware-well p-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white">${escapeHtml(d.name)}</span>
+              <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400">.${d.format.toUpperCase()}</span>
+              <span class="font-mono-tech text-[10px] text-gray-400">${escapeHtml(d.category)}</span>
+            </div>
+            <div class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(d.desc)}</div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" data-edit-dev="${escapeHtml(d.id)}" class="hardware-well px-2.5 py-1 font-mono-tech text-[10px] text-cyan-400">Edit</button>
+            <button type="button" data-delete-dev="${escapeHtml(d.id)}" class="hardware-well px-2.5 py-1 font-mono-tech text-[10px] text-rose-400">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('[data-edit-dev]').forEach((btn) => {
+        btn.onclick = () => {
+          const dev = state.deviceProfiles.find((x) => x.id === btn.getAttribute('data-edit-dev'));
+          if (!dev) return;
+          document.getElementById('devFormId').value = dev.id;
+          document.getElementById('devFormName').value = dev.name;
+          document.getElementById('devFormCategory').value = dev.category;
+          document.getElementById('devFormFormat').value = dev.format;
+          document.getElementById('devFormBitrate').value = String(dev.bitrate);
+          document.getElementById('devFormBitDepth').value = String(dev.bitDepth);
+          document.getElementById('devFormSampleRate').value = String(dev.sampleRate);
+          document.getElementById('devFormDesc').value = dev.desc;
+        };
+      });
+
+      container.querySelectorAll('[data-delete-dev]').forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-delete-dev');
+          state.deviceProfiles = state.deviceProfiles.filter((x) => x.id !== id);
+          if (state.activeDeviceId === id) state.activeDeviceId = 'none';
+          saveState();
+          renderAdminDeviceManagerList();
+          renderStudioHubDeviceDropdown();
+        };
+      });
+    }
+
+    /**************************************************************************
+     * 6. AUTHENTICATED-ONLY TELEMETRY & USER GATING
+     **************************************************************************/
+    function recordConversionTelemetry(track, blobSize, ext) {
+      // STRICT RULE: Do not track or log conversions when user is not signed in
+      if (!state.user || !state.user.email) {
+        return;
+      }
+
+      const nowIso = new Date().toISOString();
+      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+      const targetDevice = dev && dev.id !== 'none' ? dev.name : 'Standard Studio';
+      const isLossless = ['flac', 'wav', 'aiff'].includes(ext);
+      const qualitySpec = isLossless ? `${state.bitDepth}-Bit` : `${state.bitrate}kbps`;
+
+      const logEntry = {
+        id: 'log_' + Math.random().toString(36).slice(2, 10),
+        timestamp: nowIso,
+        userEmail: state.user.email,
+        trackTitle: track.tags.title,
+        artist: track.tags.artist,
+        bpm: track.tags.bpm,
+        key: track.tags.key,
+        outputFormat: ext.toUpperCase(),
+        qualitySpec,
+        targetDevice,
+        fileSize: blobSize || 0
+      };
+      state.downloadHistory.unshift(logEntry);
+
+      const masterKey = `${ state.user.email }__${track.tags.artist}__${track.tags.title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!state.cloudLibrary[masterKey]) {
+        state.cloudLibrary[masterKey] = {
+          masterKey,
+          ownerEmail: state.user.email,
+          title: track.tags.title,
+          artist: track.tags.artist,
+          updatedAt: nowIso,
+          variants: []
+        };
+      }
+      const master = state.cloudLibrary[masterKey];
+      master.updatedAt = nowIso;
+      master.variants.push({ format: ext.toUpperCase(), qualitySpec, targetDevice, timestamp: nowIso, fileSize: blobSize });
+
+      saveState();
+      updateAccountAndGatingUI();
+    }
+
+    function updateAccountAndGatingUI() {
+      const lockIcon = document.getElementById('studioHubLockIcon');
+      const accountLabel = document.getElementById('headerAccountLabel');
+      const rigBadge = document.getElementById('activeRigBadge');
+
+      if (state.user) {
+        ensureUserPermissionsStruct(state.user);
+        const userMasters = Object.values(state.cloudLibrary).filter((m) => !m.ownerEmail || m.ownerEmail.toLowerCase() === state.user.email.toLowerCase());
+        document.getElementById('hubCrateCount').textContent = String(userMasters.length);
+
+        lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
+        accountLabel.textContent = state.user.displayName;
+        document.getElementById('loggedOutPanel').classList.add('hidden');
+        document.getElementById('loggedInPanel').classList.remove('hidden');
+        document.getElementById('accountModalName').textContent = state.user.displayName;
+        document.getElementById('accountModalEmail').textContent = state.user.email;
+
+        const tierPill = document.getElementById('accountModalTierPill');
+        const isPaid = state.user.permissions.tier === 'paid';
+        tierPill.textContent = isPaid ? 'PAID PRO' : 'FREE TIER';
+        tierPill.className = `font-mono-tech text-[10px] px-2 py-0.5 rounded ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`;
+
+        const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+        if (dev && dev.id !== 'none') {
+          rigBadge.textContent = `Rig: ${dev.name}`;
+          rigBadge.classList.remove('hidden');
+        } else {
+          rigBadge.classList.add('hidden');
+        }
+      } else {
+        document.getElementById('hubCrateCount').textContent = '0';
+        lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
+        accountLabel.textContent = 'Sign In';
+        rigBadge.classList.add('hidden');
+        document.getElementById('loggedOutPanel').classList.remove('hidden');
+        document.getElementById('loggedInPanel').classList.add('hidden');
+      }
+    }
+
+    /**************************************************************************
+     * 7. CUSTOM UI PALETTE ENGINE & CLOUD CRATE RENDERER
      **************************************************************************/
     function applyPaletteColors(p) {
       if (!p) return;
@@ -876,84 +1871,14 @@
       });
     }
 
-    /**************************************************************************
-     * 4. ACCOUNT GATING & STUDIO HUB RENDERING
-     **************************************************************************/
-    function updateAccountAndGatingUI() {
-      const lockIcon = document.getElementById('studioHubLockIcon');
-      const accountLabel = document.getElementById('headerAccountLabel');
-      const rigBadge = document.getElementById('activeRigBadge');
-      const crateCount = Object.keys(state.cloudLibrary).length;
-      document.getElementById('hubCrateCount').textContent = String(crateCount);
-
-      if (state.user) {
-        lockIcon.className = 'fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]';
-        accountLabel.textContent = state.user.displayName;
-        document.getElementById('loggedOutPanel').classList.add('hidden');
-        document.getElementById('loggedInPanel').classList.remove('hidden');
-        document.getElementById('accountModalName').textContent = state.user.displayName;
-        document.getElementById('accountModalEmail').textContent = state.user.email;
-
-        const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
-        if (dev && dev.id !== 'none') {
-          rigBadge.textContent = `Rig: ${dev.name}`;
-          rigBadge.classList.remove('hidden');
-        } else {
-          rigBadge.classList.add('hidden');
-        }
-      } else {
-        lockIcon.className = 'fa-solid fa-lock text-[10px] text-[var(--text-muted)]';
-        accountLabel.textContent = 'Sign In';
-        rigBadge.classList.add('hidden');
-        document.getElementById('loggedOutPanel').classList.remove('hidden');
-        document.getElementById('loggedInPanel').classList.add('hidden');
-      }
-    }
-
-    function renderDeviceRigGrid() {
-      const grid = document.getElementById('deviceRigGrid');
-      if (!grid) return;
-      grid.innerHTML = DEVICE_PROFILES.map((d) => {
-        const active = state.activeDeviceId === d.id;
-        return `
-          <button type="button" data-select-rig="${d.id}" class="tab-pill p-3 text-left flex items-center justify-between ${active ? 'active' : ''}">
-            <div>
-              <div class="font-bold text-xs text-[var(--text-primary)]">${escapeHtml(d.name)}</div>
-              <div class="text-[10px] font-mono-tech text-[var(--text-secondary)] mt-0.5">${escapeHtml(d.desc)}</div>
-            </div>
-            <span class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-panel)] text-[var(--accent-primary)]">
-              ${active ? '● Active' : 'Select'}
-            </span>
-          </button>
-        `;
-      }).join('');
-
-      grid.querySelectorAll('[data-select-rig]').forEach((btn) => {
-        btn.onclick = () => {
-          const id = btn.getAttribute('data-select-rig');
-          state.activeDeviceId = id;
-          const dev = DEVICE_PROFILES.find((x) => x.id === id);
-          if (dev && id !== 'none') {
-            state.outputFormat = dev.format;
-            state.bitrate = dev.bitrate;
-            state.bitDepth = dev.bitDepth;
-            state.sampleRate = dev.sampleRate;
-            state.channels = dev.channels;
-            state.activePreset = 'custom';
-          }
-          saveState();
-          syncEncoderSelects();
-          updateAccountAndGatingUI();
-          renderDeviceRigGrid();
-        };
-      });
-    }
-
     function renderCrateList() {
       const el = document.getElementById('crateMastersList');
-      const masters = Object.values(state.cloudLibrary);
+      if (!state.user) return;
+      const masters = Object.values(state.cloudLibrary).filter(
+        (m) => !m.ownerEmail || m.ownerEmail.toLowerCase() === state.user.email.toLowerCase()
+      );
       if (!masters.length) {
-        el.innerHTML = `<div class="hardware-well p-6 text-center text-[var(--text-muted)]">No converted tracks logged yet. Convert a batch to populate your Cloud Crate.</div>`;
+        el.innerHTML = `<div class="hardware-well p-6 text-center text-[var(--text-muted)]">No converted tracks logged under your account yet. Convert a batch while signed in to populate your Cloud Crate.</div>`;
         return;
       }
       el.innerHTML = masters.map((m) => `
@@ -974,7 +1899,7 @@
     }
 
     /**************************************************************************
-     * 5. AUDIO METADATA, ARTWORK & TRANSCODING ENGINE
+     * 8. BINARY ARTWORK & AUDIO TRANSCODING ENGINE
      **************************************************************************/
     async function generateProceduralCoverArt(title = 'UNTITLED', artist = 'VNTEX', key = '8A', bpm = '128') {
       const canvas = document.createElement('canvas');
@@ -1160,41 +2085,8 @@
       return new Blob([id3, wav], { type: mimes[fmt] || 'audio/mpeg' });
     }
 
-    function recordConversionTelemetry(track, blobSize, ext) {
-      const nowIso = new Date().toISOString();
-      const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
-      const targetDevice = dev && dev.id !== 'none' ? dev.name : 'Standard Studio';
-      const isLossless = ['flac', 'wav', 'aiff'].includes(ext);
-      const qualitySpec = isLossless ? `${state.bitDepth}-Bit` : `${state.bitrate}kbps`;
-
-      const logEntry = {
-        id: 'log_' + Math.random().toString(36).slice(2, 10),
-        timestamp: nowIso,
-        userEmail: state.user ? state.user.email : 'guest@local.studio',
-        trackTitle: track.tags.title,
-        artist: track.tags.artist,
-        bpm: track.tags.bpm,
-        key: track.tags.key,
-        outputFormat: ext.toUpperCase(),
-        qualitySpec,
-        targetDevice,
-        fileSize: blobSize || 0
-      };
-      state.downloadHistory.unshift(logEntry);
-
-      const masterKey = `${track.tags.artist}__${track.tags.title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (!state.cloudLibrary[masterKey]) {
-        state.cloudLibrary[masterKey] = { masterKey, title: track.tags.title, artist: track.tags.artist, updatedAt: nowIso, variants: [] };
-      }
-      const master = state.cloudLibrary[masterKey];
-      master.updatedAt = nowIso;
-      master.variants.push({ format: ext.toUpperCase(), qualitySpec, targetDevice, timestamp: nowIso, fileSize: blobSize });
-      saveState();
-      updateAccountAndGatingUI();
-    }
-
     /**************************************************************************
-     * 6. TRACK QUEUE & WAVEFORM UI
+     * 9. WAVEFORM & QUEUE RENDERER
      **************************************************************************/
     function computeWaveformPeaks(audioBuffer, numBars = 80) {
       const ch0 = audioBuffer.getChannelData(0);
@@ -1248,7 +2140,7 @@
       const tpl = (state.filenameTemplate || '[Artist] - [Title]').trim();
       const clean = (s) => String(s || '').replace(/[\\/:*?"<>|]/g, '').trim();
       const num = track.tags.trackNum || String(index + 1).padStart(2, '0');
-      const dev = DEVICE_PROFILES.find((d) => d.id === state.activeDeviceId);
+      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
       const name = tpl
         .replace(/\[Track#\]/gi, num)
         .replace(/\[Artist\]/gi, clean(track.tags.artist))
@@ -1427,6 +2319,11 @@
       setTimeout(() => URL.revokeObjectURL(url), 3000);
     }
 
+    function formatBytes(b) {
+      if (!b) return '0 KB';
+      return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+    }
+
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
@@ -1507,22 +2404,32 @@
     }
 
     function registerUserLogin(name, email, provider) {
-      state.user = {
-        uid: 'usr_' + Math.random().toString(36).slice(2, 10),
-        displayName: name,
-        email,
-        provider,
-        lastLogin: new Date().toISOString()
-      };
       const existingIdx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (existingIdx >= 0) state.usersRegistry[existingIdx] = state.user;
-      else state.usersRegistry.push(state.user);
+      const dev = state.deviceProfiles.find((d) => d.id === state.activeDeviceId);
+      if (existingIdx >= 0) {
+        const existing = ensureUserPermissionsStruct(state.usersRegistry[existingIdx]);
+        existing.displayName = name || existing.displayName;
+        existing.lastLogin = new Date().toISOString();
+        existing.activeRigName = dev ? dev.name : 'Standard Studio';
+        state.user = existing;
+      } else {
+        const newUser = ensureUserPermissionsStruct({
+          uid: 'usr_' + Math.random().toString(36).slice(2, 10),
+          displayName: name,
+          email,
+          provider,
+          activeRigName: dev ? dev.name : 'Standard Studio',
+          lastLogin: new Date().toISOString()
+        });
+        state.usersRegistry.push(newUser);
+        state.user = newUser;
+      }
       saveState();
       updateAccountAndGatingUI();
     }
 
     /**************************************************************************
-     * 7. INITIALIZATION & EVENT LISTENERS
+     * 10. INITIALIZATION & EVENT LISTENERS
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
       checkRouteMode();
@@ -1532,55 +2439,224 @@
         applyPaletteColors(state.activePalette);
       }
       syncEncoderSelects();
+      renderStudioHubDeviceDropdown();
       updateAccountAndGatingUI();
 
-      // Admin Portal Controls
+      // 1. Blank Admin Passcode Gate
       document.getElementById('adminUnlockForm').onsubmit = (e) => {
         e.preventDefault();
         const pin = document.getElementById('adminPinInput').value.trim();
-        if (pin === 'VNTEX-ADMIN' || pin === '2026') {
-          document.getElementById('adminPinGate').classList.add('hidden');
-          document.getElementById('adminDashboardContent').classList.remove('hidden');
+        if (pin === 'VNTEX-ADMIN') {
+          state.adminUnlocked = true;
+          state.adminActingRole = 'admin';
           document.getElementById('adminPinError').classList.add('hidden');
-          renderAdminConsole();
+          renderAdminDashboard();
+        } else if (pin === 'VNTEX-OWNER') {
+          state.adminUnlocked = true;
+          state.adminActingRole = 'owner';
+          document.getElementById('adminPinError').classList.add('hidden');
+          renderAdminDashboard();
         } else {
           document.getElementById('adminPinError').classList.remove('hidden');
         }
+      };
+
+      document.getElementById('adminRoleSelect').onchange = (e) => {
+        state.adminActingRole = e.target.value;
+        renderAdminDashboard();
       };
 
       document.getElementById('exitAdminRouteBtn').onclick = () => {
         window.location.hash = '';
         checkRouteMode();
       };
-      document.getElementById('refreshAdminBtn').onclick = renderAdminConsole;
-      document.getElementById('endpointSelect').onchange = renderAdminConsole;
-      document.getElementById('copyJsonBtn').onclick = () => {
-        navigator.clipboard?.writeText(document.getElementById('jsonDisplay').textContent);
-      };
-      document.getElementById('seedDemoTelemetryBtn').onclick = () => {
-        const now = new Date().toISOString();
-        state.usersRegistry = [{ uid: 'usr_uno01', displayName: 'DJ Uno', email: 'uno@vntex.studio', provider: 'google', lastLogin: now }];
-        state.downloadHistory = [
-          { id: 'log_1', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', fileSize: 4820100 },
-          { id: 'log_2', timestamp: now, userEmail: 'uno@vntex.studio', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', fileSize: 28410000 }
-        ];
-        state.cloudLibrary = {
-          uno__obsidiantelemetry: {
-            masterKey: 'uno__obsidiantelemetry',
-            title: 'Obsidian Telemetry',
-            artist: 'Uno',
-            updatedAt: now,
-            variants: [
-              { format: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6', timestamp: now, fileSize: 4820100 },
-              { format: 'WAV', qualitySpec: '32-Bit', targetDevice: 'FL Studio / DAW Stem', timestamp: now, fileSize: 28410000 }
-            ]
-          }
+
+      // Switch between Users Monitor & Activity Monitor
+      document.querySelectorAll('.admin-monitor-tab').forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.admin-monitor-tab').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          const m = btn.getAttribute('data-admin-monitor');
+          document.getElementById('adminMonitor-users').classList.toggle('hidden', m !== 'users');
+          document.getElementById('adminMonitor-activity').classList.toggle('hidden', m !== 'activity');
         };
-        saveState();
-        renderAdminConsole();
+      });
+
+      // List vs. Tile Grid View Toggle
+      document.getElementById('viewModeListBtn').onclick = () => {
+        state.adminUsersViewMode = 'list';
+        document.getElementById('viewModeListBtn').classList.add('active');
+        document.getElementById('viewModeGridBtn').classList.remove('active');
+        renderAdminDashboard();
+      };
+      document.getElementById('viewModeGridBtn').onclick = () => {
+        state.adminUsersViewMode = 'grid';
+        document.getElementById('viewModeGridBtn').classList.add('active');
+        document.getElementById('viewModeListBtn').classList.remove('active');
+        renderAdminDashboard();
       };
 
-      // Dropzone Events
+      document.getElementById('adminUserSearchInput').oninput = () => renderAdminDashboard();
+      document.getElementById('adminUserTierFilter').onchange = () => renderAdminDashboard();
+      document.getElementById('adminActivitySearchInput').oninput = () => renderAdminDashboard();
+
+      // User Inspector Modal Events
+      document.getElementById('closeAdminUserInspectorBtn').onclick = () => {
+        document.getElementById('adminUserInspectorModal').classList.add('hidden');
+      };
+
+      document.querySelectorAll('.user-modal-tab-btn').forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.user-modal-tab-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.getAttribute('data-user-modal-tab');
+          document.getElementById('userModalTab-activity').classList.toggle('hidden', tab !== 'activity');
+          document.getElementById('userModalTab-permissions').classList.toggle('hidden', tab !== 'permissions');
+        };
+      });
+
+      // Standard Admin Permission Changes
+      ['permTierSelect', 'permAutomationCheck', 'permPalettesCheck', 'permRigCheck'].forEach((id) => {
+        document.getElementById(id).onchange = () => {
+          const u = state.usersRegistry.find((x) => x.email.toLowerCase() === String(state.inspectingUserEmail).toLowerCase());
+          if (!u) return;
+          ensureUserPermissionsStruct(u);
+          u.permissions.tier = document.getElementById('permTierSelect').value;
+          u.permissions.automation = document.getElementById('permAutomationCheck').checked;
+          u.permissions.palettes = document.getElementById('permPalettesCheck').checked;
+          u.permissions.rig = document.getElementById('permRigCheck').checked;
+          syncActiveUserIfMatching(u);
+          saveState();
+          openAdminUserInspector(u.email);
+          renderAdminDashboard();
+          showPermToast('✓ Updated standard user permissions.');
+        };
+      });
+
+      // Master Owner Approval Queue Modal
+      document.getElementById('openMasterQueueBtn').onclick = () => {
+        renderMasterApprovalModal();
+        document.getElementById('masterApprovalModal').classList.remove('hidden');
+      };
+      document.getElementById('closeMasterApprovalModalBtn').onclick = () => {
+        document.getElementById('masterApprovalModal').classList.add('hidden');
+      };
+
+      // Admin Device Config Manager Modal
+      document.getElementById('openDeviceConfigModalBtn').onclick = () => {
+        renderAdminDeviceManagerList();
+        document.getElementById('adminDeviceManagerModal').classList.remove('hidden');
+      };
+      document.getElementById('closeDeviceManagerBtn').onclick = () => {
+        document.getElementById('adminDeviceManagerModal').classList.add('hidden');
+      };
+
+      document.getElementById('adminDeviceForm').onsubmit = (e) => {
+        e.preventDefault();
+        const existingId = document.getElementById('devFormId').value.trim();
+        const name = document.getElementById('devFormName').value.trim();
+        const id = existingId || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const newEntry = {
+          id,
+          name,
+          category: document.getElementById('devFormCategory').value,
+          format: document.getElementById('devFormFormat').value,
+          bitrate: Number(document.getElementById('devFormBitrate').value),
+          bitDepth: Number(document.getElementById('devFormBitDepth').value),
+          sampleRate: Number(document.getElementById('devFormSampleRate').value),
+          channels: 2,
+          desc: document.getElementById('devFormDesc').value.trim()
+        };
+        const idx = state.deviceProfiles.findIndex((x) => x.id === id);
+        if (idx >= 0) state.deviceProfiles[idx] = newEntry;
+        else state.deviceProfiles.push(newEntry);
+
+        document.getElementById('devFormId').value = '';
+        document.getElementById('adminDeviceForm').reset();
+        saveState();
+        renderAdminDeviceManagerList();
+        renderStudioHubDeviceDropdown();
+      };
+
+      // Seed Demo Users & Authenticated Activity Button
+      document.getElementById('seedDemoTelemetryBtn').onclick = () => {
+        const now = new Date().toISOString();
+        state.usersRegistry = [
+          {
+            uid: 'usr_uno01',
+            displayName: 'Darren (DJ Uno)',
+            email: 'darren@auburn.edu',
+            provider: 'google',
+            activeRigName: 'Pioneer DDJ-GRV6 Controller',
+            lastLogin: now,
+            permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: true, unlimitedApiOverride: true, bypassStorageQuotas: true }
+          },
+          {
+            uid: 'usr_dave02',
+            displayName: 'DJ Dave',
+            email: 'dave@booth.audio',
+            provider: 'email',
+            activeRigName: 'Pioneer CDJ-3000 / NXS2 Club Rig',
+            lastLogin: now,
+            permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false, unlimitedApiOverride: false, bypassStorageQuotas: false }
+          },
+          {
+            uid: 'usr_alex03',
+            displayName: 'Alex Mercer',
+            email: 'alex@studio.io',
+            provider: 'email',
+            activeRigName: 'Apple Logic Pro X',
+            lastLogin: now,
+            permissions: { tier: 'free', automation: false, palettes: false, rig: true, isAdmin: false, unlimitedApiOverride: false, bypassStorageQuotas: false }
+          }
+        ];
+        state.downloadHistory = [
+          { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Obsidian Telemetry', bpm: '128', key: '8A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
+          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 },
+          { id: 'log_103', timestamp: now, userEmail: 'alex@studio.io', artist: 'Alex Mercer', trackTitle: 'Analog Warmth Stem', bpm: '122', key: '5A', outputFormat: 'WAV', qualitySpec: '24-Bit', targetDevice: 'Apple Logic Pro X', fileSize: 26100000 }
+        ];
+        state.approvalRequests = [
+          {
+            id: 'req_demo1',
+            timestamp: now,
+            targetEmail: 'dave@booth.audio',
+            targetName: 'DJ Dave',
+            permKey: 'isAdmin',
+            permLabel: 'Promote to Platform Admin',
+            desiredValue: true,
+            requestedBy: 'Standard Admin',
+            status: 'pending'
+          }
+        ];
+        saveState();
+        renderAdminDashboard();
+      };
+
+      // Studio Hub Device Rig Dropdown Change
+      document.getElementById('studioHubDeviceDropdown').onchange = (e) => {
+        const id = e.target.value;
+        state.activeDeviceId = id;
+        const dev = state.deviceProfiles.find((x) => x.id === id);
+        if (dev && id !== 'none') {
+          state.outputFormat = dev.format;
+          state.bitrate = dev.bitrate;
+          state.bitDepth = dev.bitDepth;
+          state.sampleRate = dev.sampleRate;
+          state.channels = dev.channels;
+          state.activePreset = 'custom';
+        }
+        if (state.user) {
+          state.user.activeRigName = dev ? dev.name : 'Standard Studio';
+          const regIdx = state.usersRegistry.findIndex((u) => u.email.toLowerCase() === state.user.email.toLowerCase());
+          if (regIdx >= 0) state.usersRegistry[regIdx].activeRigName = state.user.activeRigName;
+        }
+        saveState();
+        syncEncoderSelects();
+        updateSelectedDeviceSummaryCard();
+        updateAccountAndGatingUI();
+      };
+
+      // User App Dropzone & Controls
       const dz = document.getElementById('dropzone');
       const fi = document.getElementById('fileInput');
       dz.onclick = (e) => { if (e.target.id !== 'loadDemoBtn') fi.click(); };
@@ -1591,7 +2667,6 @@
 
       document.getElementById('loadDemoBtn').onclick = (e) => { e.stopPropagation(); loadDemoTracks(); };
 
-      // Consolidated Control Bar
       document.getElementById('presetSelect').onchange = (e) => {
         const val = e.target.value;
         state.activePreset = val;
@@ -1628,7 +2703,6 @@
         };
       });
 
-      // Convert & Queue Actions
       document.getElementById('convertAllBtn').onclick = async () => {
         const lbl = document.getElementById('convertBtnLabel');
         lbl.textContent = 'Encoding...';
@@ -1660,53 +2734,56 @@
         renderTrackList();
       };
 
-      // Account Modal & Gated Studio Hub
+      // Account Login & Studio Hub Gating
       const accountModal = document.getElementById('accountModal');
       const studioHubModal = document.getElementById('studioHubModal');
 
       document.getElementById('openAccountBtn').onclick = () => accountModal.classList.remove('hidden');
       document.getElementById('closeAccountModalBtn').onclick = () => accountModal.classList.add('hidden');
 
-      document.getElementById('openStudioHubBtn').onclick = () => {
+      const openStudioHubAuthenticated = () => {
         if (!state.user) {
           accountModal.classList.remove('hidden');
           return;
         }
+        renderStudioHubDeviceDropdown();
         renderSavedPalettes();
-        renderDeviceRigGrid();
         renderCrateList();
         studioHubModal.classList.remove('hidden');
       };
 
+      document.getElementById('openStudioHubBtn').onclick = openStudioHubAuthenticated;
       document.getElementById('goToStudioHubFromAccountBtn').onclick = () => {
         accountModal.classList.add('hidden');
-        renderSavedPalettes();
-        renderDeviceRigGrid();
-        renderCrateList();
-        studioHubModal.classList.remove('hidden');
+        openStudioHubAuthenticated();
       };
-
       document.getElementById('closeStudioHubBtn').onclick = () => studioHubModal.classList.add('hidden');
 
-      document.getElementById('googleLoginBtn').onclick = () => {
-        registerUserLogin('DJ Uno', 'uno@vntex.studio', 'google');
-        accountModal.classList.add('hidden');
-        renderSavedPalettes();
-        renderDeviceRigGrid();
-        renderCrateList();
-        studioHubModal.classList.remove('hidden');
-      };
-
+      // Authentic Sign-In (Uses user's actual entered Name & Email, no dummy @vntex.studio auto-fill)
       document.getElementById('emailLoginForm').onsubmit = (e) => {
         e.preventDefault();
         const name = document.getElementById('loginNameInput').value.trim();
         const email = document.getElementById('loginEmailInput').value.trim();
+        if (!name || !email) return;
         registerUserLogin(name, email, 'email');
         accountModal.classList.add('hidden');
-        renderSavedPalettes();
-        renderDeviceRigGrid();
-        renderCrateList();
-        studioHubModal.classList.remove('hidden');
+        openStudioHubAuthenticated();
+      };
+
+      document.getElementById('googleLoginBtn').onclick = () => {
+        const name = document.getElementById('loginNameInput').value.trim();
+        const email = document.getElementById('loginEmailInput').value.trim();
+        const errEl = document.getElementById('loginFormError');
+        if (!name || !email) {
+          errEl.textContent = 'Please enter your Name and Google Email above to link your Google profile.';
+          errEl.classList.remove('hidden');
+          document.getElementById('loginNameInput').focus();
+          return;
+        }
+        errEl.classList.add('hidden');
+        registerUserLogin(name, email, 'google');
+        accountModal.classList.add('hidden');
+        openStudioHubAuthenticated();
       };
 
       document.getElementById('logoutBtn').onclick = () => {
@@ -1718,13 +2795,33 @@
         accountModal.classList.add('hidden');
       };
 
-      // Studio Hub Tabs
+      // Studio Hub Tabs with Admin Permission Checks
       document.querySelectorAll('.hub-tab-btn').forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll('.hub-tab-btn').forEach((b) => b.classList.remove('active'));
           document.querySelectorAll('.hub-tab-pane').forEach((p) => p.classList.add('hidden'));
           btn.classList.add('active');
           const target = btn.getAttribute('data-hub-tab');
+          const notice = document.getElementById('hubPermissionNotice');
+          const perms = state.user?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true };
+
+          if (target === 'rig' && !perms.rig) {
+            notice.textContent = 'Device Rig Auto-Tuning is currently disabled for your account tier by an administrator.';
+            notice.classList.remove('hidden');
+            return;
+          }
+          if (target === 'automation' && (!perms.automation || perms.tier === 'free')) {
+            notice.textContent = 'Batch Automation requires a Paid Pro membership or admin permission.';
+            notice.classList.remove('hidden');
+            return;
+          }
+          if (target === 'themes' && (!perms.palettes || perms.tier === 'free')) {
+            notice.textContent = 'Custom UI Palettes require a Paid Pro membership or admin permission.';
+            notice.classList.remove('hidden');
+            return;
+          }
+
+          notice.classList.add('hidden');
           document.getElementById(`hubTab-${target}`).classList.remove('hidden');
           if (target === 'crate') renderCrateList();
         };
@@ -1794,8 +2891,12 @@
       };
 
       document.getElementById('clearCrateHistoryBtn').onclick = () => {
-        state.cloudLibrary = {};
-        state.downloadHistory = [];
+        if (!state.user) return;
+        Object.keys(state.cloudLibrary).forEach((k) => {
+          if (state.cloudLibrary[k].ownerEmail?.toLowerCase() === state.user.email.toLowerCase()) {
+            delete state.cloudLibrary[k];
+          }
+        });
         saveState();
         renderCrateList();
         updateAccountAndGatingUI();
