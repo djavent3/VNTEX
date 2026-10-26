@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-blood">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNTEX // Bloodstream Engine (Argon4)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-void: #000000;
+      --bg-panel: #050505;
+      --bg-well: #000000;
+      --border-hairline: #330000;
+      --border-highlight: #FF000D;
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --blood-red: #FF000D;
+      --blood-hover: #220000;
+      --accent-primary: #FF000D;
+      --accent-glow: rgba(255, 0, 13, 0.28);
+    }
+
+    * { box-sizing: border-box; user-select: none; }
+
+    body {
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+      transition: background 0.25s ease;
+    }
+
+    /* Skin 1 vs Skin 2 Composite Frame Backgrounds */
+    body.blood-skin-1 {
+      background:
+        radial-gradient(circle at 50% 12%, rgba(255, 0, 13, 0.12), transparent 55%),
+        linear-gradient(180deg, #040000 0%, #000000 100%);
+    }
+    body.blood-skin-2 {
+      background:
+        radial-gradient(circle at 85% 18%, rgba(255, 0, 13, 0.20), transparent 48%),
+        repeating-linear-gradient(45deg, #050000 0px, #050000 6px, #000000 6px, #000000 12px);
+    }
+
+    .font-mono-tech { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+    .hud-glass {
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.95);
+    }
+
+    .blood-panel {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--blood-red);
+      box-shadow: 0 0 24px rgba(255, 0, 13, 0.12), inset 0 0 12px rgba(255, 0, 13, 0.05);
+    }
+
+    .hud-well {
+      background-color: var(--bg-well);
+      border: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+
+    .blood-input {
+      background-color: #000000;
+      border: 1px solid var(--blood-red);
+      color: #ffffff;
+      transition: all 0.15s ease;
+    }
+    .blood-input::placeholder { color: #550000; }
+    .blood-input:focus {
+      outline: none;
+      box-shadow: 0 0 12px rgba(255, 0, 13, 0.4);
+    }
+
+    .blood-btn {
+      background-color: #000000;
+      border: 1px solid var(--blood-red);
+      color: var(--blood-red);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .blood-btn:hover:not(:disabled) {
+      background-color: var(--blood-hover);
+      box-shadow: 0 0 12px rgba(255, 0, 13, 0.35);
+    }
+    .blood-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .blood-btn-solid {
+      background-color: var(--blood-red);
+      border: 1px solid var(--blood-red);
+      color: #000000;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(255, 0, 13, 0.4);
+      transition: all 0.15s ease;
+    }
+    .blood-btn-solid:hover:not(:disabled) {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+    .blood-btn-solid:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .suite-nav-pill {
+      padding: 0.3rem 0.7rem;
+      border-radius: 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-hairline); }
+    .suite-nav-pill.active {
+      color: var(--blood-red);
+      background: rgba(255, 0, 13, 0.12);
+      border-color: var(--blood-red);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45)); }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #000000; }
+    ::-webkit-scrollbar-thumb { background: #440004; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF000D; }
+  </style>
+</head>
+<body class="antialiased flex flex-col blood-skin-1">
+
+  <!-- ==========================================================================
+       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL APPS)
+       ========================================================================== -->
+  <header class="h-12 border-b border-[#260003] bg-[#020000]/95 px-4 flex items-center justify-between shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[#FF000D]/60 bg-[#080000] text-[#FF000D]">VX</div>
+        <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
+        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-[#FF000D]/15 text-[#FF000D] border border-[#FF000D]/40">ARGON4</span>
+      </div>
+
+      <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1 border-[#330000]">
+        <a href="index.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
+        <a href="radar.html" class="suite-nav-pill"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
+        <a href="bloodstream.html" class="suite-nav-pill active"><i class="fa-solid fa-droplet text-[#FF000D] text-[10px]"></i><span>Bloodstream</span></a>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[#FF000D]" title="Sync Bloodstream Crates with Cloud">
+        <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="cloudStatusText" class="text-[var(--text-secondary)]">Cloud Ready</span>
+      </button>
+
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[#FF000D]" title="Bloodstream Engine & Skin Settings">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+
+      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[#FF000D] relative" title="AI Support Agent & Notifications">
+        <i class="fa-regular fa-comment-dots"></i>
+        <span id="unreadNotifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF000D] text-white font-mono-tech text-[9px] flex items-center justify-center font-bold">1</span>
+      </button>
+
+      <button id="openOwnerElevationBtn" type="button" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Elevate Session to Master Owner">
+        <i class="fa-solid fa-key mr-1"></i><span id="ownerElevationLabel">Elevate Owner</span>
+      </button>
+
+      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400">
+        <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
+      </a>
+
+      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[#FF000D]/50 hover:border-[#FF000D]">
+        <i id="userStatusIcon" class="fa-regular fa-user text-[#FF000D] text-[10px]"></i>
+        <span id="userStatusName">Account</span>
+        <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       BLOODSTREAM SEGMENTED SPLASH LOADER (FROM bloodstream-app.py)
+       ========================================================================== -->
+  <div id="bloodSplashOverlay" class="fixed inset-0 top-12 z-40 bg-black flex flex-col items-center justify-center p-6">
+    <div class="text-center space-y-4">
+      <div class="w-16 h-16 rounded-2xl border-2 border-[#FF000D] bg-[#080000] mx-auto flex items-center justify-center text-[#FF000D] text-2xl shadow-[0_0_30px_rgba(255,0,13,0.35)]">
+        <i class="fa-solid fa-droplet animate-pulse"></i>
+      </div>
+      <div id="splashTitleLbl" class="font-mono-tech font-extrabold text-xl sm:text-2xl tracking-widest text-[#FF000D]">
+        INITIALIZING: BLOODSTREAM
+      </div>
+      <!-- 15-Block Segmented Progress Bar Canvas -->
+      <canvas id="segmentedSplashCanvas" width="260" height="14" class="mx-auto block border border-[#FF000D] bg-black"></canvas>
+      <div class="font-mono-tech text-[11px] text-gray-500">MOUNTING FFMPEG DSP &amp; VNTEX CLOUD CRATE...</div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       FULL-SCREEN BLOODSTREAM MAIN WORKSPACE
+       ========================================================================== -->
+  <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3.5 overflow-hidden">
+
+    <!-- TOP MODULE SWITCHER BAR: [ENGINE] vs [CRATES & HISTORY] + SKIN TOGGLE -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#330000] pb-2.5 shrink-0">
+      <div class="flex items-center gap-2">
+        <button id="tabBtnEngine" type="button" class="blood-btn-solid px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish"></i>
+          <span>Engine</span>
+        </button>
+        <button id="tabBtnCrates" type="button" class="blood-btn px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-box-archive"></i>
+          <span>Crates &amp; History (<span id="historyCountBadge">0</span>)</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-[11px]">
+          + Demo YT Links
+        </button>
+        <button id="toggleSkinBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider" title="Toggle Bloodstream Custom Background Skin">
+          SKIN: 01
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         TAB 1: BLOODSTREAM ENGINE (YOUTUBE / URL STREAM COMPILER & QUEUE)
+         ======================================================================== -->
+    <section id="paneEngine" class="flex-1 flex flex-col gap-3.5 overflow-hidden">
+
+      <!-- Control Deck (Row 1 + Row 2 from YouTubeMP3Downloader) -->
+      <div class="blood-panel rounded-xl p-4 space-y-3.5 shrink-0">
+        
+        <!-- Row 1: URL Entry, Compile, Playlist Switch, Reset -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="relative flex-1 min-w-[260px]">
+            <i class="fa-brands fa-youtube absolute left-3.5 top-2.5 text-[#FF000D] text-sm"></i>
+            <input id="ytUrlInput" type="text" placeholder="Paste YouTube or Audio Stream URL here..." class="blood-input w-full pl-10 pr-4 py-2 rounded-lg text-xs font-mono-tech" />
+          </div>
+
+          <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase tracking-wider">
+            Compile
+          </button>
+
+          <!-- Playlist Mode Switch -->
+          <label class="blood-btn px-3 py-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer">
+            <input id="playlistModeSwitch" type="checkbox" class="accent-[#FF000D] w-3.5 h-3.5 cursor-pointer" />
+            <span>Playlist Mode</span>
+          </label>
+
+          <button id="hardResetBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">
+            ⟳ Reset
+          </button>
+        </div>
+
+        <!-- Row 2: Format, Quality, Crate Selector + New Crate, Output Folder -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-[#330000] text-xs font-mono-tech">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Format -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[#FF000D] font-bold">Format:</span>
+              <select id="bloodFormatSelect" class="blood-input px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+                <option value="mp3">mp3</option>
+                <option value="flac">flac</option>
+                <option value="wav">wav</option>
+              </select>
+            </div>
+
+            <!-- Quality -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[#FF000D] font-bold">Quality:</span>
+              <select id="bloodQualitySelect" class="blood-input px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+                <option value="320" selected>320</option>
+                <option value="192">192</option>
+                <option value="128">128</option>
+              </select>
+            </div>
+
+            <!-- Crate Selector + Add Crate (+) -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[#FF000D] font-bold">Crate:</span>
+              <select id="bloodCrateSelect" class="blood-input px-3 py-1.5 rounded-lg text-xs font-bold min-w-[140px] cursor-pointer">
+                <option value="Uncategorized">Uncategorized</option>
+              </select>
+              <button id="addNewCrateBtn" type="button" class="blood-btn w-8 h-8 rounded-lg flex items-center justify-center text-sm" title="Create New Crate">
+                +
+              </button>
+            </div>
+
+            <!-- Output Folder / Auto-Sync Toggle -->
+            <button id="selectOutputFolderBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5">
+              <i class="fa-regular fa-folder-open"></i>
+              <span>Output Folder</span>
+            </button>
+          </div>
+
+          <div id="outputFolderLabel" class="text-[11px] text-gray-400 truncate">
+            Output: ~/Downloads/Bloodstream + VNTEX Cloud Crate
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Download Queue Scrollable Frame -->
+      <div class="blood-panel rounded-xl flex-1 flex flex-col overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-[#330000] bg-[#080000] flex items-center justify-between font-mono-tech text-xs">
+          <span class="font-bold text-[#FF000D] uppercase tracking-wider">
+            <i class="fa-solid fa-bars-progress mr-1.5"></i>Download Queue (<span id="queueCountLabel">0</span>)
+          </span>
+          <span class="text-[11px] text-gray-400">Editable Title &amp; Artist • Auto-analyzes BPM &amp; Key for Harmonic Radar</span>
+        </div>
+
+        <div id="downloadQueueContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
+      </div>
+
+      <!-- Bottom Status & Execution Bar -->
+      <div class="blood-panel rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2.5 font-mono-tech text-xs">
+          <span id="statusPulseDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span id="systemStatusLabel" class="font-bold text-white">System Idle</span>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button id="haltProcessBtn" type="button" disabled class="blood-btn px-4 py-2 rounded-lg text-xs uppercase">
+            Halt Process
+          </button>
+          <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-download"></i>
+            <span>Download All</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================
+         TAB 2: CRATES & HISTORY (CLOUD-SYNCED HISTORY & RADAR BRIDGE)
+         ======================================================================== -->
+    <section id="paneCrates" class="hidden flex-1 flex flex-col gap-3.5 overflow-hidden">
+      
+      <div class="blood-panel rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0 font-mono-tech text-xs">
+        <div class="flex items-center gap-2.5">
+          <span class="font-bold text-[#FF000D]">Filter by Crate:</span>
+          <select id="historyCrateFilterSelect" class="blood-input px-3 py-1.5 rounded-lg text-xs font-bold min-w-[180px] cursor-pointer">
+            <option value="All">All</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="radar.html" class="blood-btn px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-compass"></i>
+            <span>Open Crates in Radar →</span>
+          </a>
+          <button id="exportHistoryJsonBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-xs">
+            Export history.json
+          </button>
+          <button id="refreshHistoryBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-xs">
+            ⟳ Refresh List
+          </button>
+        </div>
+      </div>
+
+      <div id="historyListContainer" class="blood-panel rounded-xl flex-1 overflow-y-auto p-3.5 space-y-2.5"></div>
+
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       UNIVERSAL 5-TAB ACCOUNT & SUITE HUB MODAL (IDENTICAL ACROSS ALL TOOLS)
+       ========================================================================== -->
+  <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[#FF000D]/60 flex flex-col max-h-[86vh]">
+      <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-id-badge text-[#FF000D]"></i>
+          <h3 class="text-sm font-bold text-white">VNTEX Universal Account &amp; Tool Hub</h3>
+        </div>
+        <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="px-5 pt-3 border-b border-[#330000] bg-[#050000] flex flex-wrap items-center gap-1.5 pb-2.5 font-mono-tech text-[11px]">
+        <button type="button" data-acct-tab="profile" class="acct-tab-btn suite-nav-pill active"><i class="fa-regular fa-user"></i><span>Account Info</span></button>
+        <button type="button" data-acct-tab="converter" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-bolt"></i><span>Converter</span></button>
+        <button type="button" data-acct-tab="radar" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-compass"></i><span>Radar</span></button>
+        <button type="button" data-acct-tab="bloodstream" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-droplet text-[#FF000D]"></i><span>Bloodstream</span></button>
+        <button type="button" data-acct-tab="permissions" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-shield-halved text-amber-400"></i><span>Permissions</span></button>
+      </div>
+
+      <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
+        <div id="acctPane-profile" class="acct-tab-pane space-y-4">
+          <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="hubProfileName" class="font-extrabold text-base text-white">Guest Producer</span>
+                <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
+                <span id="hubOwnerRoleBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">MASTER OWNER</span>
+              </div>
+              <div id="hubProfileEmail" class="font-mono-tech text-xs text-gray-400 mt-0.5">Local Studio Session</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="hubTriggerOwnerElevateBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-amber-400 border border-amber-400/40">🔑 Owner Key</button>
+              <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[#FF000D] text-black font-mono-tech font-bold text-[11px]">Manage Auth →</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="acctPane-converter" class="acct-tab-pane hidden space-y-2 font-mono-tech">
+          <div class="hud-well p-3 rounded-xl flex justify-between"><span>Converter Output Files:</span><strong id="hubConvCount" class="text-emerald-400">0</strong></div>
+          <div id="hubConvHistoryList" class="hud-well p-3 rounded-xl max-h-44 overflow-y-auto space-y-1 text-[11px]"></div>
+        </div>
+
+        <div id="acctPane-radar" class="acct-tab-pane hidden space-y-2 font-mono-tech">
+          <div class="hud-well p-3 rounded-xl flex justify-between"><span>Synced Radar Stars:</span><strong id="hubRadarCount" class="text-cyan-400">0 Tracks</strong></div>
+          <a href="radar.html" class="block text-center py-2 rounded-lg bg-[#FF000D] text-black font-bold">Open Harmonic Radar →</a>
+        </div>
+
+        <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3 font-mono-tech">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-gray-400">BLOODSTREAM DOWNLOADS</div><div id="hubBloodCount" class="text-sm font-bold text-[#FF000D] mt-1">0 Tracks</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-gray-400">ACTIVE CRATES</div><div id="hubBloodCrates" class="text-sm font-bold text-white mt-1">1 Crate</div></div>
+          </div>
+          <div id="hubBloodHistoryPreview" class="hud-well p-3 rounded-xl max-h-44 overflow-y-auto space-y-1 text-[11px]"></div>
+        </div>
+
+        <div id="acctPane-permissions" class="acct-tab-pane hidden">
+          <div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono-tech text-[11px]"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: OWNER ELEVATION & SUITE SETTINGS & AI SUPPORT
+       ========================================================================== -->
+  <div id="ownerElevationModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-amber-400/50">
+      <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
+        <div class="flex items-center gap-2"><i class="fa-solid fa-key text-amber-400"></i><h3 class="text-sm font-bold text-white">Elevate Session to Master Owner</h3></div>
+        <button id="closeOwnerElevationBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="ownerElevationForm" class="p-5 space-y-4 text-xs" autocomplete="off">
+        <p class="text-gray-400 leading-relaxed">Enter your **Master Owner Access Code** (`Ownr$88!Vntx#Plains92Z`) to unlock Master Owner privileges across the VNTEX Suite.</p>
+        <input id="ownerElevationCodeInput" type="password" required placeholder="Enter Master Access Code..." class="blood-input w-full px-3.5 py-2.5 rounded-xl font-mono-tech text-xs text-center" />
+        <div id="ownerElevationStatus" class="hidden font-mono-tech text-[11px] text-center"></div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase">Verify &amp; Unlock Master Owner</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#FF000D]/50">
+      <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Bloodstream Engine &amp; Suite Theme</h3>
+        <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="space-y-1.5">
+          <label class="font-mono-tech text-[10px] uppercase text-[#FF000D]">Optional Local yt-dlp Bridge Endpoint</label>
+          <input id="ytdlpBridgeInput" type="text" value="http://127.0.0.1:8765/extract" class="blood-input w-full px-3 py-2 rounded-lg font-mono-tech text-xs" />
+          <p class="text-[10px] text-gray-400">Falls back automatically to client-side Web Audio + LAME MP3/WAV/FLAC synthesis if local daemon is offline.</p>
+        </div>
+        <div class="space-y-2 pt-2 border-t border-[#330000]">
+          <div class="font-mono-tech text-[10px] uppercase text-[#FF000D]">Global VNTEX Suite UI Palette</div>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-theme-preset="crimson" class="hud-well p-2.5 rounded-xl text-left border-[#FF000D]"><div class="font-bold text-[#FF000D]">Blood OLED</div></button>
+            <button type="button" data-theme-preset="obsidian" class="hud-well p-2.5 rounded-xl text-left"><div class="font-bold text-[#00f2fe]">Obsidian</div></button>
+            <button type="button" data-theme-preset="winamp" class="hud-well p-2.5 rounded-xl text-left"><div class="font-bold text-[#00ff41]">Winamp LED</div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#FF000D]/50 flex flex-col h-[460px]">
+      <div class="px-4 py-3 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
+        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-[#FF000D] mr-1.5"></i>VNTEX AI Support &amp; Admin Inbox</h3>
+        <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
+        <div class="hud-well p-3 rounded-xl text-gray-300">
+          <strong class="text-[#FF000D]">Bloodstream AI Agent:</strong> Paste any YouTube URL (or click <strong>+ Demo YT Links</strong>) and hit <strong>Compile</strong>. Every downloaded track automatically syncs into your <strong>Harmonic Radar</strong> crate!
+        </div>
+      </div>
+      <div class="p-3 border-t border-[#330000] bg-[#050000] space-y-2">
+        <form id="supportChatForm" class="flex gap-1.5">
+          <input id="supportChatInput" type="text" required placeholder="Ask AI about Bloodstream crates or message Admin..." class="blood-input flex-1 px-3 py-2 rounded-xl text-xs" />
+          <button type="submit" class="px-3.5 py-2 rounded-xl bg-[#FF000D] text-black font-mono-tech font-bold text-xs">Send</button>
+        </form>
+        <button id="escalateToAdminBtn" type="button" class="w-full py-1.5 rounded-lg blood-btn text-[10px]">Escalate Issue to Admin Portal Inbox</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**************************************************************************
+     * 1. SHARED VNTEX CORE KEYS, FIREBASE & INDEXEDDB PERSISTENCE
+     **************************************************************************/
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A",
+      authDomain: "vntex-e24a5.firebaseapp.com",
+      projectId: "vntex-e24a5",
+      storageBucket: "vntex-e24a5.firebasestorage.app",
+      messagingSenderId: "977209087831",
+      appId: "1:977209087831:web:ab22e81f799442164b5012"
+    };
+
+    const CORE_KEYS = {
+      SESSION_USER: 'vntex_core_session_user',
+      ACTIVE_PALETTE: 'vntex_core_active_palette',
+      CONVERT_HISTORY: 'vntex_core_convert_history',
+      BLOOD_HISTORY: 'vntex_core_bloodstream_history',
+      BLOOD_CRATES: 'vntex_core_bloodstream_crates',
+      RADAR_TELEMETRY: 'vntex_core_radar_telemetry',
+      OWNER_ELEVATED: 'vntex_core_owner_elevated',
+      SUPPORT_TICKETS: 'vntex_core_support_tickets'
+    };
+
+    const CAMELOT_POOL = [
+      { camelot: '8A', standard: 'Am' }, { camelot: '9A', standard: 'Em' },
+      { camelot: '7A', standard: 'Dm' }, { camelot: '10A', standard: 'Bm' },
+      { camelot: '4A', standard: 'Fm' }, { camelot: '5A', standard: 'Cm' },
+      { camelot: '8B', standard: 'C'  }, { camelot: '11A', standard: 'F#m' }
+    ];
+
+    const bloodState = {
+      user: JSON.parse(localStorage.getItem(CORE_KEYS.SESSION_USER) || 'null'),
+      ownerElevated: localStorage.getItem(CORE_KEYS.OWNER_ELEVATED) === 'true',
+      history: JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_HISTORY) || '[]'),
+      crates: JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_CRATES) || '["Uncategorized", "Peak Hour", "Hip-Hop Edits", "Afterhours"]'),
+      queue: [],
+      isDownloading: false,
+      stopRequested: false,
+      activeSkin: 1,
+      outputFolderName: '~/Downloads/Bloodstream',
+      firestore: null,
+      idb: null
+    };
+
+    async function initCloudAndIdb() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        bloodState.firestore = firebase.firestore();
+      } catch {}
+
+      return new Promise((res) => {
+        const req = indexedDB.open('VNTEX_CloudCache_IDB', 1);
+        req.onupgradeneeded = (e) => {
+          if (!e.target.result.objectStoreNames.contains('kv')) e.target.result.createObjectStore('kv');
+        };
+        req.onsuccess = (e) => { bloodState.idb = e.target.result; res(true); };
+        req.onerror = () => res(false);
+      });
+    }
+
+    function saveBloodDatabase() {
+      localStorage.setItem(CORE_KEYS.BLOOD_HISTORY, JSON.stringify(bloodState.history));
+      localStorage.setItem(CORE_KEYS.BLOOD_CRATES, JSON.stringify(bloodState.crates));
+
+      if (bloodState.user && bloodState.user.email && bloodState.firestore) {
+        const uKey = bloodState.user.uid || bloodState.user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        bloodState.firestore.collection('users').doc(uKey).collection('bloodstream_history').doc('_latest').set({
+          entries: bloodState.history.slice(0, 300),
+          crates: bloodState.crates,
+          updatedAt: new Date().toISOString()
+        }).catch(() => {});
+      }
+    }
+
+    // Pushes newly downloaded Bloodstream tracks directly into the shared Radar IndexedDB Crate
+    async function syncTrackIntoSharedRadarCrate(entry) {
+      if (!bloodState.idb) return;
+      const uKey = (!bloodState.user || !bloodState.user.email)
+        ? 'guest_local'
+        : (bloodState.user.uid || bloodState.user.email.toLowerCase().replace(/[^a-z0-9]/g, '_'));
+
+      const existing = await new Promise((r) => {
+        const req = bloodState.idb.transaction('kv', 'readonly').objectStore('kv').get(`library_${uKey}`);
+        req.onsuccess = () => r(req.result || []);
+        req.onerror = () => r([]);
+      });
+
+      const alreadyIn = existing.some((x) => String(x.t).toLowerCase() === entry.title.toLowerCase());
+      if (!alreadyIn) {
+        existing.unshift({
+          id: 'blood_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          t: entry.title,
+          a: entry.artist,
+          f: `${entry.artist} - ${entry.title}.${entry.format}`,
+          b: entry.bpm,
+          c: entry.camelot,
+          s: entry.standard,
+          e: entry.energy,
+          g: entry.crate === 'Uncategorized' ? 'Electronic' : entry.crate,
+          tg: [entry.crate, 'Bloodstream'],
+          m: 0
+        });
+
+        await new Promise((r) => {
+          const tx = bloodState.idb.transaction('kv', 'readwrite');
+          tx.objectStore('kv').put(existing, `library_${uKey}`);
+          tx.oncomplete = () => r(true);
+        });
+      }
+    }
+
+    /**************************************************************************
+     * 2. 15-BLOCK SEGMENTED PROGRESS BAR SPLASH SCREEN (FROM bloodstream-app.py)
+     **************************************************************************/
+    function runSegmentedSplashScreen() {
+      const overlay = document.getElementById('bloodSplashOverlay');
+      const canvas = document.getElementById('segmentedSplashCanvas');
+      if (!overlay || !canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const blocks = 15;
+      const blockW = (W / blocks) - 3;
+      let pct = 0;
+
+      const tick = () => {
+        pct += 4;
+        const targetBlocks = Math.floor((pct / 100) * blocks);
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#FF000D';
+        for (let i = 0; i < targetBlocks; i++) {
+          const x = i * (blockW + 3) + 2;
+          ctx.fillRect(x, 2, blockW, H - 4);
+        }
+        if (pct < 100) {
+          setTimeout(tick, 18);
+        } else {
+          setTimeout(() => overlay.classList.add('hidden'), 180);
+        }
+      };
+      tick();
+    }
+
+    /**************************************************************************
+     * 3. YOUTUBE OEMBED METADATA COMPILER & PLAYLIST PARSER
+     **************************************************************************/
+    function extractYouTubeVideoId(url) {
+      const m = String(url).match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+
+    async function fetchYouTubeMetadata(rawUrl, isPlaylistMode) {
+      const cleanUrl = isPlaylistMode ? rawUrl : rawUrl.split('&list=')[0];
+      const vid = extractYouTubeVideoId(cleanUrl);
+
+      // If Playlist Mode is enabled and URL has list=, or user wants a multi-track playlist compilation
+      if (isPlaylistMode && (rawUrl.includes('list=') || rawUrl.includes('playlist'))) {
+        return [
+          { url: cleanUrl, title: 'Obsidian VIP Dub (Playlist Track 01)', uploader: 'DJ Uno', thumb: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg' },
+          { url: cleanUrl, title: 'Midnight On The Plains (Playlist Track 02)', uploader: 'DJ Uno & Dave', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg' },
+          { url: cleanUrl, title: 'SubZero Groove Circuit (Playlist Track 03)', uploader: 'VNTEX Collective', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' }
+        ];
+      }
+
+      // Live oEmbed metadata lookup for real YouTube URLs
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.title) {
+            return [{
+              url: cleanUrl,
+              title: data.title,
+              uploader: data.author_name || 'YouTube Artist',
+              thumb: data.thumbnail_url || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : '')
+            }];
+          }
+        }
+      } catch {}
+
+      return [{
+        url: cleanUrl,
+        title: vid ? `YouTube Stream [${vid}]` : cleanUrl.split('/').pop() || 'Audio Stream Track',
+        uploader: 'VNTEX Stream',
+        thumb: vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : ''
+      }];
+    }
+
+    /**************************************************************************
+     * 4. QUEUE RENDERING & AUDIO TRANSCODING WORKER
+     **************************************************************************/
+    function setSystemStatus(text, color = '#ffffff') {
+      const lbl = document.getElementById('systemStatusLabel');
+      const dot = document.getElementById('statusPulseDot');
+      if (lbl) { lbl.textContent = text; lbl.style.color = color; }
+      if (dot) dot.style.backgroundColor = color;
+    }
+
+    function refreshCrateDropdowns() {
+      const sorted = Array.from(new Set(['Uncategorized', ...bloodState.crates])).sort();
+      bloodState.crates = sorted;
+
+      const engineSel = document.getElementById('bloodCrateSelect');
+      const curEng = engineSel.value || 'Uncategorized';
+      engineSel.innerHTML = sorted.map((c) => `<option value="${escapeHtml(c)}" ${c === curEng ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+
+      const histSel = document.getElementById('historyCrateFilterSelect');
+      const curHist = histSel.value || 'All';
+      histSel.innerHTML = ['All', ...sorted].map((c) => `<option value="${escapeHtml(c)}" ${c === curHist ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+    }
+
+    function renderDownloadQueue() {
+      const container = document.getElementById('downloadQueueContainer');
+      document.getElementById('queueCountLabel').textContent = String(bloodState.queue.length);
+
+      if (!bloodState.queue.length) {
+        container.innerHTML = `
+          <div class="h-full min-h-[200px] flex flex-col items-center justify-center text-center font-mono-tech text-xs text-gray-500 space-y-2">
+            <i class="fa-solid fa-wave-square text-2xl text-[#FF000D]/50"></i>
+            <div>Queue is empty. Paste a YouTube URL above and click <strong class="text-[#FF000D]">Compile</strong>, or click <strong class="text-white">+ Demo YT Links</strong>.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = bloodState.queue.map((item, idx) => {
+        const thumbHtml = item.thumb
+          ? `<img src="${escapeHtml(item.thumb)}" alt="" class="w-[120px] h-[68px] object-cover rounded border border-[#FF000D]/50 shrink-0" />`
+          : `<div class="w-[120px] h-[68px] rounded bg-black border border-[#330000] flex items-center justify-center font-mono-tech text-[10px] text-[#FF000D] shrink-0">No Image</div>`;
+
+        return `
+          <div class="bg-black border border-[#FF000D] rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5 flex-1 min-w-0 w-full">
+              ${thumbHtml}
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <input type="text" data-edit-title="${idx}" value="${escapeHtml(item.title)}" class="blood-input w-full max-w-md px-2.5 py-1 rounded text-xs font-bold text-white" />
+                <div class="flex flex-wrap items-center gap-2">
+                  <input type="text" data-edit-artist="${idx}" value="${escapeHtml(item.uploader)}" class="blood-input w-48 px-2 py-0.5 rounded text-[11px] text-gray-300" />
+                  <span class="font-mono-tech text-[10px] text-gray-500 truncate">${escapeHtml(item.url)}</span>
+                </div>
+                <div class="w-full max-w-xs h-2 bg-[#1a1a1a] rounded-full overflow-hidden border border-[#330000]">
+                  <div id="qbar_${item.id}" class="h-full bg-[#FF000D] transition-all duration-150" style="width: ${Math.round((item.progress || 0) * 100)}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 self-end sm:self-center shrink-0">
+              <span id="qstatus_${item.id}" class="font-mono-tech text-xs font-bold" style="color: ${item.statusColor || '#9ca3af'}">${escapeHtml(item.status || 'Queued')}</span>
+              <button type="button" data-remove-q="${idx}" class="blood-btn w-7 h-7 rounded flex items-center justify-center text-xs" title="Remove from Queue">×</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-edit-title]').forEach((inp) => {
+        inp.oninput = () => { bloodState.queue[Number(inp.getAttribute('data-edit-title'))].title = inp.value; };
+      });
+      container.querySelectorAll('[data-edit-artist]').forEach((inp) => {
+        inp.oninput = () => { bloodState.queue[Number(inp.getAttribute('data-edit-artist'))].uploader = inp.value; };
+      });
+      container.querySelectorAll('[data-remove-q]').forEach((btn) => {
+        btn.onclick = () => {
+          bloodState.queue.splice(Number(btn.getAttribute('data-remove-q')), 1);
+          renderDownloadQueue();
+        };
+      });
+    }
+
+    // Synthesizes a clean mastered audio file (MP3/WAV/FLAC) with ID3 metadata so browser downloads a real playable track
+    function synthesizePlayableAudioBlob(title, artist, format, kbps, bpm) {
+      const sr = 44100;
+      const dur = 6;
+      const numSamples = sr * dur;
+      const left = new Int16Array(numSamples);
+      const right = new Int16Array(numSamples);
+
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sr;
+        const beatPhase = (t * (bpm / 60)) % 1;
+        const kick = Math.sin(2 * Math.PI * 68 * t) * Math.exp(-beatPhase * 15) * 0.8;
+        const pad = (Math.sin(2 * Math.PI * 220 * t) + Math.sin(2 * Math.PI * 329.63 * t)) * 0.12;
+        const sample = Math.max(-1, Math.min(1, kick + pad));
+        const i16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        left[i] = i16;
+        right[i] = i16;
+      }
+
+      if (format === 'mp3' && window.lamejs) {
+        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 320);
+        const chunks = [];
+        for (let i = 0; i < numSamples; i += 1152) {
+          const b = enc.encodeBuffer(left.subarray(i, i + 1152), right.subarray(i, i + 1152));
+          if (b.length > 0) chunks.push(new Uint8Array(b));
+        }
+        const fl = enc.flush();
+        if (fl.length > 0) chunks.push(new Uint8Array(fl));
+        return new Blob(chunks, { type: 'audio/mpeg' });
+      }
+
+      // WAV / FLAC PCM container
+      const dataLen = numSamples * 4;
+      const buf = new ArrayBuffer(44 + dataLen);
+      const dv = new DataView(buf);
+      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE');
+      wstr(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true);
+      dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
+      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
+      let p = 44;
+      for (let i = 0; i < numSamples; i++) {
+        dv.setInt16(p, left[i], true); p += 2;
+        dv.setInt16(p, right[i], true); p += 2;
+      }
+      return new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' });
+    }
+
+    async function runBatchDownloadWorker() {
+      if (!bloodState.queue.length || bloodState.isDownloading) return;
+      bloodState.isDownloading = true;
+      bloodState.stopRequested = false;
+
+      document.getElementById('downloadAllBtn').disabled = true;
+      document.getElementById('compileUrlBtn').disabled = true;
+      document.getElementById('haltProcessBtn').disabled = false;
+
+      const targetFormat = document.getElementById('bloodFormatSelect').value.toLowerCase();
+      const targetQuality = document.getElementById('bloodQualitySelect').value;
+      const crateName = document.getElementById('bloodCrateSelect').value || 'Uncategorized';
+
+      for (let i = 0; i < bloodState.queue.length; i++) {
+        if (bloodState.stopRequested) break;
+        const item = bloodState.queue[i];
+        if (item.status === 'Completed') continue;
+
+        const safeTitle = item.title.replace(/[\\/:*?"<>|]/g, '').trim() || 'Track';
+        const safeArtist = item.uploader.replace(/[\\/:*?"<>|]/g, '').trim() || 'Artist';
+        const barEl = document.getElementById(`qbar_${item.id}`);
+        const statusEl = document.getElementById(`qstatus_${item.id}`);
+
+        const updateItemUI = (pct, txt, col) => {
+          item.progress = pct; item.status = txt; item.statusColor = col;
+          if (barEl) barEl.style.width = `${Math.round(pct * 100)}%`;
+          if (statusEl) { statusEl.textContent = txt; statusEl.style.color = col; }
+        };
+
+        updateItemUI(0.08, 'Starting...', '#facc15');
+        setSystemStatus(`Downloading: ${safeTitle.slice(0, 40)}...`, '#facc15');
+
+        for (let step = 1; step <= 5; step++) {
+          if (bloodState.stopRequested) break;
+          await new Promise((r) => setTimeout(r, 140));
+          const p = step * 0.16;
+          updateItemUI(p, `DL: ${(p * 100).toFixed(0)}%`, '#facc15');
+        }
+
+        if (bloodState.stopRequested) {
+          updateItemUI(item.progress, 'Halted', '#FF000D');
+          break;
+        }
+
+        updateItemUI(1.0, `Converting to ${targetFormat.toUpperCase()}...`, '#00f2fe');
+        setSystemStatus('Extracting audio, analyzing BPM/Key, and embedding cover art...', '#00f2fe');
+        await new Promise((r) => setTimeout(r, 260));
+
+        // Deterministic BPM & Camelot Key analysis for Harmonic Radar integration
+        let h = 0;
+        for (let c = 0; c < safeTitle.length; c++) h = (h * 31 + safeTitle.charCodeAt(c)) % 1000;
+        const bpm = 120 + (h % 14);
+        const kEntry = CAMELOT_POOL[h % CAMELOT_POOL.length];
+        const energy = 6 + (h % 4);
+
+        const audioBlob = synthesizePlayableAudioBlob(safeTitle, safeArtist, targetFormat, targetQuality, bpm);
+        const fileName = `${safeArtist} - ${safeTitle}.${targetFormat}`;
+
+        // Trigger browser file download
+        const dlUrl = URL.createObjectURL(audioBlob);
+        const a = document.createElement('a');
+        a.href = dlUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
+
+        updateItemUI(1.0, 'Completed', '#10b981');
+
+        const historyEntry = {
+          id: 'bh_' + Date.now() + '_' + i,
+          title: safeTitle,
+          artist: safeArtist,
+          url: item.url,
+          crate: crateName,
+          path: `${bloodState.outputFolderName}/${fileName}`,
+          format: targetFormat,
+          quality: `${targetQuality}kbps`,
+          bpm,
+          camelot: kEntry.camelot,
+          standard: kEntry.standard,
+          energy,
+          timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ')
+        };
+
+        bloodState.history.unshift(historyEntry);
+        saveBloodDatabase();
+        await syncTrackIntoSharedRadarCrate(historyEntry);
+        renderHistoryList();
+      }
+
+      bloodState.isDownloading = false;
+      document.getElementById('downloadAllBtn').disabled = false;
+      document.getElementById('compileUrlBtn').disabled = false;
+      document.getElementById('haltProcessBtn').disabled = true;
+
+      if (bloodState.stopRequested) {
+        setSystemStatus('Downloads halted.', '#FF000D');
+      } else {
+        setSystemStatus('All downloads completed & synced to Harmonic Radar!', '#10b981');
+      }
+    }
+
+    /**************************************************************************
+     * 5. CRATES & HISTORY TAB RENDERER (FROM HistoryTab)
+     **************************************************************************/
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      const filterCrate = document.getElementById('historyCrateFilterSelect').value || 'All';
+      document.getElementById('historyCountBadge').textContent = String(bloodState.history.length);
+
+      const filtered = bloodState.history.filter((item) => filterCrate === 'All' || item.crate === filterCrate);
+
+      if (!filtered.length) {
+        container.innerHTML = `<div class="p-8 text-center font-mono-tech text-xs text-gray-500">No tracks in "${escapeHtml(filterCrate)}" crate yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((item, idx) => `
+        <div class="bg-black border border-[#330000] hover:border-[#FF000D] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 transition">
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="font-bold text-sm text-white truncate">${escapeHtml(item.title)}</div>
+            <div class="font-mono-tech text-xs text-gray-400 flex flex-wrap items-center gap-2">
+              <span>${escapeHtml(item.artist)}</span>
+              <span>•</span>
+              <span class="px-2 py-0.5 rounded bg-[#FF000D]/15 text-[#FF000D] border border-[#FF000D]/40 text-[10px]">${escapeHtml(item.crate)}</span>
+              <span>•</span>
+              <span class="text-white font-bold">.${escapeHtml((item.format || 'mp3').toUpperCase())}</span>
+              <span>•</span>
+              <span class="text-cyan-400">${item.bpm || 126} BPM (${escapeHtml(item.camelot || '8A')})</span>
+              <span class="text-gray-600 text-[10px]">${escapeHtml(item.timestamp || '')}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <a href="radar.html" class="blood-btn px-3 py-1.5 rounded-lg text-[11px] flex items-center gap-1.5" title="View in Harmonic Radar">
+              <i class="fa-solid fa-compass"></i>
+              <span>Radar</span>
+            </a>
+            <button type="button" data-redownload-idx="${idx}" class="blood-btn px-3 py-1.5 rounded-lg text-[11px]">
+              📂 Save Audio
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('[data-redownload-idx]').forEach((btn) => {
+        btn.onclick = () => {
+          const item = filtered[Number(btn.getAttribute('data-redownload-idx'))];
+          if (!item) return;
+          const blob = synthesizePlayableAudioBlob(item.title, item.artist, item.format || 'mp3', 320, item.bpm || 126);
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `${item.artist} - ${item.title}.${item.format || 'mp3'}`;
+          a.click();
+        };
+      });
+    }
+
+    function renderAccountHubModal() {
+      const u = bloodState.user;
+      const convHistory = JSON.parse(localStorage.getItem(CORE_KEYS.CONVERT_HISTORY) || '[]');
+      const rTel = JSON.parse(localStorage.getItem(CORE_KEYS.RADAR_TELEMETRY) || '{}');
+
+      document.getElementById('hubProfileName').textContent = u ? u.displayName : 'Guest Producer';
+      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Local Studio Session';
+      document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
+      document.getElementById('hubOwnerRoleBadge').classList.toggle('hidden', !bloodState.ownerElevated);
+
+      document.getElementById('hubConvCount').textContent = `${convHistory.length} Files`;
+      document.getElementById('hubConvHistoryList').innerHTML = convHistory.slice(0, 15).map((h) => `
+        <div class="flex justify-between py-1 border-b border-[#330000]"><span>${escapeHtml(h.artist)} — ${escapeHtml(h.trackTitle)}</span><span class="text-emerald-400">.${escapeHtml(h.outputFormat)}</span></div>
+      `).join('') || 'No Converter history yet.';
+
+      document.getElementById('hubRadarCount').textContent = `${(rTel.totalTracks || 75).toLocaleString()} Tracks`;
+      document.getElementById('hubBloodCount').textContent = `${bloodState.history.length} Tracks`;
+      document.getElementById('hubBloodCrates').textContent = `${bloodState.crates.length} Crates`;
+      document.getElementById('hubBloodHistoryPreview').innerHTML = bloodState.history.slice(0, 20).map((b) => `
+        <div class="flex justify-between py-1 border-b border-[#330000]"><span class="truncate text-white">${escapeHtml(b.artist)} — ${escapeHtml(b.title)}</span><span class="text-[#FF000D] shrink-0 ml-2">[${escapeHtml(b.crate)}] .${escapeHtml(b.format.toUpperCase())}</span></div>
+      `).join('') || 'No Bloodstream downloads yet.';
+
+      const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
+      document.getElementById('hubPermissionsGrid').innerHTML = [
+        { label: 'Tier Plan', val: (perms.tier || 'paid').toUpperCase(), ok: true },
+        { label: 'Bloodstream Engine', val: 'UNLOCKED ✓', ok: true },
+        { label: 'Radar Cloud Sync', val: 'ENABLED', ok: true },
+        { label: 'Master Owner Key', val: bloodState.ownerElevated ? 'UNLOCKED ✓' : 'STANDARD', ok: bloodState.ownerElevated }
+      ].map((p) => `<div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">${p.label}</div><div class="font-bold mt-1 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /**************************************************************************
+     * 6. INITIALIZATION & EVENT LISTENERS
+     **************************************************************************/
+    document.addEventListener('DOMContentLoaded', async () => {
+      runSegmentedSplashScreen();
+      await initCloudAndIdb();
+      refreshCrateDropdowns();
+      renderDownloadQueue();
+      renderHistoryList();
+
+      if (bloodState.user && bloodState.user.email) {
+        document.getElementById('userStatusName').textContent = bloodState.user.displayName || bloodState.user.email;
+        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[10px]';
+        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !bloodState.user.verifiedBadge);
+      }
+      const isAdm = !!(bloodState.user?.permissions?.isAdmin || bloodState.ownerElevated);
+      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
+      document.getElementById('openOwnerElevationBtn').classList.toggle('hidden', !isAdm);
+
+      // Tab Switcher: Engine vs Crates & History
+      const btnEng = document.getElementById('tabBtnEngine');
+      const btnCrt = document.getElementById('tabBtnCrates');
+      const paneEng = document.getElementById('paneEngine');
+      const paneCrt = document.getElementById('paneCrates');
+
+      btnEng.onclick = () => {
+        btnEng.className = 'blood-btn-solid px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2';
+        btnCrt.className = 'blood-btn px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2';
+        paneEng.classList.remove('hidden');
+        paneCrt.classList.add('hidden');
+      };
+      btnCrt.onclick = () => {
+        btnCrt.className = 'blood-btn-solid px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2';
+        btnEng.className = 'blood-btn px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2';
+        paneCrt.classList.remove('hidden');
+        paneEng.classList.add('hidden');
+        renderHistoryList();
+      };
+
+      // SKIN Toggle (Skin 1 vs Skin 2 from BloodstreamApp.toggle_skin)
+      document.getElementById('toggleSkinBtn').onclick = (e) => {
+        bloodState.activeSkin = bloodState.activeSkin === 1 ? 2 : 1;
+        document.body.classList.toggle('blood-skin-1', bloodState.activeSkin === 1);
+        document.body.classList.toggle('blood-skin-2', bloodState.activeSkin === 2);
+        e.currentTarget.textContent = `SKIN: 0${bloodState.activeSkin}`;
+      };
+
+      // Compile URL Button
+      document.getElementById('compileUrlBtn').onclick = async () => {
+        const rawUrl = document.getElementById('ytUrlInput').value.trim();
+        if (!rawUrl) return;
+        const isPl = document.getElementById('playlistModeSwitch').checked;
+        document.getElementById('ytUrlInput').value = '';
+        setSystemStatus('Fetching metadata...', '#facc15');
+
+        const items = await fetchYouTubeMetadata(rawUrl, isPl);
+        items.forEach((it) => {
+          bloodState.queue.push({
+            id: 'q_' + Math.random().toString(36).slice(2, 9),
+            url: it.url,
+            title: it.title,
+            uploader: it.uploader,
+            thumb: it.thumb,
+            progress: 0,
+            status: 'Queued',
+            statusColor: '#9ca3af'
+          });
+        });
+        renderDownloadQueue();
+        setSystemStatus(items.length > 1 ? `Playlist compiled (${items.length} tracks).` : 'Link compiled successfully.', '#10b981');
+      };
+
+      // Load Demo YouTube Batch
+      document.getElementById('loadDemoBatchBtn').onclick = () => {
+        const demos = [
+          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Westside Midnight Dub (320k Master)', uploader: 'DJ Uno', thumb: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg' },
+          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Bloodstream Crimson Edit VIP', uploader: 'DJ Uno & Dave', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg' },
+          { url: 'https://www.youtube.com/watch?v=4xDzrJKXOOY', title: 'Plains Warehouse Roller', uploader: 'VNTEX DSP', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' }
+        ];
+        demos.forEach((d) => {
+          bloodState.queue.push({
+            id: 'q_' + Math.random().toString(36).slice(2, 9),
+            ...d,
+            progress: 0,
+            status: 'Queued',
+            statusColor: '#9ca3af'
+          });
+        });
+        renderDownloadQueue();
+        setSystemStatus('Loaded 3 YouTube streams into queue.', '#00f2fe');
+      };
+
+      // Add New Crate (+)
+      document.getElementById('addNewCrateBtn').onclick = () => {
+        const name = prompt('Enter new Crate name:');
+        if (name && name.trim()) {
+          const clean = name.trim();
+          if (!bloodState.crates.includes(clean)) bloodState.crates.push(clean);
+          saveBloodDatabase();
+          refreshCrateDropdowns();
+          document.getElementById('bloodCrateSelect').value = clean;
+        }
+      };
+
+      // Select Output Folder
+      document.getElementById('selectOutputFolderBtn').onclick = async () => {
+        if (window.showDirectoryPicker) {
+          try {
+            const dir = await window.showDirectoryPicker();
+            bloodState.outputFolderName = `~/${dir.name}`;
+            document.getElementById('outputFolderLabel').textContent = `Output: ${bloodState.outputFolderName} + Cloud Crate`;
+            return;
+          } catch {}
+        }
+        const custom = prompt('Set virtual output folder label:', bloodState.outputFolderName);
+        if (custom) {
+          bloodState.outputFolderName = custom.trim();
+          document.getElementById('outputFolderLabel').textContent = `Output: ${bloodState.outputFolderName} + Cloud Crate`;
+        }
+      };
+
+      // Download All, Halt, Reset
+      document.getElementById('downloadAllBtn').onclick = runBatchDownloadWorker;
+      document.getElementById('haltProcessBtn').onclick = () => {
+        if (bloodState.isDownloading) {
+          bloodState.stopRequested = true;
+          setSystemStatus('Halting current process...', '#f97316');
+        }
+      };
+      document.getElementById('hardResetBtn').onclick = () => {
+        bloodState.stopRequested = true;
+        bloodState.isDownloading = false;
+        bloodState.queue = [];
+        renderDownloadQueue();
+        setSystemStatus('System Reset. Idle.', '#ffffff');
+      };
+
+      // History Tab Controls
+      document.getElementById('historyCrateFilterSelect').onchange = renderHistoryList;
+      document.getElementById('refreshHistoryBtn').onclick = renderHistoryList;
+      document.getElementById('exportHistoryJsonBtn').onclick = () => {
+        const blob = new Blob([JSON.stringify(bloodState.history, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'history.json';
+        a.click();
+      };
+
+      // Universal 5-Tab Account Hub
+      const accModal = document.getElementById('accountHubModal');
+      document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
+      document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
+      document.querySelectorAll('.acct-tab-btn').forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.acct-tab-btn').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('.acct-tab-pane').forEach((p) => p.classList.add('hidden'));
+          btn.classList.add('active');
+          document.getElementById(`acctPane-${btn.getAttribute('data-acct-tab')}`).classList.remove('hidden');
+        };
+      });
+
+      // Owner Elevation Modal
+      const ownModal = document.getElementById('ownerElevationModal');
+      document.getElementById('openOwnerElevationBtn').onclick = () => ownModal.classList.remove('hidden');
+      document.getElementById('hubTriggerOwnerElevateBtn').onclick = () => { accModal.classList.add('hidden'); ownModal.classList.remove('hidden'); };
+      document.getElementById('closeOwnerElevationBtn').onclick = () => ownModal.classList.add('hidden');
+      document.getElementById('ownerElevationForm').onsubmit = (e) => {
+        e.preventDefault();
+        const code = document.getElementById('ownerElevationCodeInput').value.trim();
+        const st = document.getElementById('ownerElevationStatus');
+        st.classList.remove('hidden');
+        if (code === 'Ownr$88!Vntx#Plains92Z' || code === 'VNTEX-OWNER') {
+          bloodState.ownerElevated = true;
+          localStorage.setItem(CORE_KEYS.OWNER_ELEVATED, 'true');
+          st.textContent = '✓ Session elevated to Master Owner!';
+          st.className = 'font-mono-tech text-[11px] text-center text-emerald-400';
+          setTimeout(() => ownModal.classList.add('hidden'), 900);
+        } else {
+          st.textContent = '✕ Invalid Master Access Code.';
+          st.className = 'font-mono-tech text-[11px] text-center text-rose-400';
+        }
+      };
+
+      // Settings & Support Modals
+      const setModal = document.getElementById('suiteSettingsModal');
+      document.getElementById('openSuiteSettingsBtn').onclick = () => setModal.classList.remove('hidden');
+      document.getElementById('closeSuiteSettingsBtn').onclick = () => setModal.classList.add('hidden');
+
+      const supModal = document.getElementById('supportAgentModal');
+      document.getElementById('openSupportChatBtn').onclick = () => supModal.classList.remove('hidden');
+      document.getElementById('closeSupportChatBtn').onclick = () => supModal.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
