@@ -115,7 +115,7 @@
        VIEW 1: PUBLIC USER CONVERTER APP
        ========================================================================== -->
   <div id="userAppWrapper">
-        <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30 sticky top-0">
+            <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30 sticky top-0">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
@@ -127,20 +127,22 @@
         <nav class="hardware-well p-0.5 rounded-lg flex items-center gap-1">
           <a href="index.html" class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--accent-primary)] bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)] flex items-center gap-1.5"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
           <a href="radar.html" class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--text-secondary)] hover:text-white flex items-center gap-1.5 transition"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
-          <span class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--text-muted)] opacity-60 flex items-center gap-1.5"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span class="hidden sm:inline">Bloodstream</span></span>
+          <a href="bloodstream.html" class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--text-secondary)] hover:text-white flex items-center gap-1.5 transition"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span></a>
         </nav>
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="openStudioHubBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] flex items-center gap-1.5" title="Studio Hub (Device Rigs, Automation & UI Palettes)">
-          <i id="studioHubLockIcon" class="fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]"></i>
-          <span class="hidden sm:inline font-mono-tech text-[11px]">Studio Hub</span>
+        <!-- Standardized Sliders Icon for Converter Settings -->
+        <button id="openStudioHubBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Converter Options & Studio Settings">
+          <i id="studioHubLockIcon" class="fa-solid fa-sliders"></i>
         </button>
 
-        <button id="headerElevateOwnerBtn" type="button" class="hidden hardware-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Elevate Session to Master Owner">
-          <i class="fa-solid fa-key mr-1"></i><span>Elevate Owner</span>
+        <!-- AI Support Chat Assistance Button -->
+        <button id="openIndexSupportChatBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="AI Support Agent & Notifications">
+          <i class="fa-regular fa-comment-dots"></i>
         </button>
 
+        <!-- Admin Dashboard Link: Strictly Gated to Designated Admins Only -->
         <button id="headerAdminSwitchBtn" type="button" class="hidden hardware-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400 flex items-center gap-1.5">
           <i class="fa-solid fa-shield-halved text-[10px]"></i>
           <span>Admin Dash</span>
@@ -148,7 +150,7 @@
 
         <button id="openAccountBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
           <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
-          <span id="headerAccountLabel">Sign In / Profile</span>
+          <span id="headerAccountLabel" class="font-mono-tech">@guest</span>
           <i id="headerVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
         </button>
       </div>
@@ -2745,6 +2747,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       VNTEXAuthEngine.boot();
 
+      const supBtn = document.getElementById("openIndexSupportChatBtn");
+      const supMod = document.getElementById("indexSupportAgentModal");
+      const supCls = document.getElementById("closeIndexSupportChatBtn");
+      if (supBtn && supMod) supBtn.onclick = () => supMod.classList.remove("hidden");
+      if (supCls && supMod) supCls.onclick = () => supMod.classList.add("hidden");
+
+
       // Argon5 Owner Elevation & Multi-Tool Admin Monitors
       const elevBtn = document.getElementById("elevateToOwnerBtn");
       if (elevBtn) {
@@ -3467,5 +3476,27 @@
       };
     });
   </script>
+
+  <!-- AI SUPPORT AGENT MODAL -->
+  <div id="indexSupportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
+    <div class="studio-panel w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[460px]">
+      <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-emerald-400 mr-1.5"></i>VNTEX AI Support &amp; Admin Inbox</h3>
+        <button id="closeIndexSupportChatBtn" type="button" class="hardware-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="indexSupportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
+        <div class="hardware-well p-3 rounded-xl text-[var(--text-secondary)]">
+          <strong class="text-[var(--accent-primary)]">VNTEX AI Support Agent:</strong> Ask me anything about hardware device rigs, batch audio conversion, or escalate a ticket directly to the Admin Portal!
+        </div>
+      </div>
+      <div class="p-3 border-t border-[var(--border-hairline)] bg-[#050509] space-y-2">
+        <form id="indexSupportChatForm" class="flex gap-1.5">
+          <input id="indexSupportChatInput" type="text" required placeholder="Ask AI or message Admin..." class="hardware-well flex-1 px-3 py-2 rounded-xl text-xs" />
+          <button type="submit" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-xs">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

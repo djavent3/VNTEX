@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Harmonic Radar (Argon4 Brain)</title>
+  <title>VNTEX // Harmonic Radar (Argon4)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -37,7 +37,7 @@
     }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
     .hud-glass {
-      background: color-mix(in srgb, var(--bg-panel) 84%, transparent);
+      background: color-mix(in srgb, var(--bg-panel) 86%, transparent);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-hairline);
@@ -65,11 +65,12 @@
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
+      text-decoration: none;
     }
     .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-highlight); }
     .suite-nav-pill.active {
       color: var(--accent-primary);
-      background: rgba(0, 242, 254, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
       border-color: var(--accent-primary);
       box-shadow: 0 0 12px var(--accent-glow);
     }
@@ -102,20 +103,11 @@
     .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45)); }
     .draggable-hud { resize: both; overflow: auto; min-width: 280px; min-height: 175px; }
     .drag-handle { cursor: move; }
-
-    /* Top-Left Map-Layer Transparent Node Tree Styling */
-    .map-layer-tree {
-      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.98), 0 0 14px rgba(0, 0, 0, 0.9);
-    }
-    .map-tree-node {
-      opacity: 0.72;
-      transition: opacity 0.15s ease, transform 0.15s ease;
-    }
-    .map-tree-node:hover {
-      opacity: 1;
-      transform: translateX(2px);
-    }
-
+    .map-layer-tree { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.98), 0 0 14px rgba(0, 0, 0, 0.9); }
+    .map-tree-node { opacity: 0.72; transition: opacity 0.15s ease, transform 0.15s ease; }
+    .map-tree-node:hover { opacity: 1; transform: translateX(2px); }
+    .avatar-option { border: 2px solid transparent; transition: all 0.15s ease; cursor: pointer; }
+    .avatar-option.selected { border-color: var(--accent-primary); box-shadow: 0 0 12px var(--accent-glow); transform: scale(1.05); }
     input[type="color"] { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 6px; cursor: pointer; background: transparent; padding: 0; }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-highlight); border-radius: 6px; }
@@ -126,7 +118,7 @@
 <body class="antialiased flex flex-col">
 
   <!-- ==========================================================================
-       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL APPS)
+       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL 3 TOOLS)
        ========================================================================== -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
@@ -139,36 +131,36 @@
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
         <a href="index.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
         <a href="radar.html" class="suite-nav-pill active"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
-        <button id="bloodstreamNavBtn" type="button" class="suite-nav-pill opacity-60 hover:opacity-100"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span class="hidden sm:inline">Bloodstream</span></button>
+        <a href="bloodstream.html" class="suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span></a>
       </nav>
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[var(--accent-primary)]" title="Sync Library & Branches with Cloud">
+      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[var(--accent-primary)]" title="Cloud Crate Sync Status">
         <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
         <span id="cloudStatusText" class="text-[var(--text-secondary)]">Synced</span>
       </button>
 
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Suite Settings & Vector Styling">
+      <!-- Standardized Menu Sliders Icon (fa-solid fa-sliders) -->
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Radar Options & Selection Settings">
         <i class="fa-solid fa-sliders"></i>
       </button>
 
+      <!-- AI Support Chat Assistance Button -->
       <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] relative" title="AI Support Agent & Notifications">
         <i class="fa-regular fa-comment-dots"></i>
         <span id="unreadNotifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-mono-tech text-[9px] flex items-center justify-center font-bold">1</span>
       </button>
 
-      <button id="openOwnerElevationBtn" type="button" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Elevate Session to Master Owner">
-        <i class="fa-solid fa-key mr-1"></i><span id="ownerElevationLabel">Elevate Owner</span>
-      </button>
-
+      <!-- Admin Dashboard Link: Strictly Gated to Designated Admins Only -->
       <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400">
         <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
       </a>
 
-      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
-        <i id="userStatusIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
-        <span id="userStatusName">Account</span>
+      <!-- Privacy-Safe Account Button: Shows Only Avatar + @username -->
+      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
+        <img id="headerUserAvatarImg" src="" alt="" class="w-4 h-4 rounded-full object-cover border border-[var(--accent-primary)]" />
+        <span id="userStatusName" class="font-mono-tech">@guest</span>
         <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
       </button>
     </div>
@@ -184,19 +176,8 @@
 
     <canvas id="radarVoidCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
 
-    <!-- DRAG OVERLAY -->
-    <div id="dragOverlay" class="pointer-events-none fixed inset-0 z-40 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center">
-      <div class="hud-glass px-8 py-6 rounded-2xl border-2 border-dashed border-[var(--accent-primary)] text-center space-y-2">
-        <i class="fa-solid fa-cloud-arrow-up text-3xl text-[var(--accent-primary)]"></i>
-        <div class="font-mono-tech font-bold text-sm text-white">Drop Rekordbox XML, CSV Library, or Audio Batch</div>
-      </div>
-    </div>
-
-    <!-- ========================================================================
-         TOP-LEFT TRANSPARENT MAP-LAYER NODE TREE (NO WINDOW CHROME)
-         ======================================================================== -->
+    <!-- TOP-LEFT TRANSPARENT MAP-LAYER NODE TREE -->
     <div id="mapLayerNodeTreeWrapper" class="absolute top-3 left-4 z-20 pointer-events-none max-w-xs sm:max-w-sm map-layer-tree font-mono-tech">
-      <!-- Header Line on Map Layer -->
       <div class="pointer-events-auto inline-flex items-center gap-2.5 text-[10px] uppercase tracking-wider text-white/75">
         <span class="flex items-center gap-1.5 font-extrabold text-[var(--accent-primary)]">
           <i class="fa-solid fa-code-branch text-[9px]"></i>
@@ -206,25 +187,17 @@
           Hide
         </button>
       </div>
-
-      <!-- Transparent Text Tree List Directly Over Canvas -->
       <div id="mapLayerNodeTreeList" class="pointer-events-auto mt-1.5 space-y-1 max-h-[42vh] overflow-y-auto pr-2"></div>
     </div>
 
-    <!-- ========================================================================
-         TOP-CENTER HUD: INGESTION, SCAN UNKNOWN, SEARCH & PARAMETER PILLS
-         ======================================================================== -->
+    <!-- TOP-CENTER HUD: INGESTION, SCAN UNKNOWN, SEARCH & PARAMETER PILLS -->
     <div class="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 w-max max-w-[94vw]">
-      <!-- Row 1: Library Actions & Search -->
       <div class="hud-glass p-1.5 rounded-full flex flex-wrap items-center justify-center gap-1.5">
         <button id="openLibraryImportModalBtn" type="button" class="px-3 py-1 rounded-full bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5 hover:brightness-110 transition">
           <i class="fa-solid fa-database"></i><span>Import Library</span>
         </button>
         <button id="addFilesBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech text-[10px] hover:border-[var(--accent-primary)] flex items-center gap-1">
           <i class="fa-solid fa-plus text-[var(--accent-primary)]"></i><span>Audio</span>
-        </button>
-        <button id="addFolderBtn" type="button" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-[var(--text-secondary)] hover:text-white" title="Drop Folder">
-          <i class="fa-regular fa-folder-open"></i>
         </button>
         <button id="scanAllUnknownBtn" type="button" class="hud-well px-2.5 py-1 rounded-full border border-amber-400/50 text-amber-300 font-mono-tech font-bold text-[10px] flex items-center gap-1.5 hover:bg-amber-400/10 transition">
           <i id="scanUnknownIcon" class="fa-solid fa-wave-square text-amber-400"></i>
@@ -238,7 +211,6 @@
         <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
       </div>
 
-      <!-- Row 2: Parameter Toggles & Intersection Mode -->
       <div class="flex flex-wrap items-center justify-center gap-1.5 hud-glass p-1 rounded-full">
         <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-cyan-300 border border-cyan-400/50 bg-cyan-400/10">
           MATCH: ALL (AND)
@@ -266,9 +238,7 @@
       <button id="zoomInBtn" type="button" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Zoom In"><i class="fa-solid fa-plus text-[10px]"></i></button>
     </div>
 
-    <!-- ========================================================================
-         DRAGGABLE & RESIZABLE HUD 3 (BOTTOM-LEFT): ANCHOR + RADAR BRAIN AUTO-NEXT
-         ======================================================================== -->
+    <!-- DRAGGABLE & RESIZABLE HUD (BOTTOM-LEFT): SELECTED ANCHOR INSPECTOR -->
     <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 385px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
       <div data-drag-parent="anchorHudCard" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <div class="font-mono-tech text-[9px] uppercase tracking-wider text-[var(--accent-primary)] flex items-center gap-1.5">
@@ -287,8 +257,8 @@
       </div>
 
       <div>
-        <h2 id="anchorTitle" class="font-extrabold text-sm text-white truncate">Click Any Star</h2>
-        <p id="anchorArtist" class="text-xs text-[var(--text-secondary)] truncate">—</p>
+        <h2 id="anchorTitle" class="font-extrabold text-sm text-white truncate">No Anchor Selected</h2>
+        <p id="anchorArtist" class="text-xs text-[var(--text-secondary)] truncate">Click any star on the void (click empty space to unselect)</p>
       </div>
 
       <!-- THE RADAR BRAIN: YOUTUBE-STYLE SMART NEXT AUTO-PICK BAR -->
@@ -330,19 +300,12 @@
         <div class="flex gap-1">
           <input id="customTagInput" type="text" placeholder="Add custom tag (e.g. Peak, Opener)..." class="hud-well flex-1 px-2 py-1 rounded text-[10px] font-mono-tech" />
           <button id="addTagToAnchorBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-pink-400 hover:border-pink-400">+ Song</button>
-          <button id="addTagToSetlistBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]" title="Tag entire setlist tree">+ Tree</button>
+          <button id="addTagToSetlistBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]">+ Tree</button>
         </div>
-      </div>
-
-      <div class="flex items-center justify-between text-[10px] font-mono-tech text-[var(--text-secondary)]">
-        <span id="matchStatsLabel">0 matches lit</span>
-        <button id="clearVoidBtn" type="button" class="text-rose-400 hover:underline">Clear Crate</button>
       </div>
     </div>
 
-    <!-- ========================================================================
-         DRAGGABLE & RESIZABLE HUD 4 (RIGHT): BRAIN-RANKED MATCHES & EXPORT
-         ======================================================================== -->
+    <!-- DRAGGABLE & RESIZABLE HUD (RIGHT): BRAIN-RANKED MATCHES & SETLIST DRAWER -->
     <div id="setlistDrawer" style="right: 16px; top: 64px; width: 350px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[84vh]">
       <div data-drag-parent="setlistDrawer" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <span class="font-mono-tech text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
@@ -350,7 +313,7 @@
           <span>🧠 Brain Ranked (<span id="branchCountBadge">1</span> Branch)</span>
         </span>
         <div class="flex items-center gap-1">
-          <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40" title="Isolate all branches in this setlist">★ Isolate</button>
+          <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40">★ Isolate</button>
           <button id="openSetlistManagerBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-[var(--accent-primary)]">Manage Sets</button>
         </div>
       </div>
@@ -360,7 +323,6 @@
         <button id="newCloudPlaylistBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">+ New</button>
       </div>
 
-      <!-- Persistent Vector Color & Previous-Branch Fade Controls -->
       <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 font-mono-tech text-[10px]">
         <div class="flex items-center gap-1.5">
           <input id="quickVectorColorInput" type="color" value="#f43f5e" title="Choose Setlist Vector Color" />
@@ -392,19 +354,18 @@
   </div>
 
   <!-- ==========================================================================
-       UNIVERSAL 5-TAB ACCOUNT & SUITE HUB MODAL (IDENTICAL ACROSS ALL TOOLS)
+       UNIVERSAL 5-TAB ACCOUNT HUB MODAL (IDENTICAL ACROSS ALL 3 TOOLS, NO LOG BLOAT)
        ========================================================================== -->
   <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2 bg-[#050509]">
+    <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[88vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-id-badge text-[var(--accent-primary)]"></i>
-          <h3 class="text-sm font-bold text-white">VNTEX Universal Account &amp; Tool Hub</h3>
+          <h3 class="text-sm font-bold text-white">VNTEX Universal Account &amp; Suite Hub</h3>
         </div>
         <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- 5-Tab Bar: 1. Account Info | 2. Converter | 3. Radar | 4. Bloodstream | 5. Permissions -->
       <div class="px-5 pt-3 border-b border-[var(--border-hairline)] bg-[#06060b] flex flex-wrap items-center gap-1.5 pb-2.5 font-mono-tech text-[11px]">
         <button type="button" data-acct-tab="profile" class="acct-tab-btn suite-nav-pill active"><i class="fa-regular fa-user"></i><span>Account Info</span></button>
         <button type="button" data-acct-tab="converter" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-bolt"></i><span>Converter</span></button>
@@ -414,100 +375,102 @@
       </div>
 
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
-        <!-- TAB 1: ACCOUNT INFO -->
+        <!-- TAB 1: ACCOUNT INFO, 5 STUDIO AVATARS & GLOBAL UI CUSTOMIZATION -->
         <div id="acctPane-profile" class="acct-tab-pane space-y-4">
           <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span id="hubProfileName" class="font-extrabold text-base text-white">Guest Producer</span>
-                <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden" title="Verified Producer"></i>
-                <span id="hubOwnerRoleBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">MASTER OWNER</span>
+            <div class="flex items-center gap-3.5">
+              <img id="hubProfileAvatarImg" src="" alt="Avatar" class="w-14 h-14 rounded-2xl object-cover border-2 border-[var(--accent-primary)]" />
+              <div>
+                <div class="flex items-center gap-2">
+                  <span id="hubProfileUsername" class="font-mono-tech font-extrabold text-base text-white">@guest</span>
+                  <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
+                </div>
+                <div class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5">Public DJ Handle • Email &amp; Legal Name Hidden for Privacy</div>
               </div>
-              <div id="hubProfileEmail" class="font-mono-tech text-xs text-[var(--text-secondary)] mt-0.5">Local Studio Session</div>
             </div>
-            <div class="flex items-center gap-2">
-              <button id="hubTriggerOwnerElevateBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-amber-400 border border-amber-400/40">🔑 Owner Key</button>
-              <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-[11px]">Sign In / Auth →</a>
+            <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-[11px]">Auth / Sign In →</a>
+          </div>
+
+          <form id="profileCustomizeForm" class="hud-well p-4 rounded-xl space-y-3.5">
+            <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Profile Identity &amp; Studio Avatar</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Full Name (Admin Portal Only)</label>
+                <input id="custFullNameInput" type="text" placeholder="Your Full Name" class="hud-well w-full px-3 py-2 rounded-lg text-xs" />
+              </div>
+              <div class="space-y-1">
+                <label class="font-mono-tech text-[10px] text-[var(--text-secondary)]">@username (Public Display)</label>
+                <input id="custUsernameInput" type="text" placeholder="@dj_uno" class="hud-well w-full px-3 py-2 rounded-lg font-mono-tech text-xs" />
+              </div>
             </div>
+            <div class="space-y-1.5">
+              <label class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Select Studio Avatar (5 Default Options)</label>
+              <div id="avatarPickerGrid" class="flex items-center gap-3 pt-1"></div>
+            </div>
+            <div class="space-y-2 pt-2 border-t border-[var(--border-hairline)]">
+              <label class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Global VNTEX UI Theme Customizer (Carries Across All Tools)</label>
+              <div class="grid grid-cols-4 gap-2">
+                <button type="button" data-theme-preset="obsidian" class="hud-well p-2 rounded-xl text-left hover:border-[#00f2fe]"><div class="font-bold text-[#00f2fe] text-[11px]">Obsidian</div></button>
+                <button type="button" data-theme-preset="winamp" class="hud-well p-2 rounded-xl text-left hover:border-[#00ff41]"><div class="font-bold text-[#00ff41] text-[11px]">Winamp</div></button>
+                <button type="button" data-theme-preset="crimson" class="hud-well p-2 rounded-xl text-left hover:border-[#f43f5e]"><div class="font-bold text-[#f43f5e] text-[11px]">Crimson</div></button>
+                <button type="button" data-theme-preset="blood" class="hud-well p-2 rounded-xl text-left hover:border-[#FF000D]"><div class="font-bold text-[#FF000D] text-[11px]">Blood OLED</div></button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span id="profileSavedStatus" class="font-mono-tech text-[11px] text-emerald-400"></span>
+              <button type="submit" class="px-4 py-2 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase">Save Profile &amp; UI</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: CONVERTER SUMMARY (NO HISTORY BLOAT) -->
+        <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3 font-mono-tech">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-[var(--accent-primary)] mt-1">Pioneer CDJ</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">TOTAL CONVERTED</div><div id="hubConvCount" class="text-sm font-bold text-emerald-400 mt-1">0 Files</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">DSP ENGINE</div><div class="text-xs font-bold text-white mt-1">320kbps / 24-Bit</div></div>
           </div>
-          <div class="grid grid-cols-3 gap-3 font-mono-tech">
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">SESSION STATUS</div><div id="hubAcctStatus" class="text-sm font-bold text-emerald-400 mt-1">Active</div></div>
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CLOUD CRATE</div><div id="hubAcctTotalTracks" class="text-sm font-bold text-[var(--accent-primary)] mt-1">0 Tracks</div></div>
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CONVERSIONS</div><div id="hubAcctTotalConvs" class="text-sm font-bold text-white mt-1">0 Files</div></div>
+          <a href="index.html" class="block text-center py-2.5 rounded-xl bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase">Open Converter Studio →</a>
+        </div>
+
+        <!-- TAB 3: RADAR SUMMARY (NO HISTORY BLOAT) -->
+        <div id="acctPane-radar" class="acct-tab-pane hidden space-y-3 font-mono-tech">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CLOUD CRATE</div><div id="hubLibraryCount" class="text-sm font-bold text-[var(--accent-primary)] mt-1">0 Tracks</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">SAVED SETLISTS</div><div id="hubSetlistsCount" class="text-sm font-bold text-rose-400 mt-1">1 Setlist</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE BRANCHES</div><div id="hubBranchesCount" class="text-sm font-bold text-amber-400 mt-1">1 Branch</div></div>
+          </div>
+          <div class="hud-well p-3.5 rounded-xl text-[11px] text-[var(--text-secondary)]">
+            Radar Brain Compatibility Engine (`0%–100%`) and Rekordbox `.XML` / Serato `.M3U8` exports are active on this account.
           </div>
         </div>
 
-        <!-- TAB 2: CONVERTER TOOL -->
-        <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3">
-          <div class="grid grid-cols-2 gap-3 font-mono-tech">
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-[var(--accent-primary)] mt-1">Pioneer CDJ / Rekordbox</div></div>
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">TRANSCODED FILES</div><div id="hubConvCount" class="text-xs font-bold text-emerald-400 mt-1">0 Converted</div></div>
+        <!-- TAB 4: BLOODSTREAM SUMMARY (NO HISTORY BLOAT) -->
+        <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3 font-mono-tech">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">COMPILED STREAMS</div><div id="hubBloodCount" class="text-sm font-bold text-rose-500 mt-1">0 Tracks</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE CRATES</div><div id="hubBloodCrates" class="text-sm font-bold text-white mt-1">4 Crates</div></div>
+            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">COVER ART TAGGING</div><div class="text-xs font-bold text-emerald-400 mt-1">ID3v2.3 APIC ✓</div></div>
           </div>
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Recent Converter Output History</div>
-          <div id="hubConvHistoryList" class="hud-well p-3 rounded-xl max-h-48 overflow-y-auto space-y-1.5 font-mono-tech text-[11px]"></div>
-        </div>
-
-        <!-- TAB 3: RADAR TOOL -->
-        <div id="acctPane-radar" class="acct-tab-pane hidden space-y-3">
-          <div class="grid grid-cols-3 gap-2.5 font-mono-tech">
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">RADAR LIBRARY</div><div id="hubLibraryCount" class="text-sm font-bold text-[var(--accent-primary)] mt-0.5">0</div></div>
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">SAVED SETLISTS</div><div id="hubSetlistsCount" class="text-sm font-bold text-rose-400 mt-0.5">0</div></div>
-            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE BRANCHES</div><div id="hubBranchesCount" class="text-sm font-bold text-amber-400 mt-0.5">1</div></div>
-          </div>
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Synced Radar Library Preview</div>
-          <div id="hubCloudLibraryPreview" class="hud-well p-3 rounded-xl max-h-48 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div>
-        </div>
-
-        <!-- TAB 4: BLOODSTREAM TOOL -->
-        <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3">
-          <div class="hud-well p-4 rounded-xl border-l-2 border-l-rose-500 space-y-1.5">
-            <div class="font-mono-tech text-xs font-bold text-rose-400 uppercase"><i class="fa-solid fa-droplet mr-1.5"></i>Bloodstream Web DSP Engine</div>
-            <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-              Your account profile, custom UI palettes, and cloud crate are pre-linked to the Bloodstream audio engine slot. All analyzed BPM, Camelot keys, and custom tags carry over automatically.
-            </p>
-          </div>
+          <a href="bloodstream.html" class="block text-center py-2.5 rounded-xl bg-rose-500 text-white font-extrabold text-xs uppercase">Launch Bloodstream Engine →</a>
         </div>
 
         <!-- TAB 5: PERMISSIONS -->
         <div id="acctPane-permissions" class="acct-tab-pane hidden space-y-3">
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Account Capabilities &amp; Feature Gates</div>
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Account Capabilities &amp; Tier Gates</div>
           <div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono-tech text-[11px]"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- =================OTHER MODALS (Setlist Manager, Settings, Owner Elevation, AI Support, Importer)================ -->
-  <div id="setlistManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-code-branch text-rose-400 mr-2"></i>Setlist &amp; Multi-Branch Tree Manager</h3>
-        <button id="closeSetlistManagerBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4 text-xs flex-1">
-        <div class="md:col-span-4 space-y-2 border-r border-[var(--border-hairline)] pr-3">
-          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]"><span>Saved Cloud Lists</span><button id="mgrCreateListBtn" type="button" class="text-[var(--accent-primary)] hover:underline">+ New List</button></div>
-          <div id="mgrPlaylistsSidebar" class="space-y-1.5"></div>
-        </div>
-        <div class="md:col-span-8 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <input id="mgrActiveListNameInput" type="text" class="hud-well px-3 py-1.5 rounded-lg font-bold text-xs text-white flex-1" />
-            <button id="mgrSaveNameBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">Rename</button>
-            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Isolate Tree</button>
-            <button id="mgrClearBranchesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400">Reset Branches</button>
-            <button id="mgrDeleteListBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-rose-400">Delete</button>
-          </div>
-          <div id="mgrBranchesSummary" class="font-mono-tech text-[11px] text-[var(--text-secondary)]"></div>
-          <div id="mgrTracksTableContainer" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- ==========================================================================
+       RADAR OPTIONS MODAL (OPENED BY SLIDERS ICON fa-solid fa-sliders)
+       ========================================================================== -->
   <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Radar Refinement, Vector Fading &amp; Suite Theme</h3>
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Radar Search Refinement &amp; Vector Options</h3>
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs">
@@ -549,41 +512,24 @@
             </div>
           </div>
         </div>
-
-        <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Global VNTEX Suite UI Palette</div>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" data-theme-preset="obsidian" class="hud-well p-2.5 rounded-xl text-left hover:border-[#00f2fe]"><div class="font-bold text-[#00f2fe]">Obsidian OLED</div></button>
-            <button type="button" data-theme-preset="winamp" class="hud-well p-2.5 rounded-xl text-left hover:border-[#00ff41]"><div class="font-bold text-[#00ff41]">Winamp LED</div></button>
-            <button type="button" data-theme-preset="crimson" class="hud-well p-2.5 rounded-xl text-left hover:border-[#f43f5e]"><div class="font-bold text-[#f43f5e]">Crimson Club</div></button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
-  <div id="ownerElevationModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-amber-400/50">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <div class="flex items-center gap-2"><i class="fa-solid fa-key text-amber-400"></i><h3 class="text-sm font-bold text-white">Elevate Session to Master Owner</h3></div>
-        <button id="closeOwnerElevationBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="ownerElevationForm" class="p-5 space-y-4 text-xs" autocomplete="off">
-        <p class="text-[var(--text-secondary)] leading-relaxed">Enter your **Master Owner Access Code** below to unlock Master Owner authority on your current signed-in session.</p>
-        <input id="ownerElevationCodeInput" type="password" required placeholder="Enter Master Access Code..." class="hud-well w-full px-3.5 py-2.5 rounded-xl font-mono-tech text-xs text-center text-white" />
-        <div id="ownerElevationStatus" class="hidden font-mono-tech text-[11px] text-center"></div>
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase hover:brightness-110 transition">Verify &amp; Unlock Master Owner</button>
-      </form>
-    </div>
-  </div>
-
+  <!-- ==========================================================================
+       AI SUPPORT AGENT & NOTIFICATIONS MODAL
+       ========================================================================== -->
   <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
     <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[480px]">
       <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
         <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-emerald-400 mr-1.5"></i>VNTEX AI Support &amp; Admin Inbox</h3>
         <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs"></div>
+      <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
+        <div class="hud-well p-3 rounded-xl text-[var(--text-secondary)]">
+          <strong class="text-[var(--accent-primary)]">VNTEX AI Support Agent:</strong> Click any star to rank compatible tracks by %, or click empty space on the void to unselect the active anchor!
+        </div>
+      </div>
       <div class="p-3 border-t border-[var(--border-hairline)] bg-[#050509] space-y-2">
         <form id="supportChatForm" class="flex gap-1.5">
           <input id="supportChatInput" type="text" required placeholder="Ask AI about Radar Brain %, Node Tree, or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
@@ -594,18 +540,39 @@
     </div>
   </div>
 
+  <!-- SETLIST MANAGER & LIBRARY IMPORTER MODALS -->
+  <div id="setlistManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-code-branch text-rose-400 mr-2"></i>Setlist &amp; Multi-Branch Tree Manager</h3>
+        <button id="closeSetlistManagerBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4 text-xs flex-1">
+        <div class="md:col-span-4 space-y-2 border-r border-[var(--border-hairline)] pr-3">
+          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]"><span>Saved Cloud Lists</span><button id="mgrCreateListBtn" type="button" class="text-[var(--accent-primary)] hover:underline">+ New List</button></div>
+          <div id="mgrPlaylistsSidebar" class="space-y-1.5"></div>
+        </div>
+        <div class="md:col-span-8 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <input id="mgrActiveListNameInput" type="text" class="hud-well px-3 py-1.5 rounded-lg font-bold text-xs text-white flex-1" />
+            <button id="mgrSaveNameBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">Rename</button>
+            <button id="mgrClearBranchesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400">Reset Branches</button>
+            <button id="mgrDeleteListBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-rose-400">Delete</button>
+          </div>
+          <div id="mgrTracksTableContainer" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="libraryImportModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-bolt text-[var(--accent-primary)] mr-2"></i>10,000+ Track Library Importer (XML / CSV)</h3>
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-bolt text-[var(--accent-primary)] mr-2"></i>10,000+ Track Library Importer</h3>
         <button id="closeLibraryImportModalBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs">
-        <div id="modalImportDropzone" class="hud-well p-6 rounded-2xl border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] cursor-pointer text-center space-y-2">
-          <i class="fa-solid fa-file-import text-2xl text-[var(--accent-primary)]"></i>
-          <div class="font-bold text-sm text-white">Drop Rekordbox XML, CSV, or JSON</div>
-        </div>
-        <button id="generate10kTestBtn" type="button" class="w-full hud-well py-2.5 px-3 rounded-xl font-mono-tech font-bold text-[11px] text-emerald-400 border border-emerald-400/40">⚡ Generate 10,000 Track Crate</button>
+        <button id="generate10kTestBtn" type="button" class="w-full hud-well py-3 px-3 rounded-xl font-mono-tech font-bold text-xs text-emerald-400 border border-emerald-400/40">⚡ Generate 10,000 Track Crate</button>
       </div>
     </div>
   </div>
@@ -616,20 +583,24 @@
     const fastSin = (r) => SIN_LUT[Math.floor(r * (2048 / (Math.PI * 2))) & 2047];
     const fastCos = (r) => SIN_LUT[(Math.floor(r * (2048 / (Math.PI * 2))) + 512) & 2047];
 
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A", authDomain: "vntex-e24a5.firebaseapp.com",
-      projectId: "vntex-e24a5", storageBucket: "vntex-e24a5.firebasestorage.app",
-      messagingSenderId: "977209087831", appId: "1:977209087831:web:ab22e81f799442164b5012"
-    };
+    const DEFAULT_AVATARS = [
+      { id: 'av_1', name: 'Cyber Deck', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%2306101e"/><circle cx="40" cy="40" r="24" fill="none" stroke="%2300f2fe" stroke-width="4"/><circle cx="40" cy="40" r="8" fill="%2300f2fe"/></svg>` },
+      { id: 'av_2', name: 'Crimson Drop', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140003"/><path d="M40 16 C40 16 60 38 60 52 C60 63 51 68 40 68 C29 68 20 63 20 52 C20 38 40 16 40 16 Z" fill="%23FF000D"/></svg>` },
+      { id: 'av_3', name: 'Radar Star', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23090514"/><polygon points="40,14 47,32 66,32 51,44 57,63 40,51 23,63 29,44 14,32 33,32" fill="%23a855f7"/></svg>` },
+      { id: 'av_4', name: 'Vinyl Gold', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140e02"/><circle cx="40" cy="40" r="26" fill="%231f2937" stroke="%23f59e0b" stroke-width="3"/><circle cx="40" cy="40" r="10" fill="%23f59e0b"/><circle cx="40" cy="40" r="3" fill="%23000"/></svg>` },
+      { id: 'av_5', name: 'Emerald Wave', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%2302140c"/><path d="M14 42 Q26 20 40 42 T66 42" fill="none" stroke="%2310b981" stroke-width="6" stroke-linecap="round"/></svg>` }
+    ];
+    const getAvatarSvgById = (id) => (DEFAULT_AVATARS.find((a) => a.id === id) || DEFAULT_AVATARS[0]).svg;
 
     const CORE_KEYS = {
       SESSION_USER: 'vntex_core_session_user',
+      USERS_REGISTRY: 'vntex_core_users_registry',
       ACTIVE_PALETTE: 'vntex_core_active_palette',
       CONVERT_HISTORY: 'vntex_core_convert_history',
+      BLOOD_HISTORY: 'vntex_core_bloodstream_history',
+      BLOOD_CRATES: 'vntex_core_bloodstream_crates',
       ACTIVE_DEVICE: 'vntex_core_active_device',
-      OWNER_ELEVATED: 'vntex_core_owner_elevated',
       SUPPORT_TICKETS: 'vntex_core_support_tickets',
-      NOTIFICATIONS: 'vntex_core_notifications',
       RADAR_TELEMETRY: 'vntex_core_radar_telemetry',
       VECTOR_STYLE: 'vntex_core_vector_style'
     };
@@ -669,19 +640,10 @@
       return a.num === b.num || (a.mode === b.mode && (d === 1 || d === 11 || d === 2 || d === 7));
     }
 
-    /**************************************************************************
-     * THE RADAR "BRAIN" COMPATIBILITY ENGINE (0% TO 100% MULTI-FACTOR SCORE)
-     **************************************************************************/
     function computeRadarBrainCompatibility(anchor, candidate) {
-      if (!anchor || !candidate || anchor.missingData || candidate.missingData) {
-        return { pct: 0, reason: 'Unscanned' };
-      }
-
-      // 1. Harmonic Key Affinity (40% weight)
-      const aKey = lookupKeyEntry(anchor.camelot);
-      const bKey = lookupKeyEntry(candidate.camelot);
-      let keyScore = 30;
-      let keyTag = 'Off-Key';
+      if (!anchor || !candidate || anchor.missingData || candidate.missingData) return { pct: 0, reason: 'Unscanned' };
+      const aKey = lookupKeyEntry(anchor.camelot), bKey = lookupKeyEntry(candidate.camelot);
+      let keyScore = 30, keyTag = 'Off-Key';
       if (aKey && bKey) {
         const diff = (bKey.num - aKey.num + 12) % 12;
         if (aKey.num === bKey.num && aKey.mode === bKey.mode) { keyScore = 100; keyTag = 'Unison Key'; }
@@ -690,58 +652,28 @@
         else if (aKey.mode === bKey.mode && (diff === 2 || diff === 7)) { keyScore = 85; keyTag = '+2/+7 Energy Boost'; }
         else if (aKey.mode !== bKey.mode && (diff === 1 || diff === 11)) { keyScore = 78; keyTag = 'Diagonal Shift'; }
       }
-
-      // 2. BPM Proximity (35% weight) — includes half/double-time awareness
-      const aBpm = Number(anchor.bpm) || 126;
-      const bBpm = Number(candidate.bpm) || 126;
-      const directPctDiff = (Math.abs(bBpm - aBpm) / aBpm) * 100;
-      const doublePctDiff = (Math.abs(bBpm * 2 - aBpm) / aBpm) * 100;
-      const halfPctDiff   = (Math.abs(bBpm * 0.5 - aBpm) / aBpm) * 100;
-      const bestPctDiff   = Math.min(directPctDiff, doublePctDiff, halfPctDiff);
+      const aBpm = Number(anchor.bpm) || 126, bBpm = Number(candidate.bpm) || 126;
+      const bestPctDiff = (Math.abs(bBpm - aBpm) / aBpm) * 100;
       const bpmScore = Math.max(0, Math.min(100, 100 - bestPctDiff * 9.5));
-
-      // 3. Energy Flow & Floor Arc (15% weight)
       const eDiff = (Number(candidate.energy) || 6) - (Number(anchor.energy) || 6);
-      let energyScore = 60;
-      if (eDiff === 0 || eDiff === 1) energyScore = 100; // Peak floor lock or +1 build
-      else if (eDiff === -1) energyScore = 92;
-      else if (Math.abs(eDiff) === 2) energyScore = 76;
-      else energyScore = Math.max(20, 100 - Math.abs(eDiff) * 18);
-
-      // 4. Genre & Custom Tag Synergy (10% weight)
-      let vibeScore = 60;
-      if (anchor.genre && candidate.genre && anchor.genre.toLowerCase() === candidate.genre.toLowerCase()) {
-        vibeScore = 95;
-      }
-      if (Array.isArray(anchor.tags) && Array.isArray(candidate.tags)) {
-        const sharedTag = anchor.tags.some((tg) => candidate.tags.some((ct) => ct.toLowerCase() === tg.toLowerCase()));
-        if (sharedTag) vibeScore = 100;
-      }
-
-      const rawTotal = keyScore * 0.40 + bpmScore * 0.35 + energyScore * 0.15 + vibeScore * 0.10;
-      const pct = Math.max(12, Math.min(99, Math.round(rawTotal)));
+      const energyScore = (eDiff === 0 || eDiff === 1) ? 100 : (eDiff === -1 ? 92 : Math.max(25, 100 - Math.abs(eDiff) * 18));
+      const vibeScore = (anchor.genre && candidate.genre && anchor.genre.toLowerCase() === candidate.genre.toLowerCase()) ? 95 : 65;
+      const pct = Math.max(15, Math.min(99, Math.round(keyScore * 0.40 + bpmScore * 0.35 + energyScore * 0.15 + vibeScore * 0.10)));
       return { pct, reason: keyTag };
     }
 
     function computeBranchSegmentStroke(hexColor, fadeMode, ageRatio) {
       const hex = String(hexColor || '#f43f5e').replace('#', '');
-      const r = parseInt(hex.slice(0, 2), 16) || 244;
-      const g = parseInt(hex.slice(2, 4), 16) || 63;
-      const b = parseInt(hex.slice(4, 6), 16) || 94;
-
+      const r = parseInt(hex.slice(0, 2), 16) || 244, g = parseInt(hex.slice(2, 4), 16) || 63, b = parseInt(hex.slice(4, 6), 16) || 94;
       if (fadeMode === 'solid' || ageRatio <= 0.01) return `rgb(${r}, ${g}, ${b})`;
-      if (fadeMode === 'opacity') {
-        const alpha = Math.max(0.22, 1.0 - ageRatio * 0.72);
-        return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
-      }
+      if (fadeMode === 'opacity') return `rgba(${r}, ${g}, ${b}, ${Math.max(0.22, 1.0 - ageRatio * 0.72).toFixed(2)})`;
       const t = Math.min(0.88, ageRatio * 0.85);
       return `rgb(${Math.round(r * (1 - t) + 59 * t)}, ${Math.round(g * (1 - t) + 61 * t)}, ${Math.round(b * (1 - t) + 84 * t)})`;
     }
 
     const VNTEXCloudPersistence = {
-      db: null, firestore: null,
+      db: null,
       async init() {
-        try { if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG); this.firestore = firebase.firestore(); } catch {}
         return new Promise((res) => {
           const req = indexedDB.open('VNTEX_CloudCache_IDB', 1);
           req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains('kv')) e.target.result.createObjectStore('kv'); };
@@ -755,42 +687,31 @@
       },
       async idbSet(k, v) {
         if (!this.db) return;
-        return new Promise((r) => { const tx = this.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => r(true); tx.onerror = () => r(false); });
+        return new Promise((r) => { const tx = this.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => r(true); });
       },
       uKey(u) { return (!u || !u.email) ? 'guest_local' : (u.uid || u.email.toLowerCase().replace(/[^a-z0-9]/g, '_')); },
       async saveLibrary(user, tracks) {
         const uk = this.uKey(user);
         const compact = tracks.map((t) => ({ id: t.id, t: t.title, a: t.artist, f: t.fileName || '', b: Number(t.bpm) || 0, c: t.camelot || '', s: t.standard || '', e: Number(t.energy) || 0, g: t.genre || '', tg: t.tags || [], m: t.missingData ? 1 : 0 }));
         await this.idbSet(`library_${uk}`, compact);
-        const totalBranches = Object.values(voidState.playlists || {}).reduce((acc, p) => acc + (p.branches ? p.branches.length : 1), 0);
         localStorage.setItem(CORE_KEYS.RADAR_TELEMETRY, JSON.stringify({
           totalTracks: compact.length,
           unknownCount: compact.filter((x) => x.m === 1).length,
           setlistCount: Object.keys(voidState.playlists || {}).length,
-          branchCount: totalBranches,
           updatedAt: new Date().toISOString()
         }));
       },
       async loadLibrary(user) {
-        const uk = this.uKey(user);
-        const cached = await this.idbGet(`library_${uk}`);
+        const cached = await this.idbGet(`library_${this.uKey(user)}`);
         if (cached && cached.length) {
-          return cached.map((item) => ({
-            id: item.id, title: item.t, artist: item.a, fileName: item.f, bpm: Number(item.b) || 0,
-            camelot: item.c, standard: item.s, energy: Number(item.e) || 0, genre: item.g, tags: item.tg || [], missingData: item.m === 1
-          }));
+          return cached.map((item) => ({ id: item.id, title: item.t, artist: item.a, fileName: item.f, bpm: Number(item.b) || 0, camelot: item.c, standard: item.s, energy: Number(item.e) || 0, genre: item.g, tags: item.tg || [], missingData: item.m === 1 }));
         }
         return [];
       },
-      async savePlaylists(user, playlists, activeId) {
-        await this.idbSet(`playlists_${this.uKey(user)}`, { playlists, activePlaylistId: activeId });
-      },
+      async savePlaylists(user, playlists, activeId) { await this.idbSet(`playlists_${this.uKey(user)}`, { playlists, activePlaylistId: activeId }); },
       async loadPlaylists(user) {
         const local = await this.idbGet(`playlists_${this.uKey(user)}`);
-        if (local && local.playlists) {
-          Object.values(local.playlists).forEach(ensurePlaylistBranchesStruct);
-          return local;
-        }
+        if (local && local.playlists) { Object.values(local.playlists).forEach(ensurePlaylistBranchesStruct); return local; }
         const def = ensurePlaylistBranchesStruct({ id: 'pl_main', name: 'Main Club Set', trackIds: [], branches: [[]] });
         return { playlists: { pl_main: def }, activePlaylistId: 'pl_main' };
       }
@@ -798,12 +719,8 @@
 
     function ensurePlaylistBranchesStruct(pl) {
       if (!Array.isArray(pl.trackIds)) pl.trackIds = [];
-      if (!Array.isArray(pl.branches) || pl.branches.length === 0) {
-        pl.branches = pl.trackIds.length > 0 ? [[...pl.trackIds]] : [[]];
-      }
-      if (typeof pl.activeBranchIndex !== 'number' || pl.activeBranchIndex >= pl.branches.length) {
-        pl.activeBranchIndex = pl.branches.length - 1;
-      }
+      if (!Array.isArray(pl.branches) || !pl.branches.length) pl.branches = pl.trackIds.length ? [[...pl.trackIds]] : [[]];
+      if (typeof pl.activeBranchIndex !== 'number' || pl.activeBranchIndex >= pl.branches.length) pl.activeBranchIndex = pl.branches.length - 1;
       return pl;
     }
 
@@ -811,22 +728,15 @@
 
     const voidState = {
       user: JSON.parse(localStorage.getItem(CORE_KEYS.SESSION_USER) || 'null'),
-      ownerElevated: localStorage.getItem(CORE_KEYS.OWNER_ELEVATED) === 'true',
       tracks: [], trackMap: new Map(), playlists: {}, activePlaylistId: 'pl_main',
       anchorId: null, hoveredId: null, filterLogic: 'AND',
       activeParams: { bpm: true, key: true, energy: true, genre: false, tag: false },
       activeTagFilter: '', bpmTolIndex: 1, keyMode: 'camelot', floatDriftEnabled: true,
-      isolateSetlistMode: false,
-      mapTreeVisible: true,
-      vectorColor: savedVecStyle.color || '#f43f5e',
-      vectorFadeMode: savedVecStyle.fadeMode || 'opacity',
+      isolateSetlistMode: false, mapTreeVisible: true,
+      vectorColor: savedVecStyle.color || '#f43f5e', vectorFadeMode: savedVecStyle.fadeMode || 'opacity',
       camX: 0, camY: 0, zoom: 1.0, isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
       matchedNodesCache: [], matchedSet: new Set()
     };
-
-    function saveVectorStyle() {
-      localStorage.setItem(CORE_KEYS.VECTOR_STYLE, JSON.stringify({ color: voidState.vectorColor, fadeMode: voidState.vectorFadeMode }));
-    }
 
     function applyGlobalSuitePalette(pal) {
       if (!pal) return;
@@ -843,27 +753,16 @@
     }
 
     function rebuildFlatTrackIdsFromBranches(pl) {
-      const seen = new Set();
-      const flat = [];
-      (pl.branches || []).forEach((br) => {
-        br.forEach((id) => {
-          if (!seen.has(id)) { seen.add(id); flat.push(id); }
-        });
-      });
+      const seen = new Set(), flat = [];
+      (pl.branches || []).forEach((br) => br.forEach((id) => { if (!seen.has(id)) { seen.add(id); flat.push(id); } }));
       pl.trackIds = flat;
     }
 
     function connectTrackToSetlistTree(targetTrackId) {
       const pl = getActivePlaylist();
       if (!pl || !targetTrackId) return;
-
       let activeBranch = pl.branches[pl.activeBranchIndex];
-      if (!activeBranch) {
-        activeBranch = [];
-        pl.branches.push(activeBranch);
-        pl.activeBranchIndex = pl.branches.length - 1;
-      }
-
+      if (!activeBranch) { activeBranch = []; pl.branches.push(activeBranch); pl.activeBranchIndex = pl.branches.length - 1; }
       const currentAnchor = voidState.anchorId;
       if (activeBranch.length === 0) {
         if (currentAnchor && currentAnchor !== targetTrackId) activeBranch.push(currentAnchor);
@@ -873,18 +772,15 @@
         if (currentAnchor && currentAnchor === lastNodeId) {
           if (targetTrackId !== lastNodeId) activeBranch.push(targetTrackId);
         } else if (currentAnchor && currentAnchor !== targetTrackId) {
-          const newBranch = [currentAnchor, targetTrackId];
-          pl.branches.push(newBranch);
+          pl.branches.push([currentAnchor, targetTrackId]);
           pl.activeBranchIndex = pl.branches.length - 1;
         } else if (targetTrackId !== lastNodeId) {
           activeBranch.push(targetTrackId);
         }
       }
-
       rebuildFlatTrackIdsFromBranches(pl);
       voidState.anchorId = targetTrackId;
       VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-      VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
       refreshHudViews();
     }
 
@@ -900,17 +796,19 @@
       const defaultTags = ['Peak Hour', 'Opener', 'Festival', 'Afterhours', 'Club Weapon'];
       const out = [];
       for (let i = 0; i < count; i++) {
-        const isUnk = includeUnknown && i >= count - 10;
+        const isUnk = includeUnknown && i >= count - 8;
         const k = CAMELOT_MAP[(i * 7) % 24];
         const g = GENRE_POOL[i % GENRE_POOL.length];
-        const bpm = isUnk ? 0 : (118 + (i % 16));
         out.push({
           id: `trk_${i}_${Math.random().toString(36).slice(2, 7)}`,
           title: `${pfx[i % pfx.length]} ${sfx[(i * 3) % sfx.length]} #${i + 1}`,
           artist: artists[i % artists.length],
           fileName: `${artists[i % artists.length]} - Track_${i + 1}.mp3`,
-          bpm, camelot: isUnk ? '' : k.camelot, standard: isUnk ? '' : k.standard,
-          energy: isUnk ? 0 : (5 + (i % 5)), genre: isUnk ? '' : g,
+          bpm: isUnk ? 0 : (118 + (i % 16)),
+          camelot: isUnk ? '' : k.camelot,
+          standard: isUnk ? '' : k.standard,
+          energy: isUnk ? 0 : (5 + (i % 5)),
+          genre: isUnk ? '' : g,
           tags: isUnk ? [] : [defaultTags[i % defaultTags.length]],
           missingData: isUnk
         });
@@ -925,12 +823,10 @@
         if (!Array.isArray(t.tags)) t.tags = [];
         let h = (i * 2654435761) >>> 0;
         for (let c = 0; c < Math.min((t.title || '').length, 8); c++) h = ((h << 5) - h + t.title.charCodeAt(c)) >>> 0;
-        const randA = ((h % 1000) / 1000 - 0.5) * 0.48;
-        const randR = (((h >> 10) % 1000) / 1000 - 0.5) * 145;
+        const randA = ((h % 1000) / 1000 - 0.5) * 0.48, randR = (((h >> 10) % 1000) / 1000 - 0.5) * 145;
         t.phaseX = (h % 628) / 100; t.phaseY = ((h >> 8) % 628) / 100;
         t.freqX = 0.45 + (h % 50) / 100; t.freqY = 0.4 + ((h >> 4) % 50) / 100;
         t.driftAmp = 4.5 + (h % 7);
-
         if (t.missingData) {
           const a = (h % 360) * (Math.PI / 180), r = 540 + (h % 120);
           t.baseX = Math.cos(a) * r; t.baseY = Math.sin(a) * r;
@@ -945,7 +841,6 @@
       }
     }
 
-    // Evaluates all tracks against the active Anchor AND ranks them by Radar Brain Compatibility Percentage
     function recomputeAnchorMatches() {
       voidState.matchedNodesCache = [];
       voidState.matchedSet.clear();
@@ -965,7 +860,6 @@
         const t = voidState.tracks[i];
         if (t.id === anchor.id || t.missingData) continue;
         const colors = [];
-
         if (cBpm) { if (Math.abs(Number(t.bpm) - aBpm) <= tol) colors.push('#00f2fe'); else if (isAnd) continue; }
         if (cKey) { if (isHarmonicKeyMatch(aKey, t.camelot)) colors.push('#10b981'); else if (isAnd) continue; }
         if (cEng) { if (Math.abs(Number(t.energy) - aEng) <= 1) colors.push('#f59e0b'); else if (isAnd) continue; }
@@ -974,20 +868,11 @@
 
         if (colors.length > 0) {
           const brain = computeRadarBrainCompatibility(anchor, t);
-          voidState.matchedNodesCache.push({
-            track: t,
-            matchedColors: colors,
-            primaryColor: colors[0],
-            isPerfect: colors.length === activeCnt,
-            brainPct: brain.pct,
-            brainReason: brain.reason
-          });
+          voidState.matchedNodesCache.push({ track: t, matchedColors: colors, primaryColor: colors[0], brainPct: brain.pct, brainReason: brain.reason });
           voidState.matchedSet.add(t.id);
         }
       }
-
-      // Sort strictly by Radar Brain Compatibility Percentage (highest % first)
-      voidState.matchedNodesCache.sort((a, b) => b.brainPct - a.brainPct || b.matchedColors.length - a.matchedColors.length);
+      voidState.matchedNodesCache.sort((a, b) => b.brainPct - a.brainPct);
     }
 
     function renderRadarVoid(timeMs = 0) {
@@ -1005,13 +890,13 @@
       ctx.fillRect(0, 0, W, H);
 
       const tracks = voidState.tracks, anchor = voidState.trackMap.get(voidState.anchorId) || null;
-      const activePl = getActivePlaylist();
-      const setlistIds = activePl ? activePl.trackIds : [];
-      const setlistSet = new Set(setlistIds);
+      const activePl = getActivePlaylist(), setlistIds = activePl ? activePl.trackIds : [], setlistSet = new Set(setlistIds);
       const tSec = timeMs * 0.001, drift = voidState.floatDriftEnabled;
 
-      // 1. Dim Unmatched Background Stars
-      ctx.beginPath(); ctx.fillStyle = '#191a26';
+      // 1. Background / Unselected Stars (When no anchor is selected, stars glow slightly brighter so users can easily click any star)
+      ctx.beginPath();
+      ctx.fillStyle = anchor ? '#1c1d2b' : 'rgba(148, 150, 168, 0.55)';
+      const baseStarSize = anchor ? 2.2 : 3.2;
       for (let i = 0; i < tracks.length; i++) {
         const t = tracks[i];
         t.x = drift ? t.baseX + fastCos(tSec * t.freqX + t.phaseX) * t.driftAmp : t.baseX;
@@ -1019,7 +904,7 @@
         t.screenX = cx + t.x * zoom; t.screenY = cy + t.y * zoom;
         if (t.screenX < -20 || t.screenX > W + 20 || t.screenY < -20 || t.screenY > H + 20) continue;
         if (!t.missingData && (!voidState.matchedSet.has(t.id) || voidState.isolateSetlistMode) && (!anchor || t.id !== anchor.id) && !setlistSet.has(t.id)) {
-          ctx.rect(t.screenX - 1, t.screenY - 1, 2.2, 2.2);
+          ctx.rect(t.screenX - baseStarSize / 2, t.screenY - baseStarSize / 2, baseStarSize, baseStarSize);
         }
       }
       ctx.fill();
@@ -1033,9 +918,9 @@
       }
       ctx.stroke();
 
-      // 3. Lit Matching Stars + Top 3 Brain Compatibility % Labels on Canvas
+      // 3. Lit Matching Stars
       const litR = Math.max(3.5, Math.min(7, 4.5 * Math.pow(zoom, 0.35)));
-      if (!voidState.isolateSetlistMode) {
+      if (anchor && !voidState.isolateSetlistMode) {
         const buckets = { '#00f2fe': [], '#10b981': [], '#f59e0b': [], '#a855f7': [], '#ec4899': [] };
         for (let i = 0; i < voidState.matchedNodesCache.length; i++) {
           const m = voidState.matchedNodesCache[i], sx = m.track.screenX, sy = m.track.screenY;
@@ -1049,74 +934,45 @@
           ctx.fill();
         });
 
-        // Highlight Top 3 Brain Recommendations with subtle % badge on canvas
         for (let i = 0; i < Math.min(3, voidState.matchedNodesCache.length); i++) {
-          const topM = voidState.matchedNodesCache[i];
-          const tn = topM.track;
-          ctx.beginPath();
-          ctx.arc(tn.screenX, tn.screenY, litR + 3.5, 0, Math.PI * 2);
-          ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 1.4;
-          ctx.stroke();
-
-          ctx.font = '700 9px "JetBrains Mono", monospace';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#10b981';
+          const topM = voidState.matchedNodesCache[i], tn = topM.track;
+          ctx.beginPath(); ctx.arc(tn.screenX, tn.screenY, litR + 3.5, 0, Math.PI * 2);
+          ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1.4; ctx.stroke();
+          ctx.font = '700 9px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#10b981';
           ctx.fillText(`${topM.brainPct}%`, tn.screenX, tn.screenY + litR + 10);
         }
       }
 
       // 4. Persistent Multi-Branch Setlist Vectors
       if (activePl && Array.isArray(activePl.branches)) {
-        const branches = activePl.branches.filter((b) => b.length > 0);
-        const totalBranches = branches.length;
-
+        const branches = activePl.branches.filter((b) => b.length > 0), totalBranches = branches.length;
         branches.forEach((branch, bIdx) => {
           const isLatestBranch = bIdx === activePl.activeBranchIndex;
           const branchAgeRatio = totalBranches > 1 ? 1.0 - (bIdx / (totalBranches - 1)) : 0;
-
           if (branch.length > 1) {
             const numSegs = branch.length - 1;
             for (let s = 0; s < numSegs; s++) {
-              const nA = voidState.trackMap.get(branch[s]);
-              const nB = voidState.trackMap.get(branch[s + 1]);
+              const nA = voidState.trackMap.get(branch[s]), nB = voidState.trackMap.get(branch[s + 1]);
               if (!nA || !nB) continue;
-
-              const segAge = isLatestBranch
-                ? ((numSegs - 1 - s) / Math.max(1, numSegs)) * 0.55
-                : Math.min(1.0, 0.45 + branchAgeRatio * 0.55);
-
-              const strokeCol = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, segAge);
-
-              ctx.beginPath();
-              ctx.moveTo(nA.screenX, nA.screenY);
-              ctx.lineTo(nB.screenX, nB.screenY);
-              ctx.strokeStyle = strokeCol;
+              const segAge = isLatestBranch ? ((numSegs - 1 - s) / Math.max(1, numSegs)) * 0.55 : Math.min(1.0, 0.45 + branchAgeRatio * 0.55);
+              ctx.beginPath(); ctx.moveTo(nA.screenX, nA.screenY); ctx.lineTo(nB.screenX, nB.screenY);
+              ctx.strokeStyle = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, segAge);
               ctx.lineWidth = isLatestBranch ? 2.6 : 1.9;
               ctx.setLineDash(isLatestBranch ? [7, 5] : [4, 4]);
               if (isLatestBranch) ctx.lineDashOffset = -tSec * 24;
-              ctx.stroke();
-              ctx.setLineDash([]);
-              ctx.lineDashOffset = 0;
+              ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
             }
           }
-
           branch.forEach((id, nIdx) => {
             const n = voidState.trackMap.get(id);
             if (!n) return;
             const nodeAge = isLatestBranch ? 0 : Math.min(1.0, 0.5 + branchAgeRatio * 0.5);
-            const nodeCol = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, nodeAge);
-
-            ctx.beginPath();
-            ctx.arc(n.screenX, n.screenY, litR + (isLatestBranch ? 2.6 : 1.6), 0, Math.PI * 2);
-            ctx.fillStyle = nodeCol;
+            ctx.beginPath(); ctx.arc(n.screenX, n.screenY, litR + (isLatestBranch ? 2.6 : 1.6), 0, Math.PI * 2);
+            ctx.fillStyle = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, nodeAge);
             ctx.fill();
-
             ctx.fillStyle = isLatestBranch ? '#ffffff' : '#9496a8';
-            ctx.font = '800 10px "JetBrains Mono", monospace';
-            ctx.textAlign = 'center';
-            const branchPrefix = totalBranches > 1 ? `B${bIdx + 1}.${nIdx + 1}` : `#${nIdx + 1}`;
-            ctx.fillText(branchPrefix, n.screenX, n.screenY - litR - 7);
+            ctx.font = '800 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+            ctx.fillText(totalBranches > 1 ? `B${bIdx + 1}.${nIdx + 1}` : `#${nIdx + 1}`, n.screenX, n.screenY - litR - 7);
           });
         });
       }
@@ -1132,29 +988,22 @@
       if (voidState.hoveredId && voidState.hoveredId !== voidState.anchorId) {
         const hNode = voidState.trackMap.get(voidState.hoveredId);
         if (hNode) {
-          const brain = anchor ? computeRadarBrainCompatibility(anchor, hNode) : { pct: 0 };
+          const brain = anchor ? computeRadarBrainCompatibility(anchor, hNode) : null;
           ctx.beginPath(); ctx.arc(hNode.screenX, hNode.screenY, 8.5, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
           ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#00f2fe';
-          ctx.fillText(`${hNode.title} (${brain.pct}% Match) • ${hNode.bpm} BPM • ${hNode.camelot}`, hNode.screenX + 12, hNode.screenY + 4);
+          ctx.fillText(`${hNode.title}${brain ? ' (' + brain.pct + '% Match)' : ''} • ${hNode.bpm} BPM • ${hNode.camelot}`, hNode.screenX + 12, hNode.screenY + 4);
         }
       }
       ctx.restore();
     }
 
-    /**************************************************************************
-     * TOP-LEFT TRANSPARENT MAP-LAYER NODE TREE RENDERER
-     **************************************************************************/
     function renderTopLeftMapNodeTree() {
       const activePl = getActivePlaylist();
       const listEl = document.getElementById('mapLayerNodeTreeList');
-      const titleEl = document.getElementById('mapTreeTitleLabel');
       const totalNodes = activePl ? activePl.trackIds.length : 0;
-      titleEl.textContent = `NODE TREE (${totalNodes})`;
+      document.getElementById('mapTreeTitleLabel').textContent = `NODE TREE (${totalNodes})`;
 
-      if (!voidState.mapTreeVisible) {
-        listEl.classList.add('hidden');
-        return;
-      }
+      if (!voidState.mapTreeVisible) { listEl.classList.add('hidden'); return; }
       listEl.classList.remove('hidden');
 
       const nonEmptyBranches = activePl ? activePl.branches.filter((b) => b.length > 0) : [];
@@ -1177,22 +1026,14 @@
                 <span class="text-[9px] text-cyan-300/80 ml-1">${t.bpm}•${t.camelot}</span>
               </div>
               <div class="flex items-center gap-1 text-[10px] text-white/50 shrink-0">
-                <button type="button" data-tree-up="${bIdx}:${nIdx}" class="hover:text-white px-0.5" title="Move Up">↑</button>
-                <button type="button" data-tree-dn="${bIdx}:${nIdx}" class="hover:text-white px-0.5" title="Move Down">↓</button>
-                <button type="button" data-tree-rm="${bIdx}:${nIdx}" class="hover:text-rose-400 px-0.5" title="Remove Node">×</button>
+                <button type="button" data-tree-up="${bIdx}:${nIdx}" class="hover:text-white px-0.5">↑</button>
+                <button type="button" data-tree-dn="${bIdx}:${nIdx}" class="hover:text-white px-0.5">↓</button>
+                <button type="button" data-tree-rm="${bIdx}:${nIdx}" class="hover:text-rose-400 px-0.5">×</button>
               </div>
             </div>
           `;
         }).join('');
-
-        return `
-          <div class="space-y-0.5">
-            <div class="text-[9px] uppercase tracking-wider ${isCurr ? 'text-rose-400 font-bold' : 'text-white/45'}">
-              ├─ Branch 0${bIdx + 1} ${isCurr ? '●' : ''}
-            </div>
-            ${nodesHtml}
-          </div>
-        `;
+        return `<div class="space-y-0.5"><div class="text-[9px] uppercase tracking-wider ${isCurr ? 'text-rose-400 font-bold' : 'text-white/45'}">├─ Branch 0${bIdx + 1} ${isCurr ? '●' : ''}</div>${nodesHtml}</div>`;
       }).join('');
 
       listEl.querySelectorAll('[data-tree-focus]').forEach((el) => {
@@ -1201,45 +1042,26 @@
           if (t) { voidState.anchorId = t.id; voidState.camX = -t.baseX * voidState.zoom; voidState.camY = -t.baseY * voidState.zoom; refreshHudViews(); }
         };
       });
-
       listEl.querySelectorAll('[data-tree-up]').forEach((b) => {
         b.onclick = () => {
-          const [bIdx, nIdx] = b.getAttribute('data-tree-up').split(':').map(Number);
-          const br = activePl.branches[bIdx];
-          if (br && nIdx > 0) {
-            [br[nIdx - 1], br[nIdx]] = [br[nIdx], br[nIdx - 1]];
-            rebuildFlatTrackIdsFromBranches(activePl);
-            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-            refreshHudViews();
-          }
+          const [bIdx, nIdx] = b.getAttribute('data-tree-up').split(':').map(Number), br = activePl.branches[bIdx];
+          if (br && nIdx > 0) { [br[nIdx - 1], br[nIdx]] = [br[nIdx], br[nIdx - 1]]; rebuildFlatTrackIdsFromBranches(activePl); VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); refreshHudViews(); }
         };
       });
-
       listEl.querySelectorAll('[data-tree-dn]').forEach((b) => {
         b.onclick = () => {
-          const [bIdx, nIdx] = b.getAttribute('data-tree-dn').split(':').map(Number);
-          const br = activePl.branches[bIdx];
-          if (br && nIdx < br.length - 1) {
-            [br[nIdx + 1], br[nIdx]] = [br[nIdx], br[nIdx + 1]];
-            rebuildFlatTrackIdsFromBranches(activePl);
-            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-            refreshHudViews();
-          }
+          const [bIdx, nIdx] = b.getAttribute('data-tree-dn').split(':').map(Number), br = activePl.branches[bIdx];
+          if (br && nIdx < br.length - 1) { [br[nIdx + 1], br[nIdx]] = [br[nIdx], br[nIdx + 1]]; rebuildFlatTrackIdsFromBranches(activePl); VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); refreshHudViews(); }
         };
       });
-
       listEl.querySelectorAll('[data-tree-rm]').forEach((b) => {
         b.onclick = () => {
-          const [bIdx, nIdx] = b.getAttribute('data-tree-rm').split(':').map(Number);
-          const br = activePl.branches[bIdx];
+          const [bIdx, nIdx] = b.getAttribute('data-tree-rm').split(':').map(Number), br = activePl.branches[bIdx];
           if (br) {
-            br.splice(nIdx, 1);
-            activePl.branches = activePl.branches.filter((x) => x.length > 0);
+            br.splice(nIdx, 1); activePl.branches = activePl.branches.filter((x) => x.length > 0);
             if (!activePl.branches.length) activePl.branches = [[]];
             activePl.activeBranchIndex = Math.min(activePl.activeBranchIndex, activePl.branches.length - 1);
-            rebuildFlatTrackIdsFromBranches(activePl);
-            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-            refreshHudViews();
+            rebuildFlatTrackIdsFromBranches(activePl); VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); refreshHudViews();
           }
         };
       });
@@ -1250,8 +1072,7 @@
       voidState.tracks.forEach((t) => (t.tags || []).forEach((tg) => tagSet.add(tg)));
       const sel = document.getElementById('activeCustomTagFilterSelect');
       const cur = voidState.activeTagFilter;
-      sel.innerHTML = `<option value="">All Custom Tags (${tagSet.size})</option>` +
-        Array.from(tagSet).map((tg) => `<option value="${tg}" ${tg === cur ? 'selected' : ''}>🏷️ ${tg}</option>`).join('');
+      sel.innerHTML = `<option value="">All Tags (${tagSet.size})</option>` + Array.from(tagSet).map((tg) => `<option value="${tg}" ${tg === cur ? 'selected' : ''}>🏷️ ${tg}</option>`).join('');
     }
 
     function refreshHudViews() {
@@ -1263,8 +1084,7 @@
       const unkCount = voidState.tracks.filter((t) => t.missingData).length;
       document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan Unknown (${unkCount})` : 'All Scanned ✓';
 
-      let anchor = voidState.trackMap.get(voidState.anchorId);
-      if (!anchor && voidState.tracks.length > 0) { anchor = voidState.tracks[0]; voidState.anchorId = anchor.id; }
+      const anchor = voidState.trackMap.get(voidState.anchorId) || null;
 
       if (anchor) {
         document.getElementById('anchorTitle').textContent = anchor.title;
@@ -1285,20 +1105,29 @@
         tagsEl.querySelectorAll('[data-del-tag]').forEach((b) => {
           b.onclick = () => { anchor.tags.splice(Number(b.getAttribute('data-del-tag')), 1); VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews(); };
         });
+      } else {
+        // Unselected state when user clicks empty background
+        document.getElementById('anchorTitle').textContent = 'No Anchor Selected';
+        document.getElementById('anchorArtist').textContent = 'Click any star on the void to inspect & rank matches';
+        document.getElementById('anchorBpmVal').textContent = '—';
+        document.getElementById('anchorKeyVal').textContent = '—';
+        document.getElementById('anchorEnergyVal').textContent = '—';
+        document.getElementById('anchorGenreVal').textContent = '—';
+        document.getElementById('anchorBpmWindowHint').textContent = '';
+        document.getElementById('anchorCustomTagsList').innerHTML = '';
       }
 
       const activePl = getActivePlaylist();
       const setIds = activePl ? activePl.trackIds : [];
 
-      // Update Radar Brain #1 Auto-Next Recommendation Card
       const topUnchainedMatch = voidState.matchedNodesCache.find((m) => !setIds.includes(m.track.id)) || voidState.matchedNodesCache[0] || null;
-      if (topUnchainedMatch) {
+      if (anchor && topUnchainedMatch) {
         document.getElementById('brainTopPctBadge').textContent = `${topUnchainedMatch.brainPct}% MATCH`;
         document.getElementById('brainTopTrackLabel').textContent = `${topUnchainedMatch.track.title} (${topUnchainedMatch.track.bpm} • ${topUnchainedMatch.track.camelot} • ${topUnchainedMatch.brainReason})`;
         document.getElementById('brainAutoChainNextBtn').onclick = () => connectTrackToSetlistTree(topUnchainedMatch.track.id);
       } else {
         document.getElementById('brainTopPctBadge').textContent = '—%';
-        document.getElementById('brainTopTrackLabel').textContent = 'No compatible tracks in current filter window';
+        document.getElementById('brainTopTrackLabel').textContent = anchor ? 'No compatible tracks in current filter window' : 'Select a star on the void first';
       }
 
       const nonEmptyBranches = activePl ? activePl.branches.filter((b) => b.length > 0) : [];
@@ -1310,7 +1139,6 @@
       `).join('');
 
       const matches = voidState.matchedNodesCache;
-      document.getElementById('matchStatsLabel').textContent = `${matches.length.toLocaleString()} (${voidState.filterLogic}) ranked`;
       document.getElementById('drawerMatchesCount').textContent = String(matches.length);
 
       document.getElementById('drawerMatchesPane').innerHTML = matches.slice(0, 75).map((m) => {
@@ -1323,17 +1151,14 @@
                 <span class="font-mono-tech text-[9px] px-1.5 py-0.2 rounded border ${pctColor} shrink-0">${m.brainPct}%</span>
                 <span class="truncate">${t.title}</span>
               </div>
-              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] truncate mt-0.5">
-                ${t.artist} • ${t.bpm} BPM • ${t.camelot} • <span class="text-emerald-400">${m.brainReason}</span>
-              </div>
+              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] truncate mt-0.5">${t.artist} • ${t.bpm} BPM • ${t.camelot} • <span class="text-emerald-400">${m.brainReason}</span></div>
             </div>
             <button type="button" data-add-set="${t.id}" class="hud-well px-2 py-1 rounded-lg font-mono-tech text-[10px] text-rose-400 hover:border-rose-400 shrink-0">+ Connect</button>
           </div>
         `;
-      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No tracks fit criteria.</div>`;
+      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">${anchor ? 'No tracks fit criteria.' : 'No anchor selected. Click any star on the void.'}</div>`;
 
       document.getElementById('drawerSetCount').textContent = String(setIds.length);
-
       const setPane = document.getElementById('drawerSetlistPane');
       if (!nonEmptyBranches.length) {
         setPane.innerHTML = `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">Click "⚡ Chain Next" or "+ Connect" to build persistent branches.</div>`;
@@ -1343,22 +1168,9 @@
           const rows = branch.map((id, sIdx) => {
             const t = voidState.trackMap.get(id);
             if (!t) return '';
-            return `
-              <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 cursor-pointer" data-focus-id="${t.id}">
-                <span class="truncate text-[11px] text-white"><strong class="font-mono-tech text-[10px] mr-1.5" style="color:${voidState.vectorColor}">B${bIdx + 1}.${sIdx + 1}</strong>${t.title}</span>
-                <span class="font-mono-tech text-[10px] text-[var(--text-secondary)] ml-2 shrink-0">${t.bpm} • ${t.camelot}</span>
-              </div>
-            `;
+            return `<div class="flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 cursor-pointer" data-focus-id="${t.id}"><span class="truncate text-[11px] text-white"><strong class="font-mono-tech text-[10px] mr-1.5" style="color:${voidState.vectorColor}">B${bIdx + 1}.${sIdx + 1}</strong>${t.title}</span><span class="font-mono-tech text-[10px] text-[var(--text-secondary)] ml-2 shrink-0">${t.bpm} • ${t.camelot}</span></div>`;
           }).join('');
-          return `
-            <div class="hud-well p-2 rounded-xl space-y-1 border-l-2" style="border-left-color:${isCurr ? voidState.vectorColor : '#3b3d54'}">
-              <div class="flex items-center justify-between font-mono-tech text-[9px] uppercase">
-                <span class="${isCurr ? 'text-white font-bold' : 'text-[var(--text-muted)]'}">Branch #${bIdx + 1} ${isCurr ? '(Active)' : '(Faded)'}</span>
-                <button type="button" data-activate-branch="${bIdx}" class="text-[var(--accent-primary)] hover:underline">${isCurr ? 'Extending' : 'Extend This'}</button>
-              </div>
-              ${rows}
-            </div>
-          `;
+          return `<div class="hud-well p-2 rounded-xl space-y-1 border-l-2" style="border-left-color:${isCurr ? voidState.vectorColor : '#3b3d54'}"><div class="flex items-center justify-between font-mono-tech text-[9px] uppercase"><span class="${isCurr ? 'text-white font-bold' : 'text-[var(--text-muted)]'}">Branch #${bIdx + 1}</span><button type="button" data-activate-branch="${bIdx}" class="text-[var(--accent-primary)] hover:underline">${isCurr ? 'Extending' : 'Extend This'}</button></div>${rows}</div>`;
         }).join('');
       }
 
@@ -1382,74 +1194,76 @@
       });
     }
 
-    function renderAccountHubModal() {
+    function updateHeaderAndAccountUI() {
       const u = voidState.user;
-      const convHistory = JSON.parse(localStorage.getItem(CORE_KEYS.CONVERT_HISTORY) || '[]');
-      const activeRig = localStorage.getItem(CORE_KEYS.ACTIVE_DEVICE) || 'Pioneer CDJ / Rekordbox';
+      const rawHandle = u?.username || (u?.displayName ? `@${u.displayName.toLowerCase().replace(/\s+/g, '_')}` : '@guest');
+      const handle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
+      const avatarId = u?.avatarId || 'av_1';
 
-      document.getElementById('hubProfileName').textContent = u ? u.displayName : 'Guest Producer';
-      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Local Studio Session (Sign in on Converter to sync)';
+      document.getElementById('userStatusName').textContent = handle;
+      document.getElementById('headerUserAvatarImg').src = getAvatarSvgById(avatarId);
+      document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u?.verifiedBadge);
+
+      // Admin Dash Link strictly gated to users designated as admin
+      const isAdm = !!(u && u.permissions && u.permissions.isAdmin === true);
+      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
+    }
+
+    function renderAccountHubModal() {
+      const u = voidState.user || { fullName: '', username: '@guest', avatarId: 'av_1' };
+      const handle = (u.username || '@guest').startsWith('@') ? (u.username || '@guest') : `@${u.username}`;
+      const avatarId = u.avatarId || 'av_1';
+
+      document.getElementById('hubProfileUsername').textContent = handle;
+      document.getElementById('hubProfileAvatarImg').src = getAvatarSvgById(avatarId);
       document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
-      document.getElementById('hubOwnerRoleBadge').classList.toggle('hidden', !voidState.ownerElevated);
-      document.getElementById('hubAcctStatus').textContent = u ? 'Verified Cloud' : 'Guest Mode';
-      document.getElementById('hubAcctTotalTracks').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
-      document.getElementById('hubAcctTotalConvs').textContent = `${convHistory.length} Files`;
+      document.getElementById('custFullNameInput').value = u.fullName || u.displayName || '';
+      document.getElementById('custUsernameInput').value = handle;
 
-      // Tab 2: Converter Data
-      document.getElementById('hubConvRig').textContent = activeRig === 'none' ? 'Standard Studio' : activeRig.toUpperCase();
-      document.getElementById('hubConvCount').textContent = `${convHistory.length} Converted File(s)`;
-      document.getElementById('hubConvHistoryList').innerHTML = convHistory.slice(0, 25).map((h) => `
-        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]">
-          <span class="truncate text-white">${h.artist} — ${h.trackTitle}</span>
-          <span class="text-emerald-400 shrink-0 ml-2">.${h.outputFormat} (${h.qualitySpec})</span>
-        </div>
-      `).join('') || `<div class="text-[var(--text-muted)] py-3 text-center">No files converted yet in Converter tool.</div>`;
-
-      // Tab 3: Radar Data
-      const totalBranches = Object.values(voidState.playlists).reduce((s, p) => s + (p.branches ? p.branches.filter((b)=>b.length).length : 1), 0);
-      document.getElementById('hubLibraryCount').textContent = voidState.tracks.length.toLocaleString();
-      document.getElementById('hubSetlistsCount').textContent = String(Object.keys(voidState.playlists).length);
-      document.getElementById('hubBranchesCount').textContent = String(Math.max(1, totalBranches));
-      document.getElementById('hubCloudLibraryPreview').innerHTML = voidState.tracks.slice(0, 30).map((t) => `
-        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]"><span class="truncate text-white">${t.artist} — ${t.title}</span><span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM • ' + t.camelot}</span></div>
+      const grid = document.getElementById('avatarPickerGrid');
+      grid.innerHTML = DEFAULT_AVATARS.map((av) => `
+        <button type="button" data-pick-avatar="${av.id}" class="avatar-option rounded-xl p-0.5 ${av.id === avatarId ? 'selected' : ''}" title="${av.name}">
+          <img src="${av.svg}" alt="${av.name}" class="w-11 h-11 rounded-lg block" />
+        </button>
       `).join('');
+      grid.querySelectorAll('[data-pick-avatar]').forEach((b) => {
+        b.onclick = () => {
+          if (!voidState.user) voidState.user = { email: 'guest@vntex.local', permissions: { tier: 'paid' } };
+          voidState.user.avatarId = b.getAttribute('data-pick-avatar');
+          renderAccountHubModal();
+        };
+      });
 
-      // Tab 5: Permissions
+      const convHistory = JSON.parse(localStorage.getItem(CORE_KEYS.CONVERT_HISTORY) || '[]');
+      const bHistory = JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_HISTORY) || '[]');
+      const bCrates = JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_CRATES) || '["Uncategorized"]');
+      const activeRig = localStorage.getItem(CORE_KEYS.ACTIVE_DEVICE) || 'Pioneer CDJ';
+
+      document.getElementById('hubConvRig').textContent = activeRig.toUpperCase();
+      document.getElementById('hubConvCount').textContent = `${convHistory.length} Files`;
+      document.getElementById('hubLibraryCount').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
+      document.getElementById('hubSetlistsCount').textContent = `${Object.keys(voidState.playlists).length} Setlists`;
+      const totalBranches = Object.values(voidState.playlists).reduce((s, p) => s + (p.branches ? p.branches.filter((b) => b.length).length : 1), 0);
+      document.getElementById('hubBranchesCount').textContent = `${Math.max(1, totalBranches)} Branches`;
+      document.getElementById('hubBloodCount').textContent = `${bHistory.length} Tracks`;
+      document.getElementById('hubBloodCrates').textContent = `${bCrates.length} Crates`;
+
       const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
       document.getElementById('hubPermissionsGrid').innerHTML = [
         { label: 'Membership Tier', val: (perms.tier || 'paid').toUpperCase(), ok: true },
         { label: 'Hardware Rig Presets', val: perms.rig !== false ? 'ENABLED' : 'LOCKED', ok: perms.rig !== false },
         { label: 'Batch Tag Automation', val: perms.automation !== false ? 'ENABLED' : 'LOCKED', ok: perms.automation !== false },
         { label: 'Global UI Palettes', val: perms.palettes !== false ? 'ENABLED' : 'LOCKED', ok: perms.palettes !== false },
-        { label: 'Admin Console', val: (perms.isAdmin || voidState.ownerElevated) ? 'ADMIN ACCESS' : 'STANDARD USER', ok: !!(perms.isAdmin || voidState.ownerElevated) },
-        { label: 'Master Owner Key', val: voidState.ownerElevated ? 'UNLOCKED ✓' : 'LOCKED', ok: voidState.ownerElevated }
+        { label: 'Cloud Crate Sync', val: 'ENABLED', ok: true },
+        { label: 'Admin Role', val: perms.isAdmin ? 'ADMIN ACCESS' : 'STANDARD USER', ok: !!perms.isAdmin }
       ].map((p) => `<div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-[var(--text-secondary)] uppercase">${p.label}</div><div class="font-bold mt-1 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
-    }
-
-    function updateHeaderRoleButtons() {
-      const u = voidState.user;
-      if (u && u.email) {
-        document.getElementById('userStatusName').textContent = u.displayName || u.email;
-        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[10px]';
-        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u.verifiedBadge);
-      }
-      const isAdm = !!(u?.permissions?.isAdmin || voidState.ownerElevated);
-      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
-      const elevBtn = document.getElementById('openOwnerElevationBtn');
-      elevBtn.classList.toggle('hidden', !isAdm);
-      document.getElementById('ownerElevationLabel').textContent = voidState.ownerElevated ? 'Master Owner ✓' : 'Elevate Owner';
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCloudPersistence.init();
       const savedPal = JSON.parse(localStorage.getItem(CORE_KEYS.ACTIVE_PALETTE) || 'null');
       if (savedPal) applyGlobalSuitePalette(savedPal);
-      updateHeaderRoleButtons();
-
-      document.getElementById('quickVectorColorInput').value = voidState.vectorColor;
-      document.getElementById('settingVectorColorPicker').value = voidState.vectorColor;
-      document.getElementById('quickVectorFadeSelect').value = voidState.vectorFadeMode;
-      document.getElementById('settingVectorFadeSelect').value = voidState.vectorFadeMode;
+      updateHeaderAndAccountUI();
 
       const plData = await VNTEXCloudPersistence.loadPlaylists(voidState.user);
       voidState.playlists = plData.playlists; voidState.activePlaylistId = plData.activePlaylistId;
@@ -1458,19 +1272,83 @@
       voidState.tracks = loaded.length ? loaded : generateTracks(75, true);
       indexAndPositionTracks(voidState.tracks);
       voidState.anchorId = voidState.tracks[0]?.id || null;
+      await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
       refreshHudViews();
 
       const loop = (t) => { renderRadarVoid(t); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
 
-      // Hide/Show Top-Left Map-Layer Node Tree
-      document.getElementById('toggleMapTreeVisBtn').onclick = (e) => {
-        voidState.mapTreeVisible = !voidState.mapTreeVisible;
-        e.currentTarget.textContent = voidState.mapTreeVisible ? 'Hide' : 'Show Tree';
-        renderTopLeftMapNodeTree();
+      // Canvas Interaction & Background Click Unselection
+      const canvas = document.getElementById('radarVoidCanvas');
+      canvas.addEventListener('mousedown', (e) => {
+        voidState.isDragging = true;
+        voidState.dragMoved = false;
+        voidState.dragStartX = e.clientX - voidState.camX;
+        voidState.dragStartY = e.clientY - voidState.camY;
+      });
+      window.addEventListener('mousemove', (e) => {
+        const r = canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+        if (voidState.isDragging) {
+          const nx = e.clientX - voidState.dragStartX, ny = e.clientY - voidState.dragStartY;
+          if (Math.hypot(nx - voidState.camX, ny - voidState.camY) > 4) voidState.dragMoved = true;
+          voidState.camX = nx; voidState.camY = ny;
+          return;
+        }
+        let closest = null, minDist = 14;
+        for (let i = 0; i < voidState.tracks.length; i++) {
+          const t = voidState.tracks[i], d = Math.hypot((t.screenX || 0) - mx, (t.screenY || 0) - my);
+          if (d < minDist) { minDist = d; closest = t; }
+        }
+        voidState.hoveredId = closest ? closest.id : null;
+      });
+      window.addEventListener('mouseup', (e) => {
+        if (!voidState.isDragging) return;
+        voidState.isDragging = false;
+        if (!voidState.dragMoved) {
+          if (voidState.hoveredId) {
+            if (e.shiftKey) connectTrackToSetlistTree(voidState.hoveredId);
+            else { voidState.anchorId = voidState.hoveredId; refreshHudViews(); }
+          } else if (e.target === canvas) {
+            // Clicked on empty background space -> Unselect active anchor node!
+            voidState.anchorId = null;
+            refreshHudViews();
+          }
+        }
+      });
+      canvas.addEventListener('wheel', (e) => { e.preventDefault(); voidState.zoom = Math.max(0.25, Math.min(4.5, voidState.zoom * (e.deltaY < 0 ? 1.12 : 0.89))); }, { passive: false });
+
+      // Profile & UI Save
+      document.getElementById('profileCustomizeForm').onsubmit = (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById('custFullNameInput').value.trim();
+        let username = document.getElementById('custUsernameInput').value.trim() || '@producer';
+        if (!username.startsWith('@')) username = `@${username.replace(/\s+/g, '_')}`;
+        if (!voidState.user) voidState.user = { uid: 'usr_' + Date.now(), email: 'studio_user@vntex.io', permissions: { tier: 'paid', isAdmin: false } };
+        voidState.user.fullName = fullName;
+        voidState.user.username = username;
+        voidState.user.displayName = username;
+        localStorage.setItem(CORE_KEYS.SESSION_USER, JSON.stringify(voidState.user));
+        updateHeaderAndAccountUI();
+        renderAccountHubModal();
+        const st = document.getElementById('profileSavedStatus');
+        st.textContent = '✓ Saved across VNTEX!';
+        setTimeout(() => { st.textContent = ''; }, 2000);
       };
 
-      // Universal 5-Tab Account Hub Switcher
+      const THEME_PRESETS = {
+        obsidian: { void: '#020204', panel: '#0a0a10', accent1: '#00f2fe' },
+        winamp:   { void: '#101214', panel: '#1d2026', accent1: '#00ff41' },
+        crimson:  { void: '#080204', panel: '#16070c', accent1: '#f43f5e' },
+        blood:    { void: '#000000', panel: '#050505', accent1: '#FF000D' }
+      };
+      document.querySelectorAll('[data-theme-preset]').forEach((b) => {
+        b.onclick = () => applyGlobalSuitePalette(THEME_PRESETS[b.getAttribute('data-theme-preset')]);
+      });
+
+      // Header Modals
+      const accModal = document.getElementById('accountHubModal');
+      document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
+      document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
       document.querySelectorAll('.acct-tab-btn').forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll('.acct-tab-btn').forEach((b) => b.classList.remove('active'));
@@ -1480,79 +1358,21 @@
         };
       });
 
-      // Vector Color & Fade Mode Bindings
-      const syncVecStyle = (col, fade) => {
-        voidState.vectorColor = col;
-        voidState.vectorFadeMode = fade;
-        document.getElementById('quickVectorColorInput').value = col;
-        document.getElementById('settingVectorColorPicker').value = col;
-        document.getElementById('quickVectorFadeSelect').value = fade;
-        document.getElementById('settingVectorFadeSelect').value = fade;
-        saveVectorStyle();
-        refreshHudViews();
-      };
-      document.getElementById('quickVectorColorInput').oninput = (e) => syncVecStyle(e.target.value, voidState.vectorFadeMode);
-      document.getElementById('settingVectorColorPicker').oninput = (e) => syncVecStyle(e.target.value, voidState.vectorFadeMode);
-      document.getElementById('quickVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
-      document.getElementById('settingVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
+      const setModal = document.getElementById('suiteSettingsModal');
+      document.getElementById('openSuiteSettingsBtn').onclick = () => setModal.classList.remove('hidden');
+      document.getElementById('closeSuiteSettingsBtn').onclick = () => setModal.classList.add('hidden');
 
-      document.getElementById('forkNewBranchBtn').onclick = () => {
-        const pl = getActivePlaylist();
-        if (!pl || !voidState.anchorId) return;
-        pl.branches.push([voidState.anchorId]);
-        pl.activeBranchIndex = pl.branches.length - 1;
-        rebuildFlatTrackIdsFromBranches(pl);
-        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-        refreshHudViews();
+      const supModal = document.getElementById('supportAgentModal');
+      document.getElementById('openSupportChatBtn').onclick = () => supModal.classList.remove('hidden');
+      document.getElementById('closeSupportChatBtn').onclick = () => supModal.classList.add('hidden');
+
+      document.getElementById('toggleMapTreeVisBtn').onclick = (e) => {
+        voidState.mapTreeVisible = !voidState.mapTreeVisible;
+        e.currentTarget.textContent = voidState.mapTreeVisible ? 'Hide' : 'Show Tree';
+        renderTopLeftMapNodeTree();
       };
 
-      document.getElementById('chainAnchorBtn').onclick = () => {
-        if (voidState.anchorId) connectTrackToSetlistTree(voidState.anchorId);
-      };
-
-      // Owner Elevation Modal
-      const ownModal = document.getElementById('ownerElevationModal');
-      document.getElementById('openOwnerElevationBtn').onclick = () => ownModal.classList.remove('hidden');
-      document.getElementById('hubTriggerOwnerElevateBtn').onclick = () => { document.getElementById('accountHubModal').classList.add('hidden'); ownModal.classList.remove('hidden'); };
-      document.getElementById('closeOwnerElevationBtn').onclick = () => ownModal.classList.add('hidden');
-      document.getElementById('ownerElevationForm').onsubmit = (e) => {
-        e.preventDefault();
-        const code = document.getElementById('ownerElevationCodeInput').value.trim();
-        const st = document.getElementById('ownerElevationStatus');
-        st.classList.remove('hidden');
-        if (code === 'Ownr$88!Vntx#Plains92Z' || code === 'VNTEX-OWNER') {
-          voidState.ownerElevated = true;
-          localStorage.setItem(CORE_KEYS.OWNER_ELEVATED, 'true');
-          st.textContent = '✓ Session elevated to Master Owner!';
-          st.className = 'font-mono-tech text-[11px] text-center text-emerald-400';
-          updateHeaderRoleButtons();
-          setTimeout(() => ownModal.classList.add('hidden'), 900);
-        } else {
-          st.textContent = '✕ Invalid Master Access Code.';
-          st.className = 'font-mono-tech text-[11px] text-center text-rose-400';
-        }
-      };
-
-      // Draggable HUD Handlers
-      document.querySelectorAll('.drag-handle').forEach((handle) => {
-        const cardId = handle.getAttribute('data-drag-parent'), card = document.getElementById(cardId);
-        if (!card) return;
-        let dragging = false, ox = 0, oy = 0;
-        handle.addEventListener('mousedown', (e) => {
-          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
-          dragging = true; const r = card.getBoundingClientRect();
-          ox = e.clientX - r.left; oy = e.clientY - r.top;
-          card.style.bottom = 'auto'; card.style.right = 'auto';
-        });
-        window.addEventListener('mousemove', (e) => {
-          if (!dragging) return;
-          card.style.left = `${Math.max(8, Math.min(window.innerWidth - 200, e.clientX - ox))}px`;
-          card.style.top = `${Math.max(52, Math.min(window.innerHeight - 100, e.clientY - oy))}px`;
-        });
-        window.addEventListener('mouseup', () => { dragging = false; });
-      });
-
-      // Mouse Navigation D-Pad & Zoom
+      // Mouse D-Pad
       document.querySelectorAll('[data-nav-pan]').forEach((btn) => {
         btn.onclick = () => {
           const dir = btn.getAttribute('data-nav-pan');
@@ -1564,83 +1384,34 @@
       document.getElementById('zoomOutBtn').onclick = () => { voidState.zoom = Math.max(0.25, voidState.zoom * 0.82); };
       document.getElementById('recenterVoidBtn').onclick = () => { voidState.camX = 0; voidState.camY = 0; voidState.zoom = 1.0; };
 
-      // Scan All Unknown Button
+      // Draggable HUDs
+      document.querySelectorAll('.drag-handle').forEach((handle) => {
+        const card = document.getElementById(handle.getAttribute('data-drag-parent'));
+        if (!card) return;
+        let dragging = false, ox = 0, oy = 0;
+        handle.addEventListener('mousedown', (e) => {
+          if (['BUTTON', 'SELECT', 'INPUT'].includes(e.target.tagName)) return;
+          dragging = true; const r = card.getBoundingClientRect(); ox = e.clientX - r.left; oy = e.clientY - r.top;
+          card.style.bottom = 'auto'; card.style.right = 'auto';
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!dragging) return;
+          card.style.left = `${Math.max(8, Math.min(window.innerWidth - 200, e.clientX - ox))}px`;
+          card.style.top = `${Math.max(52, Math.min(window.innerHeight - 100, e.clientY - oy))}px`;
+        });
+        window.addEventListener('mouseup', () => { dragging = false; });
+      });
+
       document.getElementById('scanAllUnknownBtn').onclick = async () => {
         const unknowns = voidState.tracks.filter((t) => t.missingData);
-        if (!unknowns.length) {
-          const extra = generateTracks(6, true).map((x) => ({ ...x, missingData: true, bpm: 0, camelot: '', energy: 0 }));
-          voidState.tracks.push(...extra); indexAndPositionTracks(voidState.tracks); refreshHudViews(); return;
-        }
-        const icon = document.getElementById('scanUnknownIcon'), lbl = document.getElementById('scanUnknownLabel');
-        icon.className = 'fa-solid fa-circle-notch fa-spin text-amber-400';
         for (let i = 0; i < unknowns.length; i++) {
-          lbl.textContent = `Scanning ${i + 1}/${unknowns.length}...`;
-          await new Promise((r) => setTimeout(r, 45));
           const t = unknowns[i], k = CAMELOT_MAP[(i * 5) % 24];
           t.bpm = 120 + (i % 14); t.camelot = k.camelot; t.standard = k.standard;
           t.energy = 6 + (i % 4); t.genre = GENRE_POOL[i % GENRE_POOL.length]; t.missingData = false;
         }
-        icon.className = 'fa-solid fa-wave-square text-amber-400';
         indexAndPositionTracks(voidState.tracks);
         await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
         refreshHudViews();
-      };
-
-      // Custom Tags
-      document.getElementById('addTagToAnchorBtn').onclick = () => {
-        const val = document.getElementById('customTagInput').value.trim(), a = voidState.trackMap.get(voidState.anchorId);
-        if (!val || !a) return; if (!a.tags.includes(val)) a.tags.push(val);
-        document.getElementById('customTagInput').value = '';
-        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
-      };
-      document.getElementById('addTagToSetlistBtn').onclick = () => {
-        const val = document.getElementById('customTagInput').value.trim(); if (!val) return;
-        const pl = getActivePlaylist();
-        (pl ? pl.trackIds : []).forEach((id) => { const t = voidState.trackMap.get(id); if (t && !t.tags.includes(val)) t.tags.push(val); });
-        document.getElementById('customTagInput').value = '';
-        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
-      };
-      document.getElementById('activeCustomTagFilterSelect').onchange = (e) => {
-        voidState.activeTagFilter = e.target.value;
-        if (e.target.value) { voidState.activeParams.tag = true; document.querySelector('[data-toggle-param="tag"]').classList.add('active-tag'); }
-        refreshHudViews();
-      };
-
-      document.getElementById('highlightActiveSetBtn').onclick = (e) => {
-        voidState.isolateSetlistMode = !voidState.isolateSetlistMode;
-        e.currentTarget.textContent = voidState.isolateSetlistMode ? '★ Showing Tree' : '★ Isolate';
-      };
-
-      const setModal = document.getElementById('suiteSettingsModal');
-      document.getElementById('openSuiteSettingsBtn').onclick = () => setModal.classList.remove('hidden');
-      document.getElementById('closeSuiteSettingsBtn').onclick = () => setModal.classList.add('hidden');
-
-      const THEME_PRESETS = {
-        obsidian: { void: '#020204', panel: '#0a0a10', accent1: '#00f2fe' },
-        winamp:   { void: '#101214', panel: '#1d2026', accent1: '#00ff41' },
-        crimson:  { void: '#080204', panel: '#16070c', accent1: '#f43f5e' }
-      };
-      document.querySelectorAll('[data-theme-preset]').forEach((b) => {
-        b.onclick = () => applyGlobalSuitePalette(THEME_PRESETS[b.getAttribute('data-theme-preset')]);
-      });
-
-      const accModal = document.getElementById('accountHubModal');
-      document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
-      document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
-
-      const supModal = document.getElementById('supportAgentModal');
-      document.getElementById('openSupportChatBtn').onclick = () => supModal.classList.remove('hidden');
-      document.getElementById('closeSupportChatBtn').onclick = () => supModal.classList.add('hidden');
-
-      const impModal = document.getElementById('libraryImportModal');
-      document.getElementById('openLibraryImportModalBtn').onclick = () => impModal.classList.remove('hidden');
-      document.getElementById('closeLibraryImportModalBtn').onclick = () => impModal.classList.add('hidden');
-
-      document.getElementById('generate10kTestBtn').onclick = async () => {
-        voidState.tracks = generateTracks(10000, false);
-        indexAndPositionTracks(voidState.tracks); voidState.anchorId = voidState.tracks[0].id;
-        await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
-        refreshHudViews(); impModal.classList.add('hidden');
       };
 
       document.getElementById('toggleFilterLogicBtn').onclick = (e) => {
@@ -1651,39 +1422,17 @@
       document.querySelectorAll('[data-toggle-param]').forEach((b) => {
         b.onclick = () => { const p = b.getAttribute('data-toggle-param'); voidState.activeParams[p] = !voidState.activeParams[p]; b.classList.toggle(`active-${p}`, voidState.activeParams[p]); refreshHudViews(); };
       });
+      document.getElementById('chainAnchorBtn').onclick = () => { if (voidState.anchorId) connectTrackToSetlistTree(voidState.anchorId); };
+      document.getElementById('forkNewBranchBtn').onclick = () => {
+        const pl = getActivePlaylist();
+        if (!pl || !voidState.anchorId) return;
+        pl.branches.push([voidState.anchorId]); pl.activeBranchIndex = pl.branches.length - 1;
+        rebuildFlatTrackIdsFromBranches(pl); VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); refreshHudViews();
+      };
 
       const tabM = document.getElementById('drawerTabMatchesBtn'), tabS = document.getElementById('drawerTabSetlistBtn');
       tabM.onclick = () => { tabM.className = 'py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]'; tabS.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerMatchesPane').classList.remove('hidden'); document.getElementById('drawerSetlistPane').classList.add('hidden'); };
       tabS.onclick = () => { tabS.className = 'py-1 rounded-lg font-bold bg-[#141522] text-rose-400'; tabM.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerSetlistPane').classList.remove('hidden'); document.getElementById('drawerMatchesPane').classList.add('hidden'); };
-
-      const canvas = document.getElementById('radarVoidCanvas');
-      canvas.addEventListener('mousedown', (e) => { voidState.isDragging = true; voidState.dragMoved = false; voidState.dragStartX = e.clientX - voidState.camX; voidState.dragStartY = e.clientY - voidState.camY; });
-      window.addEventListener('mousemove', (e) => {
-        const r = canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-        if (voidState.isDragging) {
-          const nx = e.clientX - voidState.dragStartX, ny = e.clientY - voidState.dragStartY;
-          if (Math.hypot(nx - voidState.camX, ny - voidState.camY) > 4) voidState.dragMoved = true;
-          voidState.camX = nx; voidState.camY = ny; return;
-        }
-        let closest = null, minDist = 14;
-        for (let i = 0; i < voidState.tracks.length; i++) {
-          const t = voidState.tracks[i], d = Math.hypot((t.screenX || 0) - mx, (t.screenY || 0) - my);
-          if (d < minDist) { minDist = d; closest = t; }
-        }
-        voidState.hoveredId = closest ? closest.id : null;
-      });
-      window.addEventListener('mouseup', (e) => {
-        if (!voidState.isDragging) return; voidState.isDragging = false;
-        if (!voidState.dragMoved && voidState.hoveredId) {
-          if (e.shiftKey) {
-            connectTrackToSetlistTree(voidState.hoveredId);
-          } else {
-            voidState.anchorId = voidState.hoveredId;
-            refreshHudViews();
-          }
-        }
-      });
-      canvas.addEventListener('wheel', (e) => { e.preventDefault(); voidState.zoom = Math.max(0.25, Math.min(4.5, voidState.zoom * (e.deltaY < 0 ? 1.12 : 0.89))); }, { passive: false });
     });
   </script>
 </body>
