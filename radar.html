@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Harmonic Radar (Argon4)</title>
+  <title>VNTEX // Harmonic Radar (Argon4 Brain)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -37,7 +37,7 @@
     }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
     .hud-glass {
-      background: color-mix(in srgb, var(--bg-panel) 86%, transparent);
+      background: color-mix(in srgb, var(--bg-panel) 84%, transparent);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-hairline);
@@ -100,8 +100,22 @@
     .param-pill.active-tag { border-color: #ec4899; color: #fff; background: rgba(236, 72, 153, 0.14); }
     .param-pill.active-tag .dot { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
     .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45)); }
-    .draggable-hud { resize: both; overflow: auto; min-width: 275px; min-height: 175px; }
+    .draggable-hud { resize: both; overflow: auto; min-width: 280px; min-height: 175px; }
     .drag-handle { cursor: move; }
+
+    /* Top-Left Map-Layer Transparent Node Tree Styling */
+    .map-layer-tree {
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.98), 0 0 14px rgba(0, 0, 0, 0.9);
+    }
+    .map-tree-node {
+      opacity: 0.72;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .map-tree-node:hover {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+
     input[type="color"] { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 6px; cursor: pointer; background: transparent; padding: 0; }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-highlight); border-radius: 6px; }
@@ -154,7 +168,7 @@
 
       <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
         <i id="userStatusIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
-        <span id="userStatusName">Sign In / Profile</span>
+        <span id="userStatusName">Account</span>
         <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
       </button>
     </div>
@@ -178,44 +192,66 @@
       </div>
     </div>
 
-    <!-- TOP-LEFT HUD: IMPORT, SCAN ALL UNKNOWN & SEARCH -->
-    <div class="absolute top-3 left-3 z-20 flex flex-wrap items-center gap-2 max-w-[calc(100vw-24px)]">
-      <div class="hud-glass p-1.5 rounded-xl flex flex-wrap items-center gap-1.5">
-        <button id="openLibraryImportModalBtn" type="button" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[11px] flex items-center gap-1.5 hover:brightness-110 transition">
-          <i class="fa-solid fa-database"></i><span>Import Library</span>
+    <!-- ========================================================================
+         TOP-LEFT TRANSPARENT MAP-LAYER NODE TREE (NO WINDOW CHROME)
+         ======================================================================== -->
+    <div id="mapLayerNodeTreeWrapper" class="absolute top-3 left-4 z-20 pointer-events-none max-w-xs sm:max-w-sm map-layer-tree font-mono-tech">
+      <!-- Header Line on Map Layer -->
+      <div class="pointer-events-auto inline-flex items-center gap-2.5 text-[10px] uppercase tracking-wider text-white/75">
+        <span class="flex items-center gap-1.5 font-extrabold text-[var(--accent-primary)]">
+          <i class="fa-solid fa-code-branch text-[9px]"></i>
+          <span id="mapTreeTitleLabel">NODE TREE (0)</span>
+        </span>
+        <button id="toggleMapTreeVisBtn" type="button" class="text-[9px] text-white/50 hover:text-white transition px-1.5 py-0.5 rounded bg-white/5">
+          Hide
         </button>
-        <button id="addFilesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] hover:border-[var(--accent-primary)] flex items-center gap-1">
-          <i class="fa-solid fa-plus text-[var(--accent-primary)]"></i><span>Audio</span>
-        </button>
-        <button id="addFolderBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--text-secondary)] hover:text-white" title="Drop Folder">
-          <i class="fa-regular fa-folder-open"></i>
-        </button>
-        <button id="scanAllUnknownBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg border border-amber-400/50 text-amber-300 font-mono-tech font-bold text-[11px] flex items-center gap-1.5 hover:bg-amber-400/10 transition">
-          <i id="scanUnknownIcon" class="fa-solid fa-wave-square text-amber-400"></i>
-          <span id="scanUnknownLabel">Scan All Unknown (0)</span>
-        </button>
-        <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-[var(--text-muted)]"></i>
-          <input id="trackSearchInput" type="text" placeholder="Find song or tag..." class="hud-well pl-7 pr-2.5 py-1 rounded-lg text-[11px] font-mono-tech w-36 sm:w-44" />
-          <div id="searchDropdownList" class="hidden absolute left-0 top-8 w-72 max-h-64 overflow-y-auto hud-glass rounded-xl p-1.5 space-y-1 z-50"></div>
-        </div>
-        <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2 py-1 rounded-lg bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
       </div>
+
+      <!-- Transparent Text Tree List Directly Over Canvas -->
+      <div id="mapLayerNodeTreeList" class="pointer-events-auto mt-1.5 space-y-1 max-h-[42vh] overflow-y-auto pr-2"></div>
     </div>
 
-    <!-- TOP-CENTER HUD: INTERSECTION TOGGLES & TAG FILTER -->
-    <div class="absolute top-16 xl:top-3 left-3 xl:left-1/2 xl:-translate-x-1/2 z-20 flex flex-wrap items-center gap-1.5 hud-glass p-1.5 rounded-full">
-      <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-cyan-300 border border-cyan-400/50 bg-cyan-400/10">
-        MATCH: ALL (AND)
-      </button>
-      <button type="button" data-toggle-param="bpm" class="param-pill active-bpm"><span class="dot"></span><span>BPM</span><span id="bpmTolLabel" class="text-[9px] opacity-80">±3%</span></button>
-      <button type="button" data-toggle-param="key" class="param-pill active-key"><span class="dot"></span><span>Key</span></button>
-      <button type="button" data-toggle-param="energy" class="param-pill active-energy"><span class="dot"></span><span>Energy</span></button>
-      <button type="button" data-toggle-param="genre" class="param-pill"><span class="dot"></span><span>Genre</span></button>
-      <button type="button" data-toggle-param="tag" class="param-pill"><span class="dot"></span><span>Tag</span></button>
-      <select id="activeCustomTagFilterSelect" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-pink-400 cursor-pointer">
-        <option value="">All Tags</option>
-      </select>
+    <!-- ========================================================================
+         TOP-CENTER HUD: INGESTION, SCAN UNKNOWN, SEARCH & PARAMETER PILLS
+         ======================================================================== -->
+    <div class="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 w-max max-w-[94vw]">
+      <!-- Row 1: Library Actions & Search -->
+      <div class="hud-glass p-1.5 rounded-full flex flex-wrap items-center justify-center gap-1.5">
+        <button id="openLibraryImportModalBtn" type="button" class="px-3 py-1 rounded-full bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5 hover:brightness-110 transition">
+          <i class="fa-solid fa-database"></i><span>Import Library</span>
+        </button>
+        <button id="addFilesBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech text-[10px] hover:border-[var(--accent-primary)] flex items-center gap-1">
+          <i class="fa-solid fa-plus text-[var(--accent-primary)]"></i><span>Audio</span>
+        </button>
+        <button id="addFolderBtn" type="button" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-[var(--text-secondary)] hover:text-white" title="Drop Folder">
+          <i class="fa-regular fa-folder-open"></i>
+        </button>
+        <button id="scanAllUnknownBtn" type="button" class="hud-well px-2.5 py-1 rounded-full border border-amber-400/50 text-amber-300 font-mono-tech font-bold text-[10px] flex items-center gap-1.5 hover:bg-amber-400/10 transition">
+          <i id="scanUnknownIcon" class="fa-solid fa-wave-square text-amber-400"></i>
+          <span id="scanUnknownLabel">Scan Unknown (0)</span>
+        </button>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1.5 text-[10px] text-[var(--text-muted)]"></i>
+          <input id="trackSearchInput" type="text" placeholder="Search song or tag..." class="hud-well pl-7 pr-2.5 py-0.5 rounded-full text-[10px] font-mono-tech w-36 sm:w-44" />
+          <div id="searchDropdownList" class="hidden absolute left-0 top-7 w-72 max-h-64 overflow-y-auto hud-glass rounded-xl p-1.5 space-y-1 z-50"></div>
+        </div>
+        <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
+      </div>
+
+      <!-- Row 2: Parameter Toggles & Intersection Mode -->
+      <div class="flex flex-wrap items-center justify-center gap-1.5 hud-glass p-1 rounded-full">
+        <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-cyan-300 border border-cyan-400/50 bg-cyan-400/10">
+          MATCH: ALL (AND)
+        </button>
+        <button type="button" data-toggle-param="bpm" class="param-pill active-bpm"><span class="dot"></span><span>BPM</span><span id="bpmTolLabel" class="text-[9px] opacity-80">±3%</span></button>
+        <button type="button" data-toggle-param="key" class="param-pill active-key"><span class="dot"></span><span>Key</span></button>
+        <button type="button" data-toggle-param="energy" class="param-pill active-energy"><span class="dot"></span><span>Energy</span></button>
+        <button type="button" data-toggle-param="genre" class="param-pill"><span class="dot"></span><span>Genre</span></button>
+        <button type="button" data-toggle-param="tag" class="param-pill"><span class="dot"></span><span>Tag</span></button>
+        <select id="activeCustomTagFilterSelect" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-pink-400 cursor-pointer">
+          <option value="">All Tags</option>
+        </select>
+      </div>
     </div>
 
     <!-- MOUSE NAVIGATION D-PAD (BOTTOM-CENTER) -->
@@ -230,8 +266,10 @@
       <button id="zoomInBtn" type="button" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Zoom In"><i class="fa-solid fa-plus text-[10px]"></i></button>
     </div>
 
-    <!-- DRAGGABLE & RESIZABLE HUD 3 (BOTTOM-LEFT): SELECTED ANCHOR INSPECTOR -->
-    <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 375px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
+    <!-- ========================================================================
+         DRAGGABLE & RESIZABLE HUD 3 (BOTTOM-LEFT): ANCHOR + RADAR BRAIN AUTO-NEXT
+         ======================================================================== -->
+    <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 385px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
       <div data-drag-parent="anchorHudCard" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <div class="font-mono-tech text-[9px] uppercase tracking-wider text-[var(--accent-primary)] flex items-center gap-1.5">
           <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
@@ -239,8 +277,8 @@
           <span id="anchorBpmWindowHint" class="text-[var(--text-secondary)]"></span>
         </div>
         <div class="flex items-center gap-1">
-          <button id="forkNewBranchBtn" type="button" class="hud-well px-2 py-1 rounded-md font-mono-tech font-bold text-[10px] text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Start a new branch from this song while keeping previous branches visible">
-            <i class="fa-solid fa-code-branch mr-1"></i>Fork Branch
+          <button id="forkNewBranchBtn" type="button" class="hud-well px-2 py-1 rounded-md font-mono-tech font-bold text-[10px] text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Fork a new branch from this song">
+            <i class="fa-solid fa-code-branch mr-1"></i>Fork
           </button>
           <button id="chainAnchorBtn" type="button" class="px-2.5 py-1 rounded-md bg-rose-500 text-white font-mono-tech font-bold text-[10px] hover:bg-rose-400">
             + Connect
@@ -251,6 +289,21 @@
       <div>
         <h2 id="anchorTitle" class="font-extrabold text-sm text-white truncate">Click Any Star</h2>
         <p id="anchorArtist" class="text-xs text-[var(--text-secondary)] truncate">—</p>
+      </div>
+
+      <!-- THE RADAR BRAIN: YOUTUBE-STYLE SMART NEXT AUTO-PICK BAR -->
+      <div id="brainNextRecommendationBar" class="hud-well p-2 rounded-xl border border-emerald-400/30 bg-emerald-400/5 flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="font-mono-tech text-[9px] uppercase text-emerald-400 font-bold flex items-center gap-1">
+            <i class="fa-solid fa-brain"></i>
+            <span>Radar Brain #1 Next Pick</span>
+            <span id="brainTopPctBadge" class="px-1.5 py-0.2 rounded bg-emerald-400 text-black font-extrabold text-[9px]">—%</span>
+          </div>
+          <div id="brainTopTrackLabel" class="font-bold text-[11px] text-white truncate mt-0.5">Select a star to rank matches</div>
+        </div>
+        <button id="brainAutoChainNextBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-emerald-400 text-black font-mono-tech font-extrabold text-[10px] shrink-0 hover:brightness-110 transition">
+          ⚡ Chain Next
+        </button>
       </div>
 
       <div class="grid grid-cols-4 gap-1.5 font-mono-tech text-center">
@@ -287,12 +340,14 @@
       </div>
     </div>
 
-    <!-- DRAGGABLE & RESIZABLE HUD 4 (RIGHT): SETLIST TREE, VECTOR COLOR & FADE CONTROLS -->
-    <div id="setlistDrawer" style="right: 16px; top: 64px; width: 345px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[84vh]">
+    <!-- ========================================================================
+         DRAGGABLE & RESIZABLE HUD 4 (RIGHT): BRAIN-RANKED MATCHES & EXPORT
+         ======================================================================== -->
+    <div id="setlistDrawer" style="right: 16px; top: 64px; width: 350px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[84vh]">
       <div data-drag-parent="setlistDrawer" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
-        <span class="font-mono-tech text-[10px] uppercase font-bold text-rose-400 flex items-center gap-1.5">
+        <span class="font-mono-tech text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
           <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
-          <span>Setlist Tree (<span id="branchCountBadge">1</span> Branch)</span>
+          <span>🧠 Brain Ranked (<span id="branchCountBadge">1</span> Branch)</span>
         </span>
         <div class="flex items-center gap-1">
           <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40" title="Isolate all branches in this setlist">★ Isolate</button>
@@ -322,12 +377,12 @@
       </div>
 
       <div class="grid grid-cols-2 gap-1 p-1 hud-well rounded-xl font-mono-tech text-[11px]">
-        <button id="drawerTabMatchesBtn" type="button" class="py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]">Matches (<span id="drawerMatchesCount">0</span>)</button>
+        <button id="drawerTabMatchesBtn" type="button" class="py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]">Brain Matches (<span id="drawerMatchesCount">0</span>)</button>
         <button id="drawerTabSetlistBtn" type="button" class="py-1 rounded-lg font-bold text-[var(--text-secondary)]">Branches (<span id="drawerSetCount">0</span>)</button>
       </div>
 
-      <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52"></div>
-      <div id="drawerSetlistPane" class="hidden flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52"></div>
+      <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
+      <div id="drawerSetlistPane" class="hidden flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
 
       <div class="pt-2 border-t border-[var(--border-hairline)] grid grid-cols-2 gap-1.5 font-mono-tech text-[10px]">
         <button id="exportRekordboxXmlBtn" type="button" class="py-2 px-2 rounded-lg bg-[#00f2fe] text-black font-extrabold flex items-center justify-center gap-1"><i class="fa-solid fa-file-code"></i><span>Rekordbox XML</span></button>
@@ -337,8 +392,92 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 1: ADVANCED SETLIST & BRANCH MANAGER
+       UNIVERSAL 5-TAB ACCOUNT & SUITE HUB MODAL (IDENTICAL ACROSS ALL TOOLS)
        ========================================================================== -->
+  <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2 bg-[#050509]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-id-badge text-[var(--accent-primary)]"></i>
+          <h3 class="text-sm font-bold text-white">VNTEX Universal Account &amp; Tool Hub</h3>
+        </div>
+        <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- 5-Tab Bar: 1. Account Info | 2. Converter | 3. Radar | 4. Bloodstream | 5. Permissions -->
+      <div class="px-5 pt-3 border-b border-[var(--border-hairline)] bg-[#06060b] flex flex-wrap items-center gap-1.5 pb-2.5 font-mono-tech text-[11px]">
+        <button type="button" data-acct-tab="profile" class="acct-tab-btn suite-nav-pill active"><i class="fa-regular fa-user"></i><span>Account Info</span></button>
+        <button type="button" data-acct-tab="converter" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-bolt"></i><span>Converter</span></button>
+        <button type="button" data-acct-tab="radar" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-compass"></i><span>Radar</span></button>
+        <button type="button" data-acct-tab="bloodstream" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500"></i><span>Bloodstream</span></button>
+        <button type="button" data-acct-tab="permissions" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-shield-halved text-amber-400"></i><span>Permissions</span></button>
+      </div>
+
+      <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
+        <!-- TAB 1: ACCOUNT INFO -->
+        <div id="acctPane-profile" class="acct-tab-pane space-y-4">
+          <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="hubProfileName" class="font-extrabold text-base text-white">Guest Producer</span>
+                <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden" title="Verified Producer"></i>
+                <span id="hubOwnerRoleBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">MASTER OWNER</span>
+              </div>
+              <div id="hubProfileEmail" class="font-mono-tech text-xs text-[var(--text-secondary)] mt-0.5">Local Studio Session</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="hubTriggerOwnerElevateBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-amber-400 border border-amber-400/40">🔑 Owner Key</button>
+              <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-[11px]">Sign In / Auth →</a>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 font-mono-tech">
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">SESSION STATUS</div><div id="hubAcctStatus" class="text-sm font-bold text-emerald-400 mt-1">Active</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CLOUD CRATE</div><div id="hubAcctTotalTracks" class="text-sm font-bold text-[var(--accent-primary)] mt-1">0 Tracks</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CONVERSIONS</div><div id="hubAcctTotalConvs" class="text-sm font-bold text-white mt-1">0 Files</div></div>
+          </div>
+        </div>
+
+        <!-- TAB 2: CONVERTER TOOL -->
+        <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3">
+          <div class="grid grid-cols-2 gap-3 font-mono-tech">
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-[var(--accent-primary)] mt-1">Pioneer CDJ / Rekordbox</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">TRANSCODED FILES</div><div id="hubConvCount" class="text-xs font-bold text-emerald-400 mt-1">0 Converted</div></div>
+          </div>
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Recent Converter Output History</div>
+          <div id="hubConvHistoryList" class="hud-well p-3 rounded-xl max-h-48 overflow-y-auto space-y-1.5 font-mono-tech text-[11px]"></div>
+        </div>
+
+        <!-- TAB 3: RADAR TOOL -->
+        <div id="acctPane-radar" class="acct-tab-pane hidden space-y-3">
+          <div class="grid grid-cols-3 gap-2.5 font-mono-tech">
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">RADAR LIBRARY</div><div id="hubLibraryCount" class="text-sm font-bold text-[var(--accent-primary)] mt-0.5">0</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">SAVED SETLISTS</div><div id="hubSetlistsCount" class="text-sm font-bold text-rose-400 mt-0.5">0</div></div>
+            <div class="hud-well p-3 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">ACTIVE BRANCHES</div><div id="hubBranchesCount" class="text-sm font-bold text-amber-400 mt-0.5">1</div></div>
+          </div>
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Synced Radar Library Preview</div>
+          <div id="hubCloudLibraryPreview" class="hud-well p-3 rounded-xl max-h-48 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div>
+        </div>
+
+        <!-- TAB 4: BLOODSTREAM TOOL -->
+        <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3">
+          <div class="hud-well p-4 rounded-xl border-l-2 border-l-rose-500 space-y-1.5">
+            <div class="font-mono-tech text-xs font-bold text-rose-400 uppercase"><i class="fa-solid fa-droplet mr-1.5"></i>Bloodstream Web DSP Engine</div>
+            <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              Your account profile, custom UI palettes, and cloud crate are pre-linked to the Bloodstream audio engine slot. All analyzed BPM, Camelot keys, and custom tags carry over automatically.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 5: PERMISSIONS -->
+        <div id="acctPane-permissions" class="acct-tab-pane hidden space-y-3">
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Account Capabilities &amp; Feature Gates</div>
+          <div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono-tech text-[11px]"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================OTHER MODALS (Setlist Manager, Settings, Owner Elevation, AI Support, Importer)================ -->
   <div id="setlistManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
@@ -354,7 +493,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <input id="mgrActiveListNameInput" type="text" class="hud-well px-3 py-1.5 rounded-lg font-bold text-xs text-white flex-1" />
             <button id="mgrSaveNameBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">Rename</button>
-            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Isolate Tree on Void</button>
+            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Isolate Tree</button>
             <button id="mgrClearBranchesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400">Reset Branches</button>
             <button id="mgrDeleteListBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-rose-400">Delete</button>
           </div>
@@ -365,9 +504,6 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAL 2: SUITE SETTINGS, VECTOR STYLING & GLOBAL UI PALETTE
-       ========================================================================== -->
   <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
@@ -396,7 +532,6 @@
           </div>
         </div>
 
-        <!-- Setlist Branch Vector Color & Fading Mode -->
         <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
           <div class="font-mono-tech text-[10px] uppercase text-rose-400">Setlist Vector Color &amp; Previous Branch Fading</div>
           <div class="grid grid-cols-2 gap-3">
@@ -415,7 +550,6 @@
           </div>
         </div>
 
-        <!-- Global UI Palette -->
         <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
           <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Global VNTEX Suite UI Palette</div>
           <div class="grid grid-cols-3 gap-2">
@@ -428,64 +562,21 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAL 3: SECURE OWNER ELEVATION MODAL (FOR GOOGLE-CONNECTED ADMINS)
-       ========================================================================== -->
   <div id="ownerElevationModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-amber-400/50">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-key text-amber-400"></i>
-          <h3 class="text-sm font-bold text-white">Elevate Session to Master Owner</h3>
-        </div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-key text-amber-400"></i><h3 class="text-sm font-bold text-white">Elevate Session to Master Owner</h3></div>
         <button id="closeOwnerElevationBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="ownerElevationForm" class="p-5 space-y-4 text-xs" autocomplete="off">
-        <p class="text-[var(--text-secondary)] leading-relaxed">
-          Enter your **Master Owner Access Code** below to unlock Master Owner authority on your current signed-in session without disconnecting your Google/Firebase account.
-        </p>
+        <p class="text-[var(--text-secondary)] leading-relaxed">Enter your **Master Owner Access Code** below to unlock Master Owner authority on your current signed-in session.</p>
         <input id="ownerElevationCodeInput" type="password" required placeholder="Enter Master Access Code..." class="hud-well w-full px-3.5 py-2.5 rounded-xl font-mono-tech text-xs text-center text-white" />
         <div id="ownerElevationStatus" class="hidden font-mono-tech text-[11px] text-center"></div>
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase hover:brightness-110 transition">
-          Verify &amp; Unlock Master Owner
-        </button>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase hover:brightness-110 transition">Verify &amp; Unlock Master Owner</button>
       </form>
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAL 4: ENHANCED ACCOUNT HUB (PROFILE, PERMISSIONS & CLOUD LIBRARY)
-       ========================================================================== -->
-  <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-xl rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-id-badge text-[var(--accent-primary)] mr-2"></i>VNTEX Account Profile, Permissions &amp; Cloud Crate</h3>
-        <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-5 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
-        <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span id="hubProfileName" class="font-extrabold text-sm text-white">Guest Producer</span>
-              <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
-              <span id="hubOwnerRoleBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">MASTER OWNER</span>
-            </div>
-            <div id="hubProfileEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5">Not signed in</div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button id="hubTriggerOwnerElevateBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400 border border-amber-400/40">🔑 Owner Key</button>
-            <a href="index.html" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)]">Manage Auth →</a>
-          </div>
-        </div>
-        <div class="space-y-1.5"><div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Permissions</div><div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono-tech text-[11px]"></div></div>
-        <div class="space-y-1.5"><div class="flex justify-between font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]"><span>Synced Cloud Library (<span id="hubLibraryCount">0</span> Tracks)</span><span id="hubSetlistsCount" class="text-rose-400">0 Setlists</span></div><div id="hubCloudLibraryPreview" class="hud-well p-2.5 rounded-xl max-h-44 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL 5: AI SUPPORT AGENT & ADMIN INBOX
-       ========================================================================== -->
   <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
     <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[480px]">
       <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
@@ -495,7 +586,7 @@
       <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs"></div>
       <div class="p-3 border-t border-[var(--border-hairline)] bg-[#050509] space-y-2">
         <form id="supportChatForm" class="flex gap-1.5">
-          <input id="supportChatInput" type="text" required placeholder="Ask AI about branching, BPM %, or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
+          <input id="supportChatInput" type="text" required placeholder="Ask AI about Radar Brain %, Node Tree, or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
           <button type="submit" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-xs">Send</button>
         </form>
         <button id="escalateToAdminBtn" type="button" class="w-full py-1.5 rounded-lg hud-well font-mono-tech text-[10px] text-amber-400">Escalate Issue Directly to Admin Portal Inbox</button>
@@ -503,9 +594,6 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAL 6: 10,000+ TRACK LIBRARY IMPORTER
-       ========================================================================== -->
   <div id="libraryImportModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
@@ -537,6 +625,8 @@
     const CORE_KEYS = {
       SESSION_USER: 'vntex_core_session_user',
       ACTIVE_PALETTE: 'vntex_core_active_palette',
+      CONVERT_HISTORY: 'vntex_core_convert_history',
+      ACTIVE_DEVICE: 'vntex_core_active_device',
       OWNER_ELEVATED: 'vntex_core_owner_elevated',
       SUPPORT_TICKETS: 'vntex_core_support_tickets',
       NOTIFICATIONS: 'vntex_core_notifications',
@@ -579,26 +669,73 @@
       return a.num === b.num || (a.mode === b.mode && (d === 1 || d === 11 || d === 2 || d === 7));
     }
 
-    // Color utility: Interpolates hex color toward slate gray (#3b3d54) or applies alpha opacity
+    /**************************************************************************
+     * THE RADAR "BRAIN" COMPATIBILITY ENGINE (0% TO 100% MULTI-FACTOR SCORE)
+     **************************************************************************/
+    function computeRadarBrainCompatibility(anchor, candidate) {
+      if (!anchor || !candidate || anchor.missingData || candidate.missingData) {
+        return { pct: 0, reason: 'Unscanned' };
+      }
+
+      // 1. Harmonic Key Affinity (40% weight)
+      const aKey = lookupKeyEntry(anchor.camelot);
+      const bKey = lookupKeyEntry(candidate.camelot);
+      let keyScore = 30;
+      let keyTag = 'Off-Key';
+      if (aKey && bKey) {
+        const diff = (bKey.num - aKey.num + 12) % 12;
+        if (aKey.num === bKey.num && aKey.mode === bKey.mode) { keyScore = 100; keyTag = 'Unison Key'; }
+        else if (aKey.num === bKey.num && aKey.mode !== bKey.mode) { keyScore = 96; keyTag = 'Relative Maj/Min'; }
+        else if (aKey.mode === bKey.mode && (diff === 1 || diff === 11)) { keyScore = 93; keyTag = diff === 1 ? '+1 Fifth Lift' : '-1 Fifth Smooth'; }
+        else if (aKey.mode === bKey.mode && (diff === 2 || diff === 7)) { keyScore = 85; keyTag = '+2/+7 Energy Boost'; }
+        else if (aKey.mode !== bKey.mode && (diff === 1 || diff === 11)) { keyScore = 78; keyTag = 'Diagonal Shift'; }
+      }
+
+      // 2. BPM Proximity (35% weight) — includes half/double-time awareness
+      const aBpm = Number(anchor.bpm) || 126;
+      const bBpm = Number(candidate.bpm) || 126;
+      const directPctDiff = (Math.abs(bBpm - aBpm) / aBpm) * 100;
+      const doublePctDiff = (Math.abs(bBpm * 2 - aBpm) / aBpm) * 100;
+      const halfPctDiff   = (Math.abs(bBpm * 0.5 - aBpm) / aBpm) * 100;
+      const bestPctDiff   = Math.min(directPctDiff, doublePctDiff, halfPctDiff);
+      const bpmScore = Math.max(0, Math.min(100, 100 - bestPctDiff * 9.5));
+
+      // 3. Energy Flow & Floor Arc (15% weight)
+      const eDiff = (Number(candidate.energy) || 6) - (Number(anchor.energy) || 6);
+      let energyScore = 60;
+      if (eDiff === 0 || eDiff === 1) energyScore = 100; // Peak floor lock or +1 build
+      else if (eDiff === -1) energyScore = 92;
+      else if (Math.abs(eDiff) === 2) energyScore = 76;
+      else energyScore = Math.max(20, 100 - Math.abs(eDiff) * 18);
+
+      // 4. Genre & Custom Tag Synergy (10% weight)
+      let vibeScore = 60;
+      if (anchor.genre && candidate.genre && anchor.genre.toLowerCase() === candidate.genre.toLowerCase()) {
+        vibeScore = 95;
+      }
+      if (Array.isArray(anchor.tags) && Array.isArray(candidate.tags)) {
+        const sharedTag = anchor.tags.some((tg) => candidate.tags.some((ct) => ct.toLowerCase() === tg.toLowerCase()));
+        if (sharedTag) vibeScore = 100;
+      }
+
+      const rawTotal = keyScore * 0.40 + bpmScore * 0.35 + energyScore * 0.15 + vibeScore * 0.10;
+      const pct = Math.max(12, Math.min(99, Math.round(rawTotal)));
+      return { pct, reason: keyTag };
+    }
+
     function computeBranchSegmentStroke(hexColor, fadeMode, ageRatio) {
       const hex = String(hexColor || '#f43f5e').replace('#', '');
       const r = parseInt(hex.slice(0, 2), 16) || 244;
       const g = parseInt(hex.slice(2, 4), 16) || 63;
       const b = parseInt(hex.slice(4, 6), 16) || 94;
 
-      if (fadeMode === 'solid' || ageRatio <= 0.01) {
-        return `rgb(${r}, ${g}, ${b})`;
-      }
+      if (fadeMode === 'solid' || ageRatio <= 0.01) return `rgb(${r}, ${g}, ${b})`;
       if (fadeMode === 'opacity') {
         const alpha = Math.max(0.22, 1.0 - ageRatio * 0.72);
         return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
       }
-      // 'gray' mode: Smoothly lerp RGB toward slate gray (#3b3d54 -> 59, 61, 84)
       const t = Math.min(0.88, ageRatio * 0.85);
-      const nr = Math.round(r * (1 - t) + 59 * t);
-      const ng = Math.round(g * (1 - t) + 61 * t);
-      const nb = Math.round(b * (1 - t) + 84 * t);
-      return `rgb(${nr}, ${ng}, ${nb})`;
+      return `rgb(${Math.round(r * (1 - t) + 59 * t)}, ${Math.round(g * (1 - t) + 61 * t)}, ${Math.round(b * (1 - t) + 84 * t)})`;
     }
 
     const VNTEXCloudPersistence = {
@@ -680,6 +817,7 @@
       activeParams: { bpm: true, key: true, energy: true, genre: false, tag: false },
       activeTagFilter: '', bpmTolIndex: 1, keyMode: 'camelot', floatDriftEnabled: true,
       isolateSetlistMode: false,
+      mapTreeVisible: true,
       vectorColor: savedVecStyle.color || '#f43f5e',
       vectorFadeMode: savedVecStyle.fadeMode || 'opacity',
       camX: 0, camY: 0, zoom: 1.0, isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
@@ -704,7 +842,17 @@
       return pl ? ensurePlaylistBranchesStruct(pl) : null;
     }
 
-    // Connects a song into the multi-branch setlist tree without erasing previous branches
+    function rebuildFlatTrackIdsFromBranches(pl) {
+      const seen = new Set();
+      const flat = [];
+      (pl.branches || []).forEach((br) => {
+        br.forEach((id) => {
+          if (!seen.has(id)) { seen.add(id); flat.push(id); }
+        });
+      });
+      pl.trackIds = flat;
+    }
+
     function connectTrackToSetlistTree(targetTrackId) {
       const pl = getActivePlaylist();
       if (!pl || !targetTrackId) return;
@@ -718,17 +866,13 @@
 
       const currentAnchor = voidState.anchorId;
       if (activeBranch.length === 0) {
-        if (currentAnchor && currentAnchor !== targetTrackId) {
-          activeBranch.push(currentAnchor);
-        }
+        if (currentAnchor && currentAnchor !== targetTrackId) activeBranch.push(currentAnchor);
         activeBranch.push(targetTrackId);
       } else {
         const lastNodeId = activeBranch[activeBranch.length - 1];
         if (currentAnchor && currentAnchor === lastNodeId) {
-          // Continue the active branch seamlessly
           if (targetTrackId !== lastNodeId) activeBranch.push(targetTrackId);
         } else if (currentAnchor && currentAnchor !== targetTrackId) {
-          // User selected a different anchor node — fork a NEW branch while preserving all previous branches!
           const newBranch = [currentAnchor, targetTrackId];
           pl.branches.push(newBranch);
           pl.activeBranchIndex = pl.branches.length - 1;
@@ -737,10 +881,7 @@
         }
       }
 
-      // Sync flat trackIds list for Rekordbox/Serato exports
-      if (currentAnchor && !pl.trackIds.includes(currentAnchor)) pl.trackIds.push(currentAnchor);
-      if (!pl.trackIds.includes(targetTrackId)) pl.trackIds.push(targetTrackId);
-
+      rebuildFlatTrackIdsFromBranches(pl);
       voidState.anchorId = targetTrackId;
       VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
       VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
@@ -804,6 +945,7 @@
       }
     }
 
+    // Evaluates all tracks against the active Anchor AND ranks them by Radar Brain Compatibility Percentage
     function recomputeAnchorMatches() {
       voidState.matchedNodesCache = [];
       voidState.matchedSet.clear();
@@ -831,10 +973,21 @@
         if (cTag) { if (targetTag && Array.isArray(t.tags) && t.tags.some((tg) => tg.toLowerCase() === targetTag)) colors.push('#ec4899'); else if (isAnd) continue; }
 
         if (colors.length > 0) {
-          voidState.matchedNodesCache.push({ track: t, matchedColors: colors, primaryColor: colors[0], isPerfect: colors.length === activeCnt });
+          const brain = computeRadarBrainCompatibility(anchor, t);
+          voidState.matchedNodesCache.push({
+            track: t,
+            matchedColors: colors,
+            primaryColor: colors[0],
+            isPerfect: colors.length === activeCnt,
+            brainPct: brain.pct,
+            brainReason: brain.reason
+          });
           voidState.matchedSet.add(t.id);
         }
       }
+
+      // Sort strictly by Radar Brain Compatibility Percentage (highest % first)
+      voidState.matchedNodesCache.sort((a, b) => b.brainPct - a.brainPct || b.matchedColors.length - a.matchedColors.length);
     }
 
     function renderRadarVoid(timeMs = 0) {
@@ -880,7 +1033,7 @@
       }
       ctx.stroke();
 
-      // 3. Lit Matching Stars
+      // 3. Lit Matching Stars + Top 3 Brain Compatibility % Labels on Canvas
       const litR = Math.max(3.5, Math.min(7, 4.5 * Math.pow(zoom, 0.35)));
       if (!voidState.isolateSetlistMode) {
         const buckets = { '#00f2fe': [], '#10b981': [], '#f59e0b': [], '#a855f7': [], '#ec4899': [] };
@@ -895,9 +1048,25 @@
           for (let i = 0; i < arr.length; i++) { ctx.moveTo(arr[i].track.screenX + litR, arr[i].track.screenY); ctx.arc(arr[i].track.screenX, arr[i].track.screenY, litR, 0, Math.PI * 2); }
           ctx.fill();
         });
+
+        // Highlight Top 3 Brain Recommendations with subtle % badge on canvas
+        for (let i = 0; i < Math.min(3, voidState.matchedNodesCache.length); i++) {
+          const topM = voidState.matchedNodesCache[i];
+          const tn = topM.track;
+          ctx.beginPath();
+          ctx.arc(tn.screenX, tn.screenY, litR + 3.5, 0, Math.PI * 2);
+          ctx.strokeStyle = '#10b981';
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+
+          ctx.font = '700 9px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#10b981';
+          ctx.fillText(`${topM.brainPct}%`, tn.screenX, tn.screenY + litR + 10);
+        }
       }
 
-      // 4. Persistent Multi-Branch Setlist Vectors with Custom Color & Opacity/Gray Fading
+      // 4. Persistent Multi-Branch Setlist Vectors
       if (activePl && Array.isArray(activePl.branches)) {
         const branches = activePl.branches.filter((b) => b.length > 0);
         const totalBranches = branches.length;
@@ -913,7 +1082,6 @@
               const nB = voidState.trackMap.get(branch[s + 1]);
               if (!nA || !nB) continue;
 
-              // Older branches fade more; older segments within a branch also subtly decay
               const segAge = isLatestBranch
                 ? ((numSegs - 1 - s) / Math.max(1, numSegs)) * 0.55
                 : Math.min(1.0, 0.45 + branchAgeRatio * 0.55);
@@ -933,7 +1101,6 @@
             }
           }
 
-          // Render Branch Nodes & Labels
           branch.forEach((id, nIdx) => {
             const n = voidState.trackMap.get(id);
             if (!n) return;
@@ -954,14 +1121,128 @@
         });
       }
 
-      // 5. Active Anchor Halo
+      // 5. Active Anchor Halo & Hovered Star
       if (anchor) {
         ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 12 + Math.sin(tSec * 4.5) * 2.5, 0, Math.PI * 2); ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
         ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 6.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
         ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
         ctx.fillText(`${anchor.title} • ${anchor.bpm} BPM • ${anchor.missingData ? '?' : anchor.camelot}`, anchor.screenX + 15, anchor.screenY + 4);
       }
+
+      if (voidState.hoveredId && voidState.hoveredId !== voidState.anchorId) {
+        const hNode = voidState.trackMap.get(voidState.hoveredId);
+        if (hNode) {
+          const brain = anchor ? computeRadarBrainCompatibility(anchor, hNode) : { pct: 0 };
+          ctx.beginPath(); ctx.arc(hNode.screenX, hNode.screenY, 8.5, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
+          ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#00f2fe';
+          ctx.fillText(`${hNode.title} (${brain.pct}% Match) • ${hNode.bpm} BPM • ${hNode.camelot}`, hNode.screenX + 12, hNode.screenY + 4);
+        }
+      }
       ctx.restore();
+    }
+
+    /**************************************************************************
+     * TOP-LEFT TRANSPARENT MAP-LAYER NODE TREE RENDERER
+     **************************************************************************/
+    function renderTopLeftMapNodeTree() {
+      const activePl = getActivePlaylist();
+      const listEl = document.getElementById('mapLayerNodeTreeList');
+      const titleEl = document.getElementById('mapTreeTitleLabel');
+      const totalNodes = activePl ? activePl.trackIds.length : 0;
+      titleEl.textContent = `NODE TREE (${totalNodes})`;
+
+      if (!voidState.mapTreeVisible) {
+        listEl.classList.add('hidden');
+        return;
+      }
+      listEl.classList.remove('hidden');
+
+      const nonEmptyBranches = activePl ? activePl.branches.filter((b) => b.length > 0) : [];
+      if (!nonEmptyBranches.length) {
+        listEl.innerHTML = `<div class="text-[10px] text-white/40 italic">Shift+Click stars or click "+ Connect" to populate tree</div>`;
+        return;
+      }
+
+      listEl.innerHTML = nonEmptyBranches.map((branch, bIdx) => {
+        const isCurr = bIdx === activePl.activeBranchIndex;
+        const nodesHtml = branch.map((id, nIdx) => {
+          const t = voidState.trackMap.get(id);
+          if (!t) return '';
+          const isSelected = voidState.anchorId === t.id;
+          return `
+            <div class="map-tree-node flex items-center justify-between gap-2 text-[11px] py-0.5 pl-2 border-l ${isSelected ? 'border-l-[var(--accent-primary)] text-white font-bold opacity-100' : 'border-l-white/20 text-white/80'}">
+              <div class="truncate cursor-pointer flex-1" data-tree-focus="${t.id}">
+                <span class="text-[10px] mr-1" style="color:${voidState.vectorColor}">${nIdx + 1}.</span>
+                <span>${t.title}</span>
+                <span class="text-[9px] text-cyan-300/80 ml-1">${t.bpm}•${t.camelot}</span>
+              </div>
+              <div class="flex items-center gap-1 text-[10px] text-white/50 shrink-0">
+                <button type="button" data-tree-up="${bIdx}:${nIdx}" class="hover:text-white px-0.5" title="Move Up">↑</button>
+                <button type="button" data-tree-dn="${bIdx}:${nIdx}" class="hover:text-white px-0.5" title="Move Down">↓</button>
+                <button type="button" data-tree-rm="${bIdx}:${nIdx}" class="hover:text-rose-400 px-0.5" title="Remove Node">×</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="space-y-0.5">
+            <div class="text-[9px] uppercase tracking-wider ${isCurr ? 'text-rose-400 font-bold' : 'text-white/45'}">
+              ├─ Branch 0${bIdx + 1} ${isCurr ? '●' : ''}
+            </div>
+            ${nodesHtml}
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-tree-focus]').forEach((el) => {
+        el.onclick = () => {
+          const t = voidState.trackMap.get(el.getAttribute('data-tree-focus'));
+          if (t) { voidState.anchorId = t.id; voidState.camX = -t.baseX * voidState.zoom; voidState.camY = -t.baseY * voidState.zoom; refreshHudViews(); }
+        };
+      });
+
+      listEl.querySelectorAll('[data-tree-up]').forEach((b) => {
+        b.onclick = () => {
+          const [bIdx, nIdx] = b.getAttribute('data-tree-up').split(':').map(Number);
+          const br = activePl.branches[bIdx];
+          if (br && nIdx > 0) {
+            [br[nIdx - 1], br[nIdx]] = [br[nIdx], br[nIdx - 1]];
+            rebuildFlatTrackIdsFromBranches(activePl);
+            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+            refreshHudViews();
+          }
+        };
+      });
+
+      listEl.querySelectorAll('[data-tree-dn]').forEach((b) => {
+        b.onclick = () => {
+          const [bIdx, nIdx] = b.getAttribute('data-tree-dn').split(':').map(Number);
+          const br = activePl.branches[bIdx];
+          if (br && nIdx < br.length - 1) {
+            [br[nIdx + 1], br[nIdx]] = [br[nIdx], br[nIdx + 1]];
+            rebuildFlatTrackIdsFromBranches(activePl);
+            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+            refreshHudViews();
+          }
+        };
+      });
+
+      listEl.querySelectorAll('[data-tree-rm]').forEach((b) => {
+        b.onclick = () => {
+          const [bIdx, nIdx] = b.getAttribute('data-tree-rm').split(':').map(Number);
+          const br = activePl.branches[bIdx];
+          if (br) {
+            br.splice(nIdx, 1);
+            activePl.branches = activePl.branches.filter((x) => x.length > 0);
+            if (!activePl.branches.length) activePl.branches = [[]];
+            activePl.activeBranchIndex = Math.min(activePl.activeBranchIndex, activePl.branches.length - 1);
+            rebuildFlatTrackIdsFromBranches(activePl);
+            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+            refreshHudViews();
+          }
+        };
+      });
     }
 
     function refreshAllCustomTagOptions() {
@@ -976,10 +1257,11 @@
     function refreshHudViews() {
       recomputeAnchorMatches();
       refreshAllCustomTagOptions();
+      renderTopLeftMapNodeTree();
 
       document.getElementById('libraryTotalBadge').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
       const unkCount = voidState.tracks.filter((t) => t.missingData).length;
-      document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan All Unknown (${unkCount})` : 'All Scanned ✓';
+      document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan Unknown (${unkCount})` : 'All Scanned ✓';
 
       let anchor = voidState.trackMap.get(voidState.anchorId);
       if (!anchor && voidState.tracks.length > 0) { anchor = voidState.tracks[0]; voidState.anchorId = anchor.id; }
@@ -1006,6 +1288,19 @@
       }
 
       const activePl = getActivePlaylist();
+      const setIds = activePl ? activePl.trackIds : [];
+
+      // Update Radar Brain #1 Auto-Next Recommendation Card
+      const topUnchainedMatch = voidState.matchedNodesCache.find((m) => !setIds.includes(m.track.id)) || voidState.matchedNodesCache[0] || null;
+      if (topUnchainedMatch) {
+        document.getElementById('brainTopPctBadge').textContent = `${topUnchainedMatch.brainPct}% MATCH`;
+        document.getElementById('brainTopTrackLabel').textContent = `${topUnchainedMatch.track.title} (${topUnchainedMatch.track.bpm} • ${topUnchainedMatch.track.camelot} • ${topUnchainedMatch.brainReason})`;
+        document.getElementById('brainAutoChainNextBtn').onclick = () => connectTrackToSetlistTree(topUnchainedMatch.track.id);
+      } else {
+        document.getElementById('brainTopPctBadge').textContent = '—%';
+        document.getElementById('brainTopTrackLabel').textContent = 'No compatible tracks in current filter window';
+      }
+
       const nonEmptyBranches = activePl ? activePl.branches.filter((b) => b.length > 0) : [];
       document.getElementById('branchCountBadge').textContent = String(Math.max(1, nonEmptyBranches.length));
 
@@ -1015,30 +1310,33 @@
       `).join('');
 
       const matches = voidState.matchedNodesCache;
-      document.getElementById('matchStatsLabel').textContent = `${matches.length.toLocaleString()} (${voidState.filterLogic}) lit`;
+      document.getElementById('matchStatsLabel').textContent = `${matches.length.toLocaleString()} (${voidState.filterLogic}) ranked`;
       document.getElementById('drawerMatchesCount').textContent = String(matches.length);
 
       document.getElementById('drawerMatchesPane').innerHTML = matches.slice(0, 75).map((m) => {
         const t = m.track;
-        const dots = m.matchedColors.map((c) => `<span class="w-2 h-2 rounded-full" style="background:${c}"></span>`).join('');
+        const pctColor = m.brainPct >= 90 ? 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10' : m.brainPct >= 80 ? 'text-cyan-300 border-cyan-400/40 bg-cyan-400/10' : 'text-amber-300 border-amber-400/40 bg-amber-400/10';
         return `
           <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 hover:border-[var(--accent-primary)]">
             <div class="min-w-0 flex-1 cursor-pointer" data-focus-id="${t.id}">
-              <div class="font-bold text-[11px] text-white truncate flex items-center gap-1.5"><span>${t.title}</span><span class="flex gap-0.5">${dots}</span></div>
-              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] truncate">${t.artist} • ${t.bpm} BPM • ${t.camelot}</div>
+              <div class="font-bold text-[11px] text-white truncate flex items-center gap-1.5">
+                <span class="font-mono-tech text-[9px] px-1.5 py-0.2 rounded border ${pctColor} shrink-0">${m.brainPct}%</span>
+                <span class="truncate">${t.title}</span>
+              </div>
+              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] truncate mt-0.5">
+                ${t.artist} • ${t.bpm} BPM • ${t.camelot} • <span class="text-emerald-400">${m.brainReason}</span>
+              </div>
             </div>
-            <button type="button" data-add-set="${t.id}" class="hud-well px-2 py-1 rounded-lg font-mono-tech text-[10px] text-rose-400 hover:border-rose-400">+ Connect</button>
+            <button type="button" data-add-set="${t.id}" class="hud-well px-2 py-1 rounded-lg font-mono-tech text-[10px] text-rose-400 hover:border-rose-400 shrink-0">+ Connect</button>
           </div>
         `;
       }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No tracks fit criteria.</div>`;
 
-      const setIds = activePl ? activePl.trackIds : [];
       document.getElementById('drawerSetCount').textContent = String(setIds.length);
 
-      // Render multi-branch tree view inside the Setlist Drawer
       const setPane = document.getElementById('drawerSetlistPane');
       if (!nonEmptyBranches.length) {
-        setPane.innerHTML = `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">Click "+ Connect" on any match or Shift+Click stars to build persistent branches.</div>`;
+        setPane.innerHTML = `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">Click "⚡ Chain Next" or "+ Connect" to build persistent branches.</div>`;
       } else {
         setPane.innerHTML = nonEmptyBranches.map((branch, bIdx) => {
           const isCurr = bIdx === activePl.activeBranchIndex;
@@ -1084,72 +1382,48 @@
       });
     }
 
-    function renderSetlistManagerModal() {
-      const side = document.getElementById('mgrPlaylistsSidebar');
-      side.innerHTML = Object.values(voidState.playlists).map((pl) => `
-        <button type="button" data-mgr-pick="${pl.id}" class="w-full text-left px-3 py-2 rounded-xl font-mono-tech text-xs flex items-center justify-between ${pl.id === voidState.activePlaylistId ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'hud-well text-[var(--text-secondary)]'}">
-          <span class="truncate">${pl.name}</span><span>${pl.trackIds.length}</span>
-        </button>
-      `).join('');
-      side.querySelectorAll('[data-mgr-pick]').forEach((b) => {
-        b.onclick = () => { voidState.activePlaylistId = b.getAttribute('data-mgr-pick'); renderSetlistManagerModal(); refreshHudViews(); };
-      });
-      const activePl = getActivePlaylist();
-      document.getElementById('mgrActiveListNameInput').value = activePl ? activePl.name : '';
-      const bCount = activePl ? activePl.branches.filter((b) => b.length > 0).length : 0;
-      document.getElementById('mgrBranchesSummary').textContent = `${bCount} persistent branch(es) active in this setlist tree.`;
-
-      const tbl = document.getElementById('mgrTracksTableContainer');
-      const ids = activePl ? activePl.trackIds : [];
-      tbl.innerHTML = ids.map((id, i) => {
-        const t = voidState.trackMap.get(id);
-        if (!t) return '';
-        return `
-          <div class="hud-well px-3 py-2 rounded-xl flex items-center justify-between gap-2 font-mono-tech text-xs">
-            <span class="truncate"><strong class="text-rose-400 mr-2">${i + 1}.</strong>${t.artist} — ${t.title} <span class="text-[var(--accent-primary)]">(${t.bpm} BPM • ${t.camelot})</span></span>
-            <div class="flex items-center gap-1 shrink-0"><button type="button" data-mgr-up="${i}" class="hud-well px-2 py-0.5 rounded">↑</button><button type="button" data-mgr-dn="${i}" class="hud-well px-2 py-0.5 rounded">↓</button><button type="button" data-mgr-rm="${i}" class="hud-well px-2 py-0.5 rounded text-rose-400">✕</button></div>
-          </div>
-        `;
-      }).join('') || `<div class="hud-well p-6 rounded-xl text-center text-[var(--text-muted)]">Empty setlist.</div>`;
-
-      tbl.querySelectorAll('[data-mgr-up]').forEach((b) => {
-        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-up')); if (i > 0) { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
-      });
-      tbl.querySelectorAll('[data-mgr-dn]').forEach((b) => {
-        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-dn')); if (i < ids.length - 1) { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
-      });
-      tbl.querySelectorAll('[data-mgr-rm]').forEach((b) => {
-        b.onclick = () => {
-          const rmId = ids[Number(b.getAttribute('data-mgr-rm'))];
-          ids.splice(Number(b.getAttribute('data-mgr-rm')), 1);
-          activePl.branches = activePl.branches.map((br) => br.filter((x) => x !== rmId)).filter((br) => br.length > 0);
-          if (!activePl.branches.length) activePl.branches = [[]];
-          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-          renderSetlistManagerModal(); refreshHudViews();
-        };
-      });
-    }
-
     function renderAccountHubModal() {
       const u = voidState.user;
+      const convHistory = JSON.parse(localStorage.getItem(CORE_KEYS.CONVERT_HISTORY) || '[]');
+      const activeRig = localStorage.getItem(CORE_KEYS.ACTIVE_DEVICE) || 'Pioneer CDJ / Rekordbox';
+
       document.getElementById('hubProfileName').textContent = u ? u.displayName : 'Guest Producer';
-      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Not signed in';
+      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Local Studio Session (Sign in on Converter to sync)';
       document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
       document.getElementById('hubOwnerRoleBadge').classList.toggle('hidden', !voidState.ownerElevated);
+      document.getElementById('hubAcctStatus').textContent = u ? 'Verified Cloud' : 'Guest Mode';
+      document.getElementById('hubAcctTotalTracks').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
+      document.getElementById('hubAcctTotalConvs').textContent = `${convHistory.length} Files`;
+
+      // Tab 2: Converter Data
+      document.getElementById('hubConvRig').textContent = activeRig === 'none' ? 'Standard Studio' : activeRig.toUpperCase();
+      document.getElementById('hubConvCount').textContent = `${convHistory.length} Converted File(s)`;
+      document.getElementById('hubConvHistoryList').innerHTML = convHistory.slice(0, 25).map((h) => `
+        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]">
+          <span class="truncate text-white">${h.artist} — ${h.trackTitle}</span>
+          <span class="text-emerald-400 shrink-0 ml-2">.${h.outputFormat} (${h.qualitySpec})</span>
+        </div>
+      `).join('') || `<div class="text-[var(--text-muted)] py-3 text-center">No files converted yet in Converter tool.</div>`;
+
+      // Tab 3: Radar Data
+      const totalBranches = Object.values(voidState.playlists).reduce((s, p) => s + (p.branches ? p.branches.filter((b)=>b.length).length : 1), 0);
+      document.getElementById('hubLibraryCount').textContent = voidState.tracks.length.toLocaleString();
+      document.getElementById('hubSetlistsCount').textContent = String(Object.keys(voidState.playlists).length);
+      document.getElementById('hubBranchesCount').textContent = String(Math.max(1, totalBranches));
+      document.getElementById('hubCloudLibraryPreview').innerHTML = voidState.tracks.slice(0, 30).map((t) => `
+        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]"><span class="truncate text-white">${t.artist} — ${t.title}</span><span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM • ' + t.camelot}</span></div>
+      `).join('');
+
+      // Tab 5: Permissions
       const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
       document.getElementById('hubPermissionsGrid').innerHTML = [
-        { label: 'Tier Plan', val: (perms.tier || 'paid').toUpperCase(), ok: true },
-        { label: 'Device Rigs', val: perms.rig !== false ? 'ENABLED' : 'LOCKED', ok: perms.rig !== false },
-        { label: 'Batch Automation', val: perms.automation !== false ? 'ENABLED' : 'LOCKED', ok: perms.automation !== false },
-        { label: 'Custom Themes', val: perms.palettes !== false ? 'ENABLED' : 'LOCKED', ok: perms.palettes !== false },
-        { label: 'Admin Access', val: (perms.isAdmin || voidState.ownerElevated) ? 'ADMIN ✓' : 'USER', ok: !!(perms.isAdmin || voidState.ownerElevated) },
-        { label: 'Owner Authority', val: voidState.ownerElevated ? 'MASTER OWNER' : 'STANDARD', ok: voidState.ownerElevated }
-      ].map((p) => `<div class="hud-well p-2.5 rounded-lg"><div class="text-[9px] text-[var(--text-secondary)]">${p.label}</div><div class="font-bold mt-0.5 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
-      document.getElementById('hubLibraryCount').textContent = voidState.tracks.length.toLocaleString();
-      document.getElementById('hubSetlistsCount').textContent = `${Object.keys(voidState.playlists).length} Sets`;
-      document.getElementById('hubCloudLibraryPreview').innerHTML = voidState.tracks.slice(0, 30).map((t) => `
-        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]"><span class="truncate text-white">${t.artist} — ${t.title}</span><span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM'}</span></div>
-      `).join('');
+        { label: 'Membership Tier', val: (perms.tier || 'paid').toUpperCase(), ok: true },
+        { label: 'Hardware Rig Presets', val: perms.rig !== false ? 'ENABLED' : 'LOCKED', ok: perms.rig !== false },
+        { label: 'Batch Tag Automation', val: perms.automation !== false ? 'ENABLED' : 'LOCKED', ok: perms.automation !== false },
+        { label: 'Global UI Palettes', val: perms.palettes !== false ? 'ENABLED' : 'LOCKED', ok: perms.palettes !== false },
+        { label: 'Admin Console', val: (perms.isAdmin || voidState.ownerElevated) ? 'ADMIN ACCESS' : 'STANDARD USER', ok: !!(perms.isAdmin || voidState.ownerElevated) },
+        { label: 'Master Owner Key', val: voidState.ownerElevated ? 'UNLOCKED ✓' : 'LOCKED', ok: voidState.ownerElevated }
+      ].map((p) => `<div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-[var(--text-secondary)] uppercase">${p.label}</div><div class="font-bold mt-1 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
     }
 
     function updateHeaderRoleButtons() {
@@ -1172,7 +1446,6 @@
       if (savedPal) applyGlobalSuitePalette(savedPal);
       updateHeaderRoleButtons();
 
-      // Sync vector style inputs
       document.getElementById('quickVectorColorInput').value = voidState.vectorColor;
       document.getElementById('settingVectorColorPicker').value = voidState.vectorColor;
       document.getElementById('quickVectorFadeSelect').value = voidState.vectorFadeMode;
@@ -1190,6 +1463,23 @@
       const loop = (t) => { renderRadarVoid(t); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
 
+      // Hide/Show Top-Left Map-Layer Node Tree
+      document.getElementById('toggleMapTreeVisBtn').onclick = (e) => {
+        voidState.mapTreeVisible = !voidState.mapTreeVisible;
+        e.currentTarget.textContent = voidState.mapTreeVisible ? 'Hide' : 'Show Tree';
+        renderTopLeftMapNodeTree();
+      };
+
+      // Universal 5-Tab Account Hub Switcher
+      document.querySelectorAll('.acct-tab-btn').forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.acct-tab-btn').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('.acct-tab-pane').forEach((p) => p.classList.add('hidden'));
+          btn.classList.add('active');
+          document.getElementById(`acctPane-${btn.getAttribute('data-acct-tab')}`).classList.remove('hidden');
+        };
+      });
+
       // Vector Color & Fade Mode Bindings
       const syncVecStyle = (col, fade) => {
         voidState.vectorColor = col;
@@ -1206,13 +1496,12 @@
       document.getElementById('quickVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
       document.getElementById('settingVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
 
-      // Fork New Branch Button
       document.getElementById('forkNewBranchBtn').onclick = () => {
         const pl = getActivePlaylist();
         if (!pl || !voidState.anchorId) return;
         pl.branches.push([voidState.anchorId]);
         pl.activeBranchIndex = pl.branches.length - 1;
-        if (!pl.trackIds.includes(voidState.anchorId)) pl.trackIds.push(voidState.anchorId);
+        rebuildFlatTrackIdsFromBranches(pl);
         VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
         refreshHudViews();
       };
@@ -1320,32 +1609,6 @@
       document.getElementById('highlightActiveSetBtn').onclick = (e) => {
         voidState.isolateSetlistMode = !voidState.isolateSetlistMode;
         e.currentTarget.textContent = voidState.isolateSetlistMode ? '★ Showing Tree' : '★ Isolate';
-      };
-
-      // Modals
-      const mgrModal = document.getElementById('setlistManagerModal');
-      document.getElementById('openSetlistManagerBtn').onclick = () => { renderSetlistManagerModal(); mgrModal.classList.remove('hidden'); };
-      document.getElementById('closeSetlistManagerBtn').onclick = () => mgrModal.classList.add('hidden');
-      document.getElementById('mgrCreateListBtn').onclick = () => {
-        const id = 'pl_' + Math.random().toString(36).slice(2, 8);
-        voidState.playlists[id] = ensurePlaylistBranchesStruct({ id, name: `Setlist #${Object.keys(voidState.playlists).length + 1}`, trackIds: [], branches: [[]] });
-        voidState.activePlaylistId = id; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, id);
-        renderSetlistManagerModal(); refreshHudViews();
-      };
-      document.getElementById('mgrSaveNameBtn').onclick = () => {
-        const pl = getActivePlaylist();
-        if (pl) { pl.name = document.getElementById('mgrActiveListNameInput').value.trim() || pl.name; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, pl.id); renderSetlistManagerModal(); refreshHudViews(); }
-      };
-      document.getElementById('mgrHighlightOnVoidBtn').onclick = () => { voidState.isolateSetlistMode = true; document.getElementById('highlightActiveSetBtn').textContent = '★ Showing Tree'; mgrModal.classList.add('hidden'); };
-      document.getElementById('mgrClearBranchesBtn').onclick = () => {
-        const pl = getActivePlaylist();
-        if (pl) { pl.trackIds = []; pl.branches = [[]]; pl.activeBranchIndex = 0; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, pl.id); renderSetlistManagerModal(); refreshHudViews(); }
-      };
-      document.getElementById('mgrDeleteListBtn').onclick = () => {
-        if (Object.keys(voidState.playlists).length <= 1) return;
-        delete voidState.playlists[voidState.activePlaylistId]; voidState.activePlaylistId = Object.keys(voidState.playlists)[0];
-        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-        renderSetlistManagerModal(); refreshHudViews();
       };
 
       const setModal = document.getElementById('suiteSettingsModal');
