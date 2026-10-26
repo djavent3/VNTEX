@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-obsidian">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNTEX // Harmonic Radar & Setlist Sonar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-void: #030305;
+      --bg-panel: #08080c;
+      --bg-panel-elevated: #0e0e16;
+      --bg-well: #040406;
+      --border-hairline: #171722;
+      --border-highlight: #262638;
+      --text-primary: #f3f4f8;
+      --text-secondary: #9496a8;
+      --text-muted: #585a6e;
+      --accent-primary: #00f2fe;
+      --accent-secondary: #4facfe;
+      --accent-glow: rgba(0, 242, 254, 0.25);
+      --accent-contrast: #030508;
+      --panel-radius: 0.75rem;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+
+    .studio-panel {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--panel-radius);
+      box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.85);
+    }
+
+    .hardware-well {
+      background-color: var(--bg-well);
+      border: 1px solid var(--border-hairline);
+      border-radius: calc(var(--panel-radius) * 0.7);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9);
+      color: var(--text-primary);
+      transition: border-color 0.15s ease;
+    }
+
+    .btn-convert-primary {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      color: var(--accent-contrast);
+      font-weight: 800;
+      box-shadow: 0 0 20px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .btn-convert-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+
+    .suite-nav-pill {
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .suite-nav-pill:hover {
+      color: var(--text-primary);
+      border-color: var(--border-highlight);
+    }
+    .suite-nav-pill.active {
+      color: var(--accent-primary);
+      background-color: var(--bg-panel-elevated);
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .verified-badge-icon {
+      color: #00f2fe;
+      filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45));
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-cyan-400 selection:text-black">
+
+  <!-- ==========================================================================
+       SHARED VNTEX SUITE TOP NAVIGATION BAR
+       ========================================================================== -->
+  <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand + App Suite Switcher -->
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">
+            VX
+          </div>
+          <span class="font-extrabold tracking-tight text-base text-[var(--text-primary)]">VNTEX</span>
+        </div>
+
+        <!-- Modular Web App Switcher Tabs -->
+        <nav class="hardware-well p-1 flex items-center gap-1">
+          <a href="index.html" class="suite-nav-pill">
+            <i class="fa-solid fa-bolt text-[10px]"></i>
+            <span>Converter</span>
+          </a>
+          <a href="radar.html" class="suite-nav-pill active">
+            <i class="fa-solid fa-compass text-[10px]"></i>
+            <span>Harmonic Radar</span>
+          </a>
+          <button id="bloodstreamSoonBtn" type="button" class="suite-nav-pill opacity-60 hover:opacity-100" title="Bloodstream Web Audio Engine — Coming Next">
+            <i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i>
+            <span>Bloodstream</span>
+            <span class="text-[9px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-400">SOON</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Shared Account & Admin Status -->
+      <div class="flex items-center gap-2">
+        <a id="headerAdminDashLink" href="index.html#admin" class="hidden hardware-well px-3 py-1.5 text-xs font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-[11px]"></i>
+          <span>Admin Dash</span>
+        </a>
+
+        <button id="importCloudCrateBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech flex items-center gap-1.5 hover:border-[var(--accent-primary)] transition" title="Pull converted tracks from your VNTEX Cloud Crate">
+          <i class="fa-solid fa-cloud-arrow-down text-[var(--accent-primary)] text-[11px]"></i>
+          <span>Sync Crate (<span id="syncedCrateCount">0</span>)</span>
+        </button>
+
+        <a href="index.html" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
+          <i id="userStatusIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
+          <span id="userStatusName">Guest Session</span>
+          <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[11px] hidden" title="Verified VNTEX Producer"></i>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN HARMONIC RADAR WORKSPACE
+       ========================================================================== -->
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-5">
+
+    <!-- Top Control & Drop Bar -->
+    <section class="studio-panel p-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <input id="radarFileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.ogg,.opus" class="hidden" />
+        <button id="scanFilesBtn" type="button" class="btn-convert-primary px-4 py-2 rounded-lg text-xs font-mono-tech flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>Drop or Select Audio to Scan</span>
+        </button>
+
+        <button id="loadDemoCrateBtn" type="button" class="hardware-well px-3 py-2 text-xs font-mono-tech text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition">
+          + Load 8 DJ Set Tracks
+        </button>
+
+        <span id="scanStatusLabel" class="font-mono-tech text-[11px] text-[var(--accent-primary)]"></span>
+      </div>
+
+      <!-- Radar Telemetry Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2 text-xs">
+          <span class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">BPM Tolerance:</span>
+          <select id="bpmToleranceSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+            <option value="3" class="bg-[#08080c] text-white">±3 BPM (Tight Mix)</option>
+            <option value="6" selected class="bg-[#08080c] text-white">±6 BPM (Standard Pitch)</option>
+            <option value="12" class="bg-[#08080c] text-white">±12 BPM (Wide Sync)</option>
+            <option value="999" class="bg-[#08080c] text-white">Any BPM (Key Only)</option>
+          </select>
+        </div>
+
+        <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2 text-xs">
+          <span class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Notation:</span>
+          <select id="radarKeyModeSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+            <option value="camelot" class="bg-[#08080c] text-white">Camelot (8A / 11B)</option>
+            <option value="standard" class="bg-[#08080c] text-white">Standard (Am / A)</option>
+          </select>
+        </div>
+
+        <button id="toggleSweepBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-mono-tech text-[var(--accent-primary)] border border-[var(--accent-primary)]/40">
+          <i class="fa-solid fa-satellite-dish mr-1"></i>Sweep: ON
+        </button>
+      </div>
+    </section>
+
+    <!-- Core 12-Column Radar Grid: Left (Sonar Canvas) + Right (Anchor Deck, Compatible Matches & Setlist) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- LEFT 7 COLS: INTERACTIVE CAMELOT SONAR CANVAS -->
+      <section class="lg:col-span-7 studio-panel p-4 flex flex-col items-center space-y-3">
+        <div class="w-full flex flex-wrap items-center justify-between gap-2 text-xs border-b border-[var(--border-hairline)] pb-2.5">
+          <div>
+            <span class="font-mono-tech uppercase text-[11px] font-bold text-[var(--accent-primary)]">24-Sector Harmonic Sonar</span>
+            <span class="text-[11px] text-[var(--text-secondary)] ml-2">Outer Ring: Major (B) • Inner Ring: Minor (A) • Radius: BPM</span>
+          </div>
+          <span class="font-mono-tech text-[10px] text-[var(--text-muted)]">Click any node or sector</span>
+        </div>
+
+        <!-- Responsive Square Canvas Wrapper -->
+        <div class="relative w-full max-w-[520px] aspect-square flex items-center justify-center">
+          <canvas id="harmonicRadarCanvas" width="620" height="620" class="w-full h-full cursor-crosshair"></canvas>
+        </div>
+
+        <!-- Legend Bar -->
+        <div class="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[var(--border-hairline)] font-mono-tech text-[10px]">
+          <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#00f2fe] shadow-[0_0_8px_#00f2fe]"></span>
+            <span>Anchor / Same Key</span>
+          </div>
+          <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-[0_0_8px_#10b981]"></span>
+            <span>Smooth (±1 / Rel B/A)</span>
+          </div>
+          <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b] shadow-[0_0_8px_#f59e0b]"></span>
+            <span>Energy Boost (+2 / +7)</span>
+          </div>
+          <div class="hardware-well px-2.5 py-1.5 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#e11d48]"></span>
+            <span>Setlist Path Vector</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT 5 COLS: ACTIVE ANCHOR DECK + COMPATIBLE NEXT TRACKS + SETLIST BUILDER -->
+      <section class="lg:col-span-5 space-y-4">
+
+        <!-- 1. ACTIVE ANCHOR DECK CARD -->
+        <div class="studio-panel p-4 space-y-3 border-l-2 border-l-[var(--accent-primary)]">
+          <div class="flex items-center justify-between">
+            <span class="font-mono-tech uppercase text-[10px] text-[var(--accent-primary)]">
+              <i class="fa-solid fa-compact-disc fa-spin mr-1"></i>Active Anchor Deck (Reference Track)
+            </span>
+            <button id="addAnchorToSetlistBtn" type="button" class="hardware-well px-2.5 py-1 font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]">
+              + Add to Setlist
+            </button>
+          </div>
+
+          <div id="anchorTrackCard" class="hardware-well p-3.5 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div id="anchorTitle" class="font-bold text-sm text-[var(--text-primary)] truncate">Select or Load a Track</div>
+              <div id="anchorArtist" class="text-xs text-[var(--text-secondary)] truncate">Click any node on the radar to inspect transitions</div>
+            </div>
+            <div class="text-right shrink-0 font-mono-tech">
+              <div id="anchorKeyBadge" class="text-sm font-extrabold text-[var(--accent-primary)]">—</div>
+              <div id="anchorBpmBadge" class="text-[11px] text-[var(--text-secondary)]">— BPM</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. HARMONIC MATCH RECOMMENDATIONS -->
+        <div class="studio-panel p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="font-mono-tech uppercase text-xs font-bold text-emerald-400">
+              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Harmonic Next-Track Matches
+            </h2>
+            <span id="compatibleCountBadge" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">0 Matches</span>
+          </div>
+
+          <div id="compatibleTracksContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- 3. SETLIST CHAIN & M3U8 EXPORT -->
+        <div class="studio-panel p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="font-mono-tech uppercase text-xs font-bold text-rose-400">
+                <i class="fa-solid fa-route mr-1"></i>Radar Setlist Chain (<span id="setlistCountBadge">0</span>)
+              </h2>
+              <p class="text-[10px] text-[var(--text-secondary)]">Connected with vector lines on the radar</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="exportM3uBtn" type="button" class="btn-convert-primary px-3 py-1 rounded font-mono-tech text-[10px]">
+                Export .M3U8
+              </button>
+              <button id="clearSetlistBtn" type="button" class="hardware-well px-2 py-1 font-mono-tech text-[10px] text-rose-400">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div id="setlistContainer" class="space-y-1.5 max-h-52 overflow-y-auto pr-1 font-mono-tech text-xs"></div>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- Full Crate Table Below Radar -->
+    <section class="studio-panel p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-hairline)] pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="font-mono-tech uppercase text-xs font-bold text-[var(--text-primary)]">All Loaded Crate Tracks (<span id="totalCrateCount">0</span>)</span>
+        </div>
+        <button id="clearAllRadarTracksBtn" type="button" class="text-xs font-mono-tech text-rose-400 hover:underline">Clear All Tracks</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse font-mono-tech text-xs">
+          <thead>
+            <tr class="border-b border-[var(--border-hairline)] text-[var(--text-secondary)]">
+              <th class="py-2 px-3">Track</th>
+              <th class="py-2 px-3">Artist</th>
+              <th class="py-2 px-3">BPM</th>
+              <th class="py-2 px-3">Camelot / Standard Key</th>
+              <th class="py-2 px-3">Compatibility vs Anchor</th>
+              <th class="py-2 px-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="fullCrateTableBody" class="divide-y divide-[var(--border-hairline)]"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /**************************************************************************
+     * 1. SHARED VNTEX STORAGE KEYS & CAMELOT WHEEL GEOMETRY
+     **************************************************************************/
+    const STORAGE_KEYS = {
+      USER: 'vntex_auth_user_v9',
+      USERS_REGISTRY: 'vntex_users_registry_v9',
+      LIBRARY: 'vntex_cloud_library_v9',
+      HISTORY: 'vntex_download_history_v9',
+      ACTIVE_PALETTE: 'vntex_active_palette_v9',
+      RADAR_CRATE: 'vntex_radar_crate_v1',
+      RADAR_SETLIST: 'vntex_radar_setlist_v1'
+    };
+
+    const CAMELOT_MAP = [
+      { num: 1,  mode: 'A', camelot: '1A',  standard: 'G#m', pc: 8  },
+      { num: 2,  mode: 'A', camelot: '2A',  standard: 'Ebm', pc: 3  },
+      { num: 3,  mode: 'A', camelot: '3A',  standard: 'Bbm', pc: 10 },
+      { num: 4,  mode: 'A', camelot: '4A',  standard: 'Fm',  pc: 5  },
+      { num: 5,  mode: 'A', camelot: '5A',  standard: 'Cm',  pc: 0  },
+      { num: 6,  mode: 'A', camelot: '6A',  standard: 'Gm',  pc: 7  },
+      { num: 7,  mode: 'A', camelot: '7A',  standard: 'Dm',  pc: 2  },
+      { num: 8,  mode: 'A', camelot: '8A',  standard: 'Am',  pc: 9  },
+      { num: 9,  mode: 'A', camelot: '9A',  standard: 'Em',  pc: 4  },
+      { num: 10, mode: 'A', camelot: '10A', standard: 'Bm',  pc: 11 },
+      { num: 11, mode: 'A', camelot: '11A', standard: 'F#m', pc: 6  },
+      { num: 12, mode: 'A', camelot: '12A', standard: 'C#m', pc: 1  },
+      { num: 1,  mode: 'B', camelot: '1B',  standard: 'B',   pc: 11 },
+      { num: 2,  mode: 'B', camelot: '2B',  standard: 'F#',  pc: 6  },
+      { num: 3,  mode: 'B', camelot: '3B',  standard: 'Db',  pc: 1  },
+      { num: 4,  mode: 'B', camelot: '4B',  standard: 'Ab',  pc: 8  },
+      { num: 5,  mode: 'B', camelot: '5B',  standard: 'Eb',  pc: 3  },
+      { num: 6,  mode: 'B', camelot: '6B',  standard: 'Bb',  pc: 10 },
+      { num: 7,  mode: 'B', camelot: '7B',  standard: 'F',   pc: 5  },
+      { num: 8,  mode: 'B', camelot: '8B',  standard: 'C',   pc: 0  },
+      { num: 9,  mode: 'B', camelot: '9B',  standard: 'G',   pc: 7  },
+      { num: 10, mode: 'B', camelot: '10B', standard: 'D',   pc: 2  },
+      { num: 11, mode: 'B', camelot: '11B', standard: 'A',   pc: 9  },
+      { num: 12, mode: 'B', camelot: '12B', standard: 'E',   pc: 4  }
+    ];
+
+    function normalizeToCamelotEntry(keyStr) {
+      const clean = String(keyStr || '8A').trim().toUpperCase();
+      return (
+        CAMELOT_MAP.find((k) => k.camelot.toUpperCase() === clean || k.standard.toUpperCase() === clean) ||
+        CAMELOT_MAP.find((k) => k.camelot === '8A')
+      );
+    }
+
+    // Evaluates harmonic transition relationship between Anchor Track and Candidate Track
+    function evaluateHarmonicRelation(anchorKeyStr, candidateKeyStr) {
+      const a = normalizeToCamelotEntry(anchorKeyStr);
+      const b = normalizeToCamelotEntry(candidateKeyStr);
+
+      const diff = (b.num - a.num + 12) % 12;
+
+      if (a.num === b.num && a.mode === b.mode) {
+        return { tier: 'same', score: 100, label: 'Unison Key (Perfect)', color: '#00f2fe' };
+      }
+      if (a.num === b.num && a.mode !== b.mode) {
+        return { tier: 'smooth', score: 94, label: 'Relative Major/Minor', color: '#10b981' };
+      }
+      if (a.mode === b.mode && (diff === 1 || diff === 11)) {
+        return { tier: 'smooth', score: 92, label: diff === 1 ? '+1 Fifth Step Up' : '-1 Fifth Step Down', color: '#10b981' };
+      }
+      if (a.mode === b.mode && (diff === 2 || diff === 7)) {
+        return { tier: 'energy', score: 82, label: diff === 2 ? '+2 Whole-Step Energy Boost' : '+7 Semitone Power Lift', color: '#f59e0b' };
+      }
+      if (a.mode !== b.mode && (diff === 1 || diff === 11)) {
+        return { tier: 'energy', score: 76, label: 'Diagonal Mood Modulation', color: '#f59e0b' };
+      }
+      return { tier: 'clash', score: 25, label: 'Off-Key Transition', color: '#585a6e' };
+    }
+
+    /**************************************************************************
+     * 2. SUB-SAMPLE DSP BPM & KEY ANALYZER (MATCHING CONVERTER ENGINE)
+     **************************************************************************/
+    const RadarDSP = {
+      PROFILE_MAJOR: [6.6, 2.0, 3.5, 2.3, 4.6, 4.0, 2.5, 5.2, 2.4, 3.7, 2.3, 3.0],
+      PROFILE_MINOR: [6.5, 2.7, 3.5, 5.4, 2.6, 3.5, 2.5, 5.1, 4.0, 2.7, 3.4, 3.2],
+
+      detectBPM(audioBuffer, minBPM = 75, maxBPM = 160) {
+        const sr = audioBuffer.sampleRate;
+        const ch0 = audioBuffer.getChannelData(0);
+        const sliceSec = Math.min(35, audioBuffer.duration);
+        const startSample = Math.floor((audioBuffer.duration > 45 ? audioBuffer.duration * 0.2 : 0) * sr);
+        const numSamples = Math.min(ch0.length - startSample, Math.floor(sliceSec * sr));
+
+        const hop = Math.max(32, Math.floor(sr / 200));
+        const envRate = sr / hop;
+        const numFrames = Math.floor(numSamples / hop);
+        if (numFrames < 80) return 126;
+
+        const dt = 1.0 / sr;
+        const alphaLp = dt / (1.0 / (2.0 * Math.PI * 115.0) + dt);
+        const alphaHp = dt / (1.0 / (2.0 * Math.PI * 35.0) + dt);
+        let lp1 = 0, lp2 = 0, hpState = 0, prevKickLog = 0;
+        const onsetEnv = new Float32Array(numFrames);
+
+        for (let f = 0; f < numFrames; f++) {
+          let kickSq = 0;
+          const base = startSample + f * hop;
+          for (let i = 0; i < hop; i++) {
+            const s = ch0[base + i];
+            hpState += alphaHp * (s - hpState);
+            const hpOut = s - hpState;
+            lp1 += alphaLp * (hpOut - lp1);
+            lp2 += alphaLp * (lp1 - lp2);
+            kickSq += lp2 * lp2;
+          }
+          const kickLog = Math.log1p(25.0 * Math.sqrt(kickSq / hop));
+          onsetEnv[f] = Math.max(0, kickLog - prevKickLog);
+          prevKickLog = kickLog;
+        }
+
+        const cleanEnv = new Float32Array(numFrames);
+        let maxVal = 1e-9;
+        for (let i = 0; i < numFrames; i++) {
+          let sum = 0, cnt = 0;
+          for (let j = Math.max(0, i - 25); j <= Math.min(numFrames - 1, i + 25); j++) { sum += onsetEnv[j]; cnt++; }
+          const v = Math.max(0, onsetEnv[i] - (sum / cnt) * 1.15);
+          cleanEnv[i] = v;
+          if (v > maxVal) maxVal = v;
+        }
+        for (let i = 0; i < numFrames; i++) cleanEnv[i] /= maxVal;
+
+        const minLag = Math.max(4, Math.floor((60 * envRate) / 205));
+        const maxLag = Math.min(Math.floor(numFrames * 0.6), Math.ceil((60 * envRate) / 50));
+        const acf = new Float32Array(maxLag + 2);
+        for (let lag = minLag; lag <= maxLag; lag++) {
+          let sum = 0;
+          const limit = numFrames - lag;
+          for (let i = 0; i < limit; i++) sum += cleanEnv[i] * cleanEnv[i + lag];
+          acf[lag] = sum / limit;
+        }
+
+        const interpAcf = (exactLag) => {
+          if (exactLag < minLag || exactLag >= maxLag) return 0;
+          const i0 = Math.floor(exactLag);
+          const frac = exactLag - i0;
+          return acf[i0] * (1.0 - frac) + acf[i0 + 1] * frac;
+        };
+
+        let bestBpm = 126, bestScore = -Infinity;
+        for (let bpm = minBPM; bpm <= maxBPM; bpm += 0.25) {
+          const baseLag = (60.0 * envRate) / bpm;
+          const score =
+            1.00 * interpAcf(baseLag) +
+            0.55 * interpAcf(baseLag * 2.0) +
+            0.30 * interpAcf(baseLag * 3.0) +
+            0.25 * interpAcf(baseLag * 4.0);
+          if (score > bestScore) { bestScore = score; bestBpm = Math.round(bpm); }
+        }
+        return bestBpm;
+      },
+
+      detectKey(audioBuffer) {
+        const origSr = audioBuffer.sampleRate;
+        const ch0 = audioBuffer.getChannelData(0);
+        const decFactor = 4;
+        const decSr = origSr / decFactor;
+        const decLen = Math.floor(ch0.length / decFactor);
+        const decSignal = new Float32Array(decLen);
+        for (let i = 0; i < decLen; i++) decSignal[i] = ch0[i * decFactor];
+
+        const winSize = 4096;
+        if (decLen < winSize) return CAMELOT_MAP[7]; // 8A
+
+        const pitchClassOmegas = [];
+        for (let pc = 0; pc < 12; pc++) {
+          const omegas = [];
+          for (let oct = 2; oct <= 5; oct++) {
+            const midi = (oct + 1) * 12 + pc;
+            const freq = 440.0 * Math.pow(2.0, (midi - 69.0) / 12.0);
+            if (freq < decSr * 0.42) {
+              omegas.push({ coeff: 2.0 * Math.cos((2.0 * Math.PI * freq) / decSr), weight: oct <= 3 ? 1.2 : 0.9 });
+            }
+          }
+          pitchClassOmegas.push(omegas);
+        }
+
+        const chroma = new Float64Array(12);
+        for (let w = 0; w < 12; w++) {
+          const startIdx = Math.min(decLen - winSize, Math.floor(decLen * (0.15 + (0.7 * w) / 11)));
+          for (let pc = 0; pc < 12; pc++) {
+            for (const o of pitchClassOmegas[pc]) {
+              let q1 = 0, q2 = 0;
+              for (let n = 0; n < winSize; n++) {
+                const q0 = o.coeff * q1 - q2 + decSignal[startIdx + n];
+                q2 = q1; q1 = q0;
+              }
+              chroma[pc] += Math.sqrt(Math.max(0, q1 * q1 + q2 * q2 - q1 * q2 * o.coeff)) * o.weight;
+            }
+          }
+        }
+
+        let bestEntry = CAMELOT_MAP[7], bestR = -Infinity;
+        for (const entry of CAMELOT_MAP) {
+          const baseProf = entry.mode === 'B' ? this.PROFILE_MAJOR : this.PROFILE_MINOR;
+          let num = 0;
+          for (let i = 0; i < 12; i++) num += chroma[i] * baseProf[(i - entry.pc + 12) % 12];
+          if (num > bestR) { bestR = num; bestEntry = entry; }
+        }
+        return bestEntry;
+      }
+    };
+
+    /**************************************************************************
+     * 3. RADAR STATE & CLOUD CRATE SYNC
+     **************************************************************************/
+    const radarState = {
+      user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null'),
+      activePalette: JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVE_PALETTE) || 'null'),
+      tracks: JSON.parse(localStorage.getItem(STORAGE_KEYS.RADAR_CRATE) || '[]'),
+      setlistIds: JSON.parse(localStorage.getItem(STORAGE_KEYS.RADAR_SETLIST) || '[]'),
+      anchorTrackId: null,
+      bpmTolerance: 6,
+      keyMode: 'camelot',
+      sweepActive: true,
+      sweepAngle: 0,
+      hoveredNodeId: null,
+      nodeScreenCoords: [],
+      audioCtx: null
+    };
+
+    function saveRadarState() {
+      localStorage.setItem(STORAGE_KEYS.RADAR_CRATE, JSON.stringify(radarState.tracks));
+      localStorage.setItem(STORAGE_KEYS.RADAR_SETLIST, JSON.stringify(radarState.setlistIds));
+    }
+
+    function applySavedThemePalette() {
+      const p = radarState.activePalette;
+      if (!p) return;
+      const root = document.documentElement;
+      root.style.setProperty('--bg-void', p.void || '#030305');
+      root.style.setProperty('--bg-panel', p.panel || '#08080c');
+      root.style.setProperty('--accent-primary', p.accent1 || '#00f2fe');
+      root.style.setProperty('--accent-secondary', p.accent2 || '#4facfe');
+    }
+
+    function syncHeaderUserAndCrateCount() {
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+      const user = radarState.user;
+      const userLogs = user
+        ? history.filter((h) => h.userEmail && h.userEmail.toLowerCase() === user.email.toLowerCase())
+        : history;
+      document.getElementById('syncedCrateCount').textContent = String(userLogs.length);
+
+      if (user && user.email) {
+        document.getElementById('userStatusName').textContent = user.displayName || user.email;
+        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[11px]';
+        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !user.verifiedBadge);
+        document.getElementById('headerAdminDashLink').classList.toggle('hidden', !user.permissions?.isAdmin);
+      }
+    }
+
+    function importConvertedTracksFromCloudCrate() {
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+      if (!history.length) return 0;
+      let added = 0;
+      history.forEach((h) => {
+        const exists = radarState.tracks.some(
+          (t) => t.title.toLowerCase() === String(h.trackTitle).toLowerCase() && t.artist.toLowerCase() === String(h.artist).toLowerCase()
+        );
+        if (!exists) {
+          const entry = normalizeToCamelotEntry(h.key || '8A');
+          radarState.tracks.push({
+            id: ' crate_' + Math.random().toString(36).slice(2, 9),
+            title: h.trackTitle || 'Untitled',
+            artist: h.artist || 'Unknown Artist',
+            bpm: Number(h.bpm) || 126,
+            camelot: entry.camelot,
+            standard: entry.standard,
+            source: 'VNTEX Crate'
+          });
+          added++;
+        }
+      });
+      if (!radarState.anchorTrackId && radarState.tracks.length) {
+        radarState.anchorTrackId = radarState.tracks[0].id;
+      }
+      saveRadarState();
+      renderAllRadarViews();
+      return added;
+    }
+
+    function loadDefaultDemoCrate() {
+      const demoTracks = [
+        { title: 'Obsidian Telemetry',    artist: 'Uno',             bpm: 126, camelot: '8A',  standard: 'Am'  },
+        { title: 'SubZero Crate Dub',     artist: 'DJ Uno & Dave',   bpm: 128, camelot: '9A',  standard: 'Em'  },
+        { title: 'Midnight On The Plains',artist: 'Uno',             bpm: 125, camelot: '8B',  standard: 'C'   },
+        { title: 'Neon Groove Circuit',   artist: 'VNTEX DSP',       bpm: 127, camelot: '7A',  standard: 'Dm'  },
+        { title: 'Hyperdrive 3000 VIP',   artist: 'Uno',             bpm: 130, camelot: '10A', standard: 'Bm'  },
+        { title: 'Velvet Rhodes Intro',   artist: 'DJ Dave',         bpm: 122, camelot: '4A',  standard: 'Fm'  },
+        { title: 'Afterhours Warehouse',  artist: 'Uno',             bpm: 129, camelot: '11A', standard: 'F#m' },
+        { title: 'Solaris Peak Hour',     artist: 'VNTEX Collective',bpm: 128, camelot: '9B',  standard: 'G'   }
+      ];
+
+      demoTracks.forEach((d) => {
+        if (!radarState.tracks.some((t) => t.title === d.title)) {
+          radarState.tracks.push({
+            id: 'trk_' + Math.random().toString(36).slice(2, 9),
+            ...d,
+            source: 'Demo Set'
+          });
+        }
+      });
+
+      if (!radarState.anchorTrackId && radarState.tracks.length) {
+        radarState.anchorTrackId = radarState.tracks[0].id;
+      }
+      saveRadarState();
+      renderAllRadarViews();
+    }
+
+    /**************************************************************************
+     * 4. 24-SECTOR POLAR CAMELOT SONAR CANVAS RENDERER
+     **************************************************************************/
+    function drawHarmonicRadarCanvas() {
+      const canvas = document.getElementById('harmonicRadarCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const cx = W / 2;
+      const cy = H / 2;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const outerMaxR = 278;
+      const midRingR = 192;   // Boundary between Outer Major (B) and Inner Minor (A)
+      const innerMinR = 96;   // Center core bullseye
+
+      const anchor = radarState.tracks.find((t) => t.id === radarState.anchorTrackId) || null;
+      const anchorEntry = anchor ? normalizeToCamelotEntry(anchor.camelot) : null;
+
+      // 1. Draw 24 Wheel Sectors (1..12 clock positions x B outer / A inner)
+      for (let num = 1; num <= 12; num++) {
+        // Place 12 at top (-90 deg), moving clockwise 30 deg per hour
+        const centerAngle = ((num % 12) * 30 - 90) * (Math.PI / 180);
+        const startAngle = centerAngle - (15 * Math.PI) / 180;
+        const endAngle = centerAngle + (15 * Math.PI) / 180;
+
+        ['B', 'A'].forEach((mode) => {
+          const rIn = mode === 'B' ? midRingR : innerMinR;
+          const rOut = mode === 'B' ? outerMaxR : midRingR;
+          const sectorEntry = CAMELOT_MAP.find((k) => k.num === num && k.mode === mode);
+          const rel = anchorEntry ? evaluateHarmonicRelation(anchorEntry.camelot, sectorEntry.camelot) : null;
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, rOut, startAngle, endAngle, false);
+          ctx.arc(cx, cy, rIn, endAngle, startAngle, true);
+          ctx.closePath();
+
+          // Highlight compatible harmonic sectors relative to the active Anchor Track
+          if (rel && rel.tier === 'same') {
+            ctx.fillStyle = 'rgba(0, 242, 254, 0.16)';
+          } else if (rel && rel.tier === 'smooth') {
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+          } else if (rel && rel.tier === 'energy') {
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.09)';
+          } else {
+            ctx.fillStyle = mode === 'B' ? 'rgba(14, 15, 24, 0.78)' : 'rgba(9, 10, 16, 0.88)';
+          }
+          ctx.fill();
+
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#1b1c2c';
+          ctx.stroke();
+
+          // Sector Label (Camelot or Standard)
+          const labelR = mode === 'B' ? rOut - 18 : rIn + 18;
+          const lx = cx + Math.cos(centerAngle) * labelR;
+          const ly = cy + Math.sin(centerAngle) * labelR;
+
+          ctx.font = '700 11px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const dispText = radarState.keyMode === 'camelot' ? sectorEntry.camelot : sectorEntry.standard;
+          ctx.fillStyle = rel && rel.tier !== 'clash' ? rel.color : '#63667e';
+          ctx.fillText(dispText, lx, ly);
+        });
+      }
+
+      // 2. Concentric Sonar BPM Rings + Center Bullseye
+      [innerMinR, (innerMinR + midRingR) / 2, midRingR, (midRingR + outerMaxR) / 2, outerMaxR].forEach((r) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0, 242, 254, 0.14)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Center Bullseye Readout
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerMinR - 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#040407';
+      ctx.fill();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00f2fe';
+      ctx.font = '800 16px "JetBrains Mono", monospace';
+      ctx.fillText(anchor ? (radarState.keyMode === 'camelot' ? anchor.camelot : anchor.standard) : 'SONAR', cx, cy - 12);
+
+      ctx.fillStyle = '#f3f4f8';
+      ctx.font = '700 11px "Inter", sans-serif';
+      ctx.fillText(anchor ? anchor.title.slice(0, 16) : `${radarState.tracks.length} Tracks`, cx, cy + 6);
+
+      ctx.fillStyle = '#9496a8';
+      ctx.font = '600 10px "JetBrains Mono", monospace';
+      ctx.fillText(anchor ? `${anchor.bpm} BPM` : 'Click a node', cx, cy + 22);
+
+      // 3. Rotating Sonar Sweep Beam
+      if (radarState.sweepActive) {
+        const sweepGrad = ctx.createConicGradient(radarState.sweepAngle, cx, cy);
+        sweepGrad.addColorStop(0, 'rgba(0, 242, 254, 0.18)');
+        sweepGrad.addColorStop(0.12, 'rgba(0, 242, 254, 0.02)');
+        sweepGrad.addColorStop(1, 'rgba(0, 242, 254, 0)');
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, outerMaxR, radarState.sweepAngle - 0.5, radarState.sweepAngle, false);
+        ctx.closePath();
+        ctx.fillStyle = sweepGrad;
+        ctx.fill();
+      }
+
+      // 4. Compute Polar Coordinates for Every Loaded Track Blip
+      radarState.nodeScreenCoords = [];
+
+      radarState.tracks.forEach((t, idx) => {
+        const entry = normalizeToCamelotEntry(t.camelot);
+        const baseAngle = ((entry.num % 12) * 30 - 90) * (Math.PI / 180);
+        // Deterministic slight angular offset so multiple tracks in the same key don't overlap
+        const hashJitter = (((idx * 37) % 19) - 9) * 0.011;
+        const angle = baseAngle + hashJitter;
+
+        // Map BPM (70..170) to radial position inside the sector's ring
+        const normBpm = Math.max(0, Math.min(1, (Number(t.bpm) - 75) / 85));
+        const rMin = entry.mode === 'B' ? midRingR + 16 : innerMinR + 28;
+        const rMax = entry.mode === 'B' ? outerMaxR - 26 : midRingR - 14;
+        const radius = rMin + normBpm * (rMax - rMin);
+
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+
+        const rel = anchor ? evaluateHarmonicRelation(anchor.camelot, t.camelot) : { tier: 'same', color: '#00f2fe' };
+        const bpmDiff = anchor ? Math.abs(Number(t.bpm) - Number(anchor.bpm)) : 0;
+        const withinBpm = bpmDiff <= radarState.bpmTolerance;
+
+        radarState.nodeScreenCoords.push({ id: t.id, x, y, track: t, rel, withinBpm });
+      });
+
+      // 5. Draw Setlist Vector Path Lines
+      if (radarState.setlistIds.length > 1) {
+        ctx.beginPath();
+        let started = false;
+        radarState.setlistIds.forEach((id) => {
+          const pt = radarState.nodeScreenCoords.find((n) => n.id === id);
+          if (!pt) return;
+          if (!started) { ctx.moveTo(pt.x, pt.y); started = true; }
+          else { ctx.lineTo(pt.x, pt.y); }
+        });
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 6. Draw Track Nodes (Blips)
+      radarState.nodeScreenCoords.forEach((node) => {
+        const isAnchor = anchor && node.id === anchor.id;
+        const isHovered = radarState.hoveredNodeId === node.id;
+        const inSetlistIdx = radarState.setlistIds.indexOf(node.id);
+
+        let blipColor = node.rel.color;
+        if (!isAnchor && (!node.withinBpm || node.rel.tier === 'clash')) {
+          blipColor = '#47495e';
+        }
+
+        // Outer pulse ring for Anchor or compatible matches
+        if (isAnchor || isHovered) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, isAnchor ? 13 : 11, 0, Math.PI * 2);
+          ctx.strokeStyle = isAnchor ? '#00f2fe' : '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, isAnchor ? 7.5 : 6, 0, Math.PI * 2);
+        ctx.fillStyle = blipColor;
+        ctx.shadowColor = blipColor;
+        ctx.shadowBlur = isAnchor || node.rel.tier !== 'clash' ? 10 : 0;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // If part of Setlist, draw sequence badge number
+        if (inSetlistIdx >= 0) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '800 9px "JetBrains Mono", monospace';
+          ctx.fillText(String(inSetlistIdx + 1), node.x, node.y - 11);
+        }
+      });
+    }
+
+    function startRadarAnimationLoop() {
+      const tick = () => {
+        if (radarState.sweepActive) {
+          radarState.sweepAngle = (radarState.sweepAngle + 0.014) % (Math.PI * 2);
+          drawHarmonicRadarCanvas();
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    /**************************************************************************
+     * 5. RENDER RIGHT-HAND INSPECTOR, MATCHES, SETLIST & CRATE TABLE
+     **************************************************************************/
+    function renderAllRadarViews() {
+      syncHeaderUserAndCrateCount();
+      document.getElementById('totalCrateCount').textContent = String(radarState.tracks.length);
+
+      const anchor = radarState.tracks.find((t) => t.id === radarState.anchorTrackId) || radarState.tracks[0] || null;
+      if (anchor) radarState.anchorTrackId = anchor.id;
+
+      // 1. Anchor Card
+      if (anchor) {
+        const keyDisp = radarState.keyMode === 'camelot' ? `${anchor.camelot} (${anchor.standard})` : `${anchor.standard} (${anchor.camelot})`;
+        document.getElementById('anchorTitle').textContent = anchor.title;
+        document.getElementById('anchorArtist').textContent = anchor.artist;
+        document.getElementById('anchorKeyBadge').textContent = keyDisp;
+        document.getElementById('anchorBpmBadge').textContent = `${anchor.bpm} BPM`;
+      } else {
+        document.getElementById('anchorTitle').textContent = 'No Track Selected';
+        document.getElementById('anchorArtist').textContent = 'Load Demo Tracks or Sync Crate above';
+        document.getElementById('anchorKeyBadge').textContent = '—';
+        document.getElementById('anchorBpmBadge').textContent = '— BPM';
+      }
+
+      // 2. Compatible Next Tracks List
+      const compContainer = document.getElementById('compatibleTracksContainer');
+      if (!anchor) {
+        compContainer.innerHTML = `<div class="hardware-well p-4 text-center text-xs text-[var(--text-muted)]">Load tracks to see harmonic recommendations.</div>`;
+        document.getElementById('compatibleCountBadge').textContent = '0 Matches';
+      } else {
+        const candidates = radarState.tracks
+          .filter((t) => t.id !== anchor.id)
+          .map((t) => {
+            const rel = evaluateHarmonicRelation(anchor.camelot, t.camelot);
+            const bpmDiff = Math.abs(Number(t.bpm) - Number(anchor.bpm));
+            return { track: t, rel, bpmDiff };
+          })
+          .filter((item) => item.rel.tier !== 'clash' && item.bpmDiff <= radarState.bpmTolerance)
+          .sort((a, b) => b.rel.score - a.rel.score || a.bpmDiff - b.bpmDiff);
+
+        document.getElementById('compatibleCountBadge').textContent = `${candidates.length} Compatible`;
+
+        compContainer.innerHTML = !candidates.length
+          ? `<div class="hardware-well p-4 text-center text-xs text-[var(--text-muted)]">No tracks within ±${radarState.bpmTolerance} BPM match harmonically. Try widening BPM Tolerance above.</div>`
+          : candidates.map(({ track, rel, bpmDiff }) => {
+              const keyStr = radarState.keyMode === 'camelot' ? track.camelot : track.standard;
+              const deltaSign = track.bpm >= anchor.bpm ? `+${track.bpm - anchor.bpm}` : `${track.bpm - anchor.bpm}`;
+              return `
+                <div class="hardware-well p-2.5 flex items-center justify-between gap-2 hover:border-[var(--accent-primary)] transition">
+                  <div class="min-w-0 flex-1 cursor-pointer" data-select-anchor="${track.id}">
+                    <div class="font-bold text-xs text-[var(--text-primary)] truncate">${escapeHtml(track.title)}</div>
+                    <div class="text-[10px] font-mono-tech flex items-center gap-2 mt-0.5">
+                      <span style="color:${rel.color}">${escapeHtml(rel.label)}</span>
+                      <span class="text-[var(--text-muted)]">• ${track.bpm} BPM (${deltaSign}) • ${keyStr}</span>
+                    </div>
+                  </div>
+                  <button type="button" data-chain-track="${track.id}" class="hardware-well px-2.5 py-1 font-mono-tech text-[10px] text-emerald-400 hover:border-emerald-400 shrink-0">
+                    + Chain
+                  </button>
+                </div>
+              `;
+            }).join('');
+      }
+
+      // 3. Setlist Builder
+      const setlistEl = document.getElementById('setlistContainer');
+      document.getElementById('setlistCountBadge').textContent = String(radarState.setlistIds.length);
+      if (!radarState.setlistIds.length) {
+        setlistEl.innerHTML = `<div class="hardware-well p-3 text-center text-[11px] text-[var(--text-muted)]">Click "+ Add to Setlist" or "+ Chain" to plot your DJ transition path on the radar.</div>`;
+      } else {
+        setlistEl.innerHTML = radarState.setlistIds.map((id, i) => {
+          const t = radarState.tracks.find((x) => x.id === id);
+          if (!t) return '';
+          const kStr = radarState.keyMode === 'camelot' ? t.camelot : t.standard;
+          return `
+            <div class="hardware-well px-3 py-2 flex items-center justify-between gap-2">
+              <div class="truncate">
+                <span class="text-rose-400 font-bold mr-1.5">${String(i + 1).padStart(2, '0')}.</span>
+                <span class="font-bold text-[var(--text-primary)]">${escapeHtml(t.title)}</span>
+                <span class="text-[10px] text-[var(--accent-primary)] ml-1.5">(${t.bpm} BPM • ${kStr})</span>
+              </div>
+              <button type="button" data-remove-setlist="${i}" class="text-[var(--text-muted)] hover:text-rose-400">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 4. Full Crate Table
+      const tbody = document.getElementById('fullCrateTableBody');
+      tbody.innerHTML = !radarState.tracks.length
+        ? `<tr><td colspan="6" class="py-6 text-center text-[var(--text-muted)]">No tracks in radar crate yet.</td></tr>`
+        : radarState.tracks.map((t) => {
+            const isAnchor = anchor && t.id === anchor.id;
+            const rel = anchor ? evaluateHarmonicRelation(anchor.camelot, t.camelot) : { label: '—', color: '#9496a8' };
+            return `
+              <tr class="${isAnchor ? 'bg-[var(--bg-panel-elevated)]' : 'hover:bg-[var(--bg-panel-elevated)]/50'} transition">
+                <td class="py-2.5 px-3 font-bold text-[var(--text-primary)]">${escapeHtml(t.title)}</td>
+                <td class="py-2.5 px-3 text-[var(--text-secondary)]">${escapeHtml(t.artist)}</td>
+                <td class="py-2.5 px-3 text-[var(--accent-primary)] font-bold">${t.bpm} BPM</td>
+                <td class="py-2.5 px-3">${t.camelot} <span class="text-[var(--text-muted)]">(${t.standard})</span></td>
+                <td class="py-2.5 px-3"><span style="color:${rel.color}">${isAnchor ? '★ ACTIVE ANCHOR DECK' : escapeHtml(rel.label)}</span></td>
+                <td class="py-2.5 px-3 text-right space-x-1.5">
+                  <button type="button" data-select-anchor="${t.id}" class="hardware-well px-2.5 py-1 text-[10px] text-[var(--accent-primary)]">Set Anchor</button>
+                  <button type="button" data-chain-track="${t.id}" class="hardware-well px-2.5 py-1 text-[10px] text-emerald-400">+ Setlist</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+      // Bind interactive row actions
+      document.querySelectorAll('[data-select-anchor]').forEach((el) => {
+        el.onclick = () => {
+          radarState.anchorTrackId = el.getAttribute('data-select-anchor');
+          renderAllRadarViews();
+        };
+      });
+
+      document.querySelectorAll('[data-chain-track]').forEach((el) => {
+        el.onclick = () => {
+          const id = el.getAttribute('data-chain-track');
+          if (!radarState.setlistIds.includes(id)) radarState.setlistIds.push(id);
+          radarState.anchorTrackId = id; // Advance anchor to the newly chained track!
+          saveRadarState();
+          renderAllRadarViews();
+        };
+      });
+
+      document.querySelectorAll('[data-remove-setlist]').forEach((el) => {
+        el.onclick = () => {
+          radarState.setlistIds.splice(Number(el.getAttribute('data-remove-setlist')), 1);
+          saveRadarState();
+          renderAllRadarViews();
+        };
+      });
+
+      drawHarmonicRadarCanvas();
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /**************************************************************************
+     * 6. INITIALIZATION & CANVAS CLICK / HOVER INTERACTION
+     **************************************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      applySavedThemePalette();
+      importConvertedTracksFromCloudCrate();
+      if (radarState.tracks.length === 0) {
+        loadDefaultDemoCrate();
+      } else {
+        renderAllRadarViews();
+      }
+      startRadarAnimationLoop();
+
+      // Canvas Click -> Select nearest track node as Active Anchor
+      const canvas = document.getElementById('harmonicRadarCanvas');
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
+
+        let closest = null, minDist = 22;
+        radarState.nodeScreenCoords.forEach((n) => {
+          const d = Math.hypot(n.x - mx, n.y - my);
+          if (d < minDist) { minDist = d; closest = n; }
+        });
+
+        if (closest) {
+          radarState.anchorTrackId = closest.id;
+          renderAllRadarViews();
+        }
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+        let hovered = null;
+        radarState.nodeScreenCoords.forEach((n) => {
+          if (Math.hypot(n.x - mx, n.y - my) < 16) hovered = n.id;
+        });
+        if (hovered !== radarState.hoveredNodeId) {
+          radarState.hoveredNodeId = hovered;
+          if (!radarState.sweepActive) drawHarmonicRadarCanvas();
+        }
+      });
+
+      // Audio File Scanner
+      const fileIn = document.getElementById('radarFileInput');
+      document.getElementById('scanFilesBtn').onclick = () => fileIn.click();
+      fileIn.onchange = async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        const statusEl = document.getElementById('scanStatusLabel');
+        if (!radarState.audioCtx) radarState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          statusEl.textContent = `Scanning (${i + 1}/${files.length}): ${f.name}...`;
+          await new Promise((r) => setTimeout(r, 20));
+          try {
+            const buf = await radarState.audioCtx.decodeAudioData(await f.arrayBuffer());
+            const bpm = RadarDSP.detectBPM(buf, 75, 160);
+            const keyEntry = RadarDSP.detectKey(buf);
+            const base = f.name.replace(/\.[^/.]+$/, '');
+            const parts = base.split(' - ');
+            const newTrack = {
+              id: 'scan_' + Math.random().toString(36).slice(2, 9),
+              title: parts.length > 1 ? parts.slice(1).join(' - ').trim() : base,
+              artist: parts.length > 1 ? parts[0].trim() : 'Scanned Audio',
+              bpm,
+              camelot: keyEntry.camelot,
+              standard: keyEntry.standard,
+              source: 'Scanned'
+            };
+            radarState.tracks.unshift(newTrack);
+            radarState.anchorTrackId = newTrack.id;
+          } catch (err) { console.error(err); }
+        }
+        statusEl.textContent = '';
+        saveRadarState();
+        renderAllRadarViews();
+      };
+
+      document.getElementById('loadDemoCrateBtn').onclick = loadDefaultDemoCrate;
+      document.getElementById('importCloudCrateBtn').onclick = () => {
+        const count = importConvertedTracksFromCloudCrate();
+        document.getElementById('scanStatusLabel').textContent = count
+          ? `✓ Imported ${count} converted track(s) from VNTEX Crate`
+          : 'Crate is already up to date';
+        setTimeout(() => { document.getElementById('scanStatusLabel').textContent = ''; }, 3000);
+      };
+
+      document.getElementById('bpmToleranceSelect').onchange = (e) => {
+        radarState.bpmTolerance = Number(e.target.value);
+        renderAllRadarViews();
+      };
+
+      document.getElementById('radarKeyModeSelect').onchange = (e) => {
+        radarState.keyMode = e.target.value;
+        renderAllRadarViews();
+      };
+
+      document.getElementById('toggleSweepBtn').onclick = (e) => {
+        radarState.sweepActive = !radarState.sweepActive;
+        e.currentTarget.innerHTML = `<i class="fa-solid fa-satellite-dish mr-1"></i>Sweep: ${radarState.sweepActive ? 'ON' : 'OFF'}`;
+        drawHarmonicRadarCanvas();
+      };
+
+      document.getElementById('addAnchorToSetlistBtn').onclick = () => {
+        if (radarState.anchorTrackId && !radarState.setlistIds.includes(radarState.anchorTrackId)) {
+          radarState.setlistIds.push(radarState.anchorTrackId);
+          saveRadarState();
+          renderAllRadarViews();
+        }
+      };
+
+      document.getElementById('clearSetlistBtn').onclick = () => {
+        radarState.setlistIds = [];
+        saveRadarState();
+        renderAllRadarViews();
+      };
+
+      document.getElementById('clearAllRadarTracksBtn').onclick = () => {
+        radarState.tracks = [];
+        radarState.setlistIds = [];
+        radarState.anchorTrackId = null;
+        saveRadarState();
+        renderAllRadarViews();
+      };
+
+      document.getElementById('exportM3uBtn').onclick = () => {
+        const list = radarState.setlistIds.map((id) => radarState.tracks.find((t) => t.id === id)).filter(Boolean);
+        if (!list.length) return;
+        const lines = ['#EXTM3U', '#PLAYLIST:VNTEX Harmonic Radar Setlist'];
+        list.forEach((t, idx) => {
+          lines.push(`#EXTINF:240,${t.artist} - ${t.title} [${t.bpm} BPM • ${t.camelot}]`);
+          lines.push(`${String(idx + 1).padStart(2, '0')} - ${t.artist} - ${t.title}.mp3`);
+        });
+        const blob = new Blob([lines.join('\n')], { type: 'audio/x-mpegurl' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'VNTEX_Harmonic_Setlist.m3u8';
+        a.click();
+      };
+
+      document.getElementById('bloodstreamSoonBtn').onclick = () => {
+        document.getElementById('scanStatusLabel').textContent = 'Bloodstream Web Engine slot reserved in the VNTEX Suite nav bar!';
+        setTimeout(() => { document.getElementById('scanStatusLabel').textContent = ''; }, 3500);
+      };
+    });
+  </script>
+</body>
+</html>
