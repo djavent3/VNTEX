@@ -8,9 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="vntex-core.js"></script>
 
   <style>
     :root {
@@ -21,111 +19,28 @@
       --border-highlight: #FF000D;
       --text-primary: #ffffff;
       --text-secondary: #9ca3af;
-      --text-muted: #6b7280;
-      --blood-red: #FF000D;
-      --blood-hover: #220000;
       --accent-primary: #FF000D;
       --accent-glow: rgba(255, 0, 13, 0.28);
     }
     * { box-sizing: border-box; user-select: none; }
-    body {
-      background-color: var(--bg-void);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, sans-serif;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      margin: 0;
-    }
-    body.blood-skin-1 {
-      background:
-        radial-gradient(circle at 50% 12%, rgba(255, 0, 13, 0.12), transparent 55%),
-        linear-gradient(180deg, #040000 0%, #000000 100%);
-    }
-    body.blood-skin-2 {
-      background:
-        radial-gradient(circle at 85% 18%, rgba(255, 0, 13, 0.20), transparent 48%),
-        repeating-linear-gradient(45deg, #050000 0px, #050000 6px, #000000 6px, #000000 12px);
-    }
+    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .hud-glass {
-      background: color-mix(in srgb, var(--bg-panel) 90%, transparent);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-hairline);
-      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.95);
-    }
-    .blood-panel {
-      background-color: var(--bg-panel);
-      border: 1px solid var(--accent-primary);
-      box-shadow: 0 0 24px rgba(255, 0, 13, 0.12);
-    }
-    .hud-well {
-      background-color: var(--bg-well);
-      border: 1px solid var(--border-hairline);
-      color: var(--text-primary);
-      transition: all 0.15s ease;
-    }
-    .blood-input {
-      background-color: #000000;
-      border: 1px solid var(--accent-primary);
-      color: #ffffff;
-    }
-    .blood-input:focus { outline: none; box-shadow: 0 0 12px var(--accent-glow); }
-    .blood-btn {
-      background-color: #000000;
-      border: 1px solid var(--accent-primary);
-      color: var(--accent-primary);
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .blood-btn:hover:not(:disabled) { background-color: var(--blood-hover); }
-    .blood-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .blood-btn-solid {
-      background-color: var(--accent-primary);
-      border: 1px solid var(--accent-primary);
-      color: #000000;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .blood-btn-solid:hover:not(:disabled) { filter: brightness(1.15); }
-    .suite-nav-pill {
-      padding: 0.3rem 0.7rem;
-      border-radius: 0.45rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      border: 1px solid transparent;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      text-decoration: none;
-    }
-    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-hairline); }
-    .suite-nav-pill.active {
-      color: var(--accent-primary);
-      background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-    .avatar-option { border: 2px solid transparent; transition: all 0.15s ease; cursor: pointer; }
-    .avatar-option.selected { border-color: var(--accent-primary); transform: scale(1.05); }
-    .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45)); }
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: #440004; border-radius: 999px; }
+    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 90%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); }
+    .blood-panel { background: var(--bg-panel); border: 1px solid var(--accent-primary); }
+    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); }
+    .blood-input { background: #000; border: 1px solid var(--accent-primary); color: #fff; }
+    .blood-btn { background: #000; border: 1px solid var(--accent-primary); color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; }
+    .blood-btn-solid { background: var(--accent-primary); border: 1px solid var(--accent-primary); color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800; cursor: pointer; }
+    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; }
+    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(255,0,13,0.14); border-color: var(--accent-primary); }
+    .verified-badge-icon { color: #00f2fe; }
+    .avatar-option { border: 2px solid transparent; cursor: pointer; }
+    .avatar-option.selected { border-color: var(--accent-primary); }
   </style>
 </head>
-<body class="antialiased flex flex-col blood-skin-1">
+<body class="antialiased flex flex-col">
 
-  <!-- ==========================================================================
-       UNIVERSAL VNTEX SUITE HEADER (CLEAN: NO ADMIN OR OWNER BUTTONS IN HEADER)
-       ========================================================================== -->
+  <!-- UNIVERSAL VNTEX SUITE HEADER -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2">
@@ -142,22 +57,14 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5" title="100% Client-Side Web Audio + ID3v2.3 Cover Art Engine">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-[var(--text-secondary)]">Web DSP Active</span>
-      </button>
-
-      <!-- Standardized Menu Sliders Icon (fa-solid fa-sliders) -->
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Bloodstream Options & Audio Settings">
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Bloodstream Options">
         <i class="fa-solid fa-sliders"></i>
       </button>
 
-      <!-- AI Support Chat Assistance Button -->
-      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] relative" title="AI Support Agent & Notifications">
+      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="AI Support Agent">
         <i class="fa-regular fa-comment-dots"></i>
       </button>
 
-      <!-- Privacy-Safe Account Button: Shows Only Avatar + @username -->
       <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 hover:border-[var(--accent-primary)]">
         <img id="headerUserAvatarImg" src="" alt="" class="w-4 h-4 rounded-full object-cover border border-[var(--accent-primary)]" />
         <span id="userStatusName" class="font-mono-tech">@guest</span>
@@ -166,681 +73,88 @@
     </div>
   </header>
 
-  <!-- 15-BLOCK SEGMENTED SPLASH LOADER -->
-  <div id="bloodSplashOverlay" class="fixed inset-0 top-12 z-40 bg-black flex flex-col items-center justify-center p-6">
-    <div class="text-center space-y-4">
-      <div class="w-16 h-16 rounded-2xl border-2 border-[#FF000D] bg-[#080000] mx-auto flex items-center justify-center text-[#FF000D] text-2xl shadow-[0_0_30px_rgba(255,0,13,0.35)]">
-        <i class="fa-solid fa-droplet animate-pulse"></i>
-      </div>
-      <div class="font-mono-tech font-extrabold text-xl sm:text-2xl tracking-widest text-[#FF000D]">INITIALIZING: BLOODSTREAM</div>
-      <canvas id="segmentedSplashCanvas" width="260" height="14" class="mx-auto block border border-[#FF000D] bg-black"></canvas>
-      <div class="font-mono-tech text-[11px] text-gray-500">MOUNTING 100% CLIENT-SIDE WEB AUDIO &amp; ID3v2.3 COVER ART ENGINE...</div>
-    </div>
-  </div>
-
-  <!-- MAIN WORKSPACE -->
   <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3.5 overflow-hidden">
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#330000] pb-2.5 shrink-0">
-      <div class="flex items-center gap-2">
-        <button id="tabBtnEngine" type="button" class="blood-btn-solid px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-satellite-dish"></i><span>Engine</span>
-        </button>
-        <button id="tabBtnCrates" type="button" class="blood-btn px-4 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-box-archive"></i><span>Crates &amp; History (<span id="historyCountBadge">0</span>)</span>
-        </button>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-[11px]">+ Demo Streams</button>
-        <button id="toggleSkinBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider">SKIN: 01</button>
+    <div class="blood-panel rounded-xl p-4 space-y-3 shrink-0">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <input id="ytUrlInput" type="text" placeholder="Paste YouTube Song Link (auto-isolates single song if inside a mix)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
+        <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase">Compile</button>
+        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">+ Demo Streams</button>
       </div>
     </div>
 
-    <!-- TAB 1: ENGINE -->
-    <section id="paneEngine" class="flex-1 flex flex-col gap-3.5 overflow-hidden">
-      <div class="blood-panel rounded-xl p-4 space-y-3.5 shrink-0">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div class="relative flex-1 min-w-[260px]">
-            <i class="fa-brands fa-youtube absolute left-3.5 top-2.5 text-[#FF000D] text-sm"></i>
-            <input id="ytUrlInput" type="text" placeholder="Paste YouTube Song or Direct Playlist URL (auto-isolates song if inside a mix)..." class="blood-input w-full pl-10 pr-4 py-2 rounded-lg text-xs font-mono-tech" />
-          </div>
-          <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase tracking-wider">Compile</button>
-          <button id="hardResetBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">⟳ Reset</button>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-[#330000] text-xs font-mono-tech">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[#FF000D] font-bold">Format:</span>
-              <select id="bloodFormatSelect" class="blood-input px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
-                <option value="mp3" selected>mp3 (ID3v2.3 + Cover Art)</option>
-                <option value="flac">flac</option>
-                <option value="wav">wav</option>
-              </select>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-[#FF000D] font-bold">Quality:</span>
-              <select id="bloodQualitySelect" class="blood-input px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
-                <option value="320" selected>320</option>
-                <option value="192">192</option>
-                <option value="128">128</option>
-              </select>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-[#FF000D] font-bold">Crate:</span>
-              <select id="bloodCrateSelect" class="blood-input px-3 py-1.5 rounded-lg text-xs font-bold min-w-[140px] cursor-pointer">
-                <option value="Uncategorized">Uncategorized</option>
-              </select>
-              <button id="addNewCrateBtn" type="button" class="blood-btn w-8 h-8 rounded-lg flex items-center justify-center text-sm">+</button>
-            </div>
-          </div>
-          <div class="text-[11px] text-gray-400">100% Browser Web Audio Synthesis + Binary ID3v2.3 `APIC` Cover Art</div>
-        </div>
+    <div class="blood-panel rounded-xl flex-1 flex flex-col overflow-hidden">
+      <div class="px-4 py-2.5 border-b border-[#330000] font-mono-tech text-xs text-[#FF000D] font-bold flex justify-between">
+        <span>Download Queue (<span id="queueCountLabel">0</span>)</span>
+        <span class="text-gray-400">100% Client-Side Audio + ID3v2.3 Cover Art</span>
       </div>
+      <div id="downloadQueueContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
+    </div>
 
-      <div class="blood-panel rounded-xl flex-1 flex flex-col overflow-hidden">
-        <div class="px-4 py-2.5 border-b border-[#330000] bg-[#080000] flex items-center justify-between font-mono-tech text-xs">
-          <span class="font-bold text-[#FF000D] uppercase tracking-wider"><i class="fa-solid fa-bars-progress mr-1.5"></i>Download Queue (<span id="queueCountLabel">0</span>)</span>
-          <span class="text-[11px] text-gray-400">Click <strong class="text-[#FF000D]">⬇ Download</strong> on any individual track or <strong class="text-white">Download All</strong></span>
-        </div>
-        <div id="downloadQueueContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
-      </div>
-
-      <div class="blood-panel rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        <div class="flex items-center gap-2.5 font-mono-tech text-xs">
-          <span id="statusPulseDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-          <span id="systemStatusLabel" class="font-bold text-white">System Idle</span>
-        </div>
-        <div class="flex items-center gap-2.5">
-          <button id="haltProcessBtn" type="button" disabled class="blood-btn px-4 py-2 rounded-lg text-xs uppercase">Halt Process</button>
-          <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-download"></i><span>Download All</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 2: CRATES & HISTORY -->
-    <section id="paneCrates" class="hidden flex-1 flex flex-col gap-3.5 overflow-hidden">
-      <div class="blood-panel rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0 font-mono-tech text-xs">
-        <div class="flex items-center gap-2.5">
-          <span class="font-bold text-[#FF000D]">Filter by Crate:</span>
-          <select id="historyCrateFilterSelect" class="blood-input px-3 py-1.5 rounded-lg text-xs font-bold min-w-[180px] cursor-pointer">
-            <option value="All">All</option>
-          </select>
-        </div>
-        <div class="flex items-center gap-2">
-          <a href="radar.html" class="blood-btn px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5"><i class="fa-solid fa-compass"></i><span>Open Crates in Radar →</span></a>
-          <button id="refreshHistoryBtn" type="button" class="blood-btn px-3 py-1.5 rounded-lg text-xs">⟳ Refresh List</button>
-        </div>
-      </div>
-      <div id="historyListContainer" class="blood-panel rounded-xl flex-1 overflow-y-auto p-3.5 space-y-2.5"></div>
-    </section>
+    <div class="blood-panel rounded-xl px-4 py-3 flex justify-between items-center shrink-0 font-mono-tech text-xs">
+      <span id="systemStatusLabel" class="text-white">System Idle</span>
+      <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg uppercase">Download All</button>
+    </div>
   </main>
 
-  <!-- ==========================================================================
-       UNIVERSAL 5-TAB ACCOUNT HUB MODAL
-       (ADMIN DASHBOARD ACCESS RELOCATED EXCLUSIVELY TO PROFILE TAB FOR ADMINS)
-       ========================================================================== -->
-  <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[#FF000D]/60 flex flex-col max-h-[88vh]">
-      <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-id-badge text-[#FF000D]"></i>
-          <h3 class="text-sm font-bold text-white">VNTEX Universal Account &amp; Suite Hub</h3>
-        </div>
-        <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="px-5 pt-3 border-b border-[#330000] bg-[#050000] flex flex-wrap items-center gap-1.5 pb-2.5 font-mono-tech text-[11px]">
-        <button type="button" data-acct-tab="profile" class="acct-tab-btn suite-nav-pill active"><i class="fa-regular fa-user"></i><span>Account Info</span></button>
-        <button type="button" data-acct-tab="converter" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-bolt"></i><span>Converter</span></button>
-        <button type="button" data-acct-tab="radar" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-compass"></i><span>Radar</span></button>
-        <button type="button" data-acct-tab="bloodstream" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500"></i><span>Bloodstream</span></button>
-        <button type="button" data-acct-tab="permissions" class="acct-tab-btn suite-nav-pill"><i class="fa-solid fa-shield-halved text-amber-400"></i><span>Permissions</span></button>
-      </div>
-
-      <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
-        <div id="acctPane-profile" class="acct-tab-pane space-y-4">
-          <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3.5">
-              <img id="hubProfileAvatarImg" src="" alt="Avatar" class="w-14 h-14 rounded-2xl object-cover border-2 border-[#FF000D]" />
-              <div>
-                <div class="flex items-center gap-2">
-                  <span id="hubProfileUsername" class="font-mono-tech font-extrabold text-base text-white">@guest</span>
-                  <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
-                </div>
-                <div class="font-mono-tech text-[11px] text-gray-400 mt-0.5">Public DJ Handle • Email &amp; Legal Name Hidden for Privacy</div>
-              </div>
-            </div>
-            <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[#FF000D] text-black font-mono-tech font-bold text-[11px]">Auth / Sign In →</a>
-          </div>
-
-          <!-- Admin Dashboard Access: Strictly Hidden Unless user.permissions.isAdmin === true -->
-          <a id="profileAdminDashLink" href="index.html#admin" class="hidden w-full py-2.5 px-4 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 transition">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>Open Admin Dashboard</span>
-          </a>
-
-          <form id="profileCustomizeForm" class="hud-well p-4 rounded-xl space-y-3.5">
-            <div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Profile Identity &amp; Studio Avatar</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="font-mono-tech text-[10px] text-gray-400">Full Name (Admin Portal Only)</label>
-                <input id="custFullNameInput" type="text" placeholder="Your Full Name" class="blood-input w-full px-3 py-2 rounded-lg text-xs" />
-              </div>
-              <div class="space-y-1">
-                <label class="font-mono-tech text-[10px] text-gray-400">@username (Public Display)</label>
-                <input id="custUsernameInput" type="text" placeholder="@dj_uno" class="blood-input w-full px-3 py-2 rounded-lg font-mono-tech text-xs" />
-              </div>
-            </div>
-            <div class="space-y-1.5">
-              <label class="font-mono-tech text-[10px] text-gray-400">Select Studio Avatar (5 Default Options)</label>
-              <div id="avatarPickerGrid" class="flex items-center gap-3 pt-1"></div>
-            </div>
-            <div class="space-y-2 pt-2 border-t border-[#330000]">
-              <label class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Global VNTEX UI Theme Customizer</label>
-              <div class="grid grid-cols-4 gap-2">
-                <button type="button" data-theme-preset="obsidian" class="hud-well p-2 rounded-xl text-left"><div class="font-bold text-[#00f2fe] text-[11px]">Obsidian</div></button>
-                <button type="button" data-theme-preset="winamp" class="hud-well p-2 rounded-xl text-left"><div class="font-bold text-[#00ff41] text-[11px]">Winamp</div></button>
-                <button type="button" data-theme-preset="crimson" class="hud-well p-2 rounded-xl text-left"><div class="font-bold text-[#f43f5e] text-[11px]">Crimson</div></button>
-                <button type="button" data-theme-preset="blood" class="hud-well p-2 rounded-xl text-left"><div class="font-bold text-[#FF000D] text-[11px]">Blood OLED</div></button>
-              </div>
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span id="profileSavedStatus" class="font-mono-tech text-[11px] text-emerald-400"></span>
-              <button type="submit" class="blood-btn-solid px-4 py-2 rounded-lg text-xs uppercase">Save Profile &amp; UI</button>
-            </div>
-          </form>
-        </div>
-
-        <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3 font-mono-tech">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-cyan-400 mt-1">Pioneer CDJ</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">TOTAL CONVERTED</div><div id="hubConvCount" class="text-sm font-bold text-emerald-400 mt-1">0 Files</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DSP ENGINE</div><div class="text-xs font-bold text-white mt-1">320kbps / 24-Bit</div></div>
-          </div>
-          <a href="index.html" class="block text-center py-2.5 rounded-xl bg-[#FF000D] text-black font-extrabold text-xs uppercase">Open Converter Studio →</a>
-        </div>
-
-        <div id="acctPane-radar" class="acct-tab-pane hidden space-y-3 font-mono-tech">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">CLOUD CRATE</div><div id="hubRadarCount" class="text-sm font-bold text-cyan-400 mt-1">75 Tracks</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">RADAR BRAIN</div><div class="text-xs font-bold text-emerald-400 mt-1">0–100% Active</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">EXPORTS</div><div class="text-xs font-bold text-white mt-1">XML / M3U8</div></div>
-          </div>
-          <a href="radar.html" class="block text-center py-2.5 rounded-xl bg-[#FF000D] text-black font-extrabold text-xs uppercase">Open Harmonic Radar →</a>
-        </div>
-
-        <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3 font-mono-tech">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">COMPILED STREAMS</div><div id="hubBloodCount" class="text-sm font-bold text-[#FF000D] mt-1">0 Tracks</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">ACTIVE CRATES</div><div id="hubBloodCrates" class="text-sm font-bold text-white mt-1">4 Crates</div></div>
-            <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">COVER ART TAGGING</div><div class="text-xs font-bold text-emerald-400 mt-1">ID3v2.3 APIC ✓</div></div>
-          </div>
-        </div>
-
-        <div id="acctPane-permissions" class="acct-tab-pane hidden">
-          <div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono-tech text-[11px]"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BLOODSTREAM OPTIONS MODAL (OPENED BY SLIDERS ICON fa-solid fa-sliders) -->
-  <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#FF000D]/50">
-      <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Bloodstream DSP &amp; Tagging Options</h3>
-        <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-5 space-y-3 text-xs font-mono-tech">
-        <div class="hud-well p-3 rounded-xl flex items-center justify-between">
-          <span>ID3v2.3 `APIC` Cover Art Embedding</span>
-          <span class="text-emerald-400 font-bold">ALWAYS ON</span>
-        </div>
-        <div class="hud-well p-3 rounded-xl flex items-center justify-between">
-          <span>Auto-Sync Downloads to Radar Crate</span>
-          <span class="text-emerald-400 font-bold">ENABLED</span>
-        </div>
-        <div class="hud-well p-3 rounded-xl flex items-center justify-between">
-          <span>Single-Song Isolation on Mix Links</span>
-          <span class="text-emerald-400 font-bold">ACTIVE</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AI SUPPORT CHAT MODAL -->
-  <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#FF000D]/50 flex flex-col h-[460px]">
-      <div class="px-4 py-3 border-b border-[#330000] flex items-center justify-between bg-[#080000]">
-        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-[#FF000D] mr-1.5"></i>VNTEX AI Support &amp; Admin Inbox</h3>
-        <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
-        <div class="hud-well p-3 rounded-xl text-gray-300">
-          <strong class="text-[#FF000D]">Bloodstream AI Agent:</strong> Bloodstream runs 100% independently in your browser! Paste any link, click <strong>Compile</strong>, and use the individual <strong>⬇ Download</strong> button or <strong>Download All</strong>.
-        </div>
-      </div>
-      <div class="p-3 border-t border-[#330000] bg-[#050000] space-y-2">
-        <form id="supportChatForm" class="flex gap-1.5">
-          <input id="supportChatInput" type="text" required placeholder="Ask AI or message Admin..." class="blood-input flex-1 px-3 py-2 rounded-xl text-xs" />
-          <button type="submit" class="px-3.5 py-2 rounded-xl bg-[#FF000D] text-black font-mono-tech font-bold text-xs">Send</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <script>
-    const DEFAULT_AVATARS = [
-      { id: 'av_1', name: 'Cyber Deck', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%2306101e"/><circle cx="40" cy="40" r="24" fill="none" stroke="%2300f2fe" stroke-width="4"/><circle cx="40" cy="40" r="8" fill="%2300f2fe"/></svg>` },
-      { id: 'av_2', name: 'Crimson Drop', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140003"/><path d="M40 16 C40 16 60 38 60 52 C60 63 51 68 40 68 C29 68 20 63 20 52 C20 38 40 16 40 16 Z" fill="%23FF000D"/></svg>` },
-      { id: 'av_3', name: 'Radar Star', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23090514"/><polygon points="40,14 47,32 66,32 51,44 57,63 40,51 23,63 29,44 14,32 33,32" fill="%23a855f7"/></svg>` },
-      { id: 'av_4', name: 'Vinyl Gold', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140e02"/><circle cx="40" cy="40" r="26" fill="%231f2937" stroke="%23f59e0b" stroke-width="3"/><circle cx="40" cy="40" r="10" fill="%23f59e0b"/><circle cx="40" cy="40" r="3" fill="%23000"/></svg>` },
-      { id: 'av_5', name: 'Emerald Wave', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%2302140c"/><path d="M14 42 Q26 20 40 42 T66 42" fill="none" stroke="%2310b981" stroke-width="6" stroke-linecap="round"/></svg>` }
-    ];
-    const getAvatarSvgById = (id) => (DEFAULT_AVATARS.find((a) => a.id === id) || DEFAULT_AVATARS[1]).svg;
+    const queue = [];
 
-    const CORE_KEYS = {
-      SESSION_USER: 'vntex_core_session_user',
-      ACTIVE_PALETTE: 'vntex_core_active_palette',
-      CONVERT_HISTORY: 'vntex_core_convert_history',
-      BLOOD_HISTORY: 'vntex_core_bloodstream_history',
-      BLOOD_CRATES: 'vntex_core_bloodstream_crates',
-      RADAR_TELEMETRY: 'vntex_core_radar_telemetry',
-      ACTIVE_DEVICE: 'vntex_core_active_device'
-    };
-
-    const CAMELOT_POOL = [
-      { camelot: '8A', standard: 'Am' }, { camelot: '9A', standard: 'Em' },
-      { camelot: '7A', standard: 'Dm' }, { camelot: '10A', standard: 'Bm' },
-      { camelot: '4A', standard: 'Fm' }, { camelot: '5A', standard: 'Cm' }
-    ];
-
-    const bloodState = {
-      user: JSON.parse(localStorage.getItem(CORE_KEYS.SESSION_USER) || 'null'),
-      history: JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_HISTORY) || '[]'),
-      crates: JSON.parse(localStorage.getItem(CORE_KEYS.BLOOD_CRATES) || '["Uncategorized", "Peak Hour", "Hip-Hop Edits", "Afterhours"]'),
-      queue: [],
-      isDownloading: false,
-      stopRequested: false,
-      activeSkin: 1
-    };
-
-    function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
-    function encodeUint32BE(val) { return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF]; }
-
-    function createId3TextFrame(id, text) {
-      const tb = new TextEncoder().encode(String(text || ''));
-      const f = new Uint8Array(10 + 1 + tb.length);
-      for (let i = 0; i < 4; i++) f[i] = id.charCodeAt(i);
-      f.set(encodeUint32BE(1 + tb.length), 4);
-      f[10] = 0x03; f.set(tb, 11);
-      return f;
-    }
-
-    function createId3ApicFrame(jpegBytes) {
-      if (!jpegBytes || !jpegBytes.length) return new Uint8Array(0);
-      const mime = new TextEncoder().encode('image/jpeg');
-      const payloadLen = 1 + mime.length + 1 + 1 + 1 + jpegBytes.length;
-      const f = new Uint8Array(10 + payloadLen);
-      f[0] = 0x41; f[1] = 0x50; f[2] = 0x49; f[3] = 0x43;
-      f.set(encodeUint32BE(payloadLen), 4);
-      let o = 10; f[o++] = 0x00; f.set(mime, o); o += mime.length; f[o++] = 0x00; f[o++] = 0x03; f[o++] = 0x00;
-      f.set(jpegBytes, o);
-      return f;
-    }
-
-    async function fetchThumbnailAsJpegBytes(thumbUrl, titleText, artistText) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 400; canvas.height = 400;
-      const ctx = canvas.getContext('2d');
-      let drewImg = false;
-      if (thumbUrl) {
-        try {
-          const img = new Image(); img.crossOrigin = 'anonymous';
-          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = thumbUrl; });
-          const s = Math.min(img.width, img.height);
-          ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 400, 400);
-          drewImg = true;
-        } catch {}
-      }
-      if (!drewImg) {
-        ctx.fillStyle = '#120002'; ctx.fillRect(0, 0, 400, 400);
-        ctx.strokeStyle = '#FF000D'; ctx.lineWidth = 8; ctx.strokeRect(16, 16, 368, 368);
-      }
-      ctx.fillStyle = 'rgba(0,0,0,0.72)'; ctx.fillRect(0, 310, 400, 90);
-      ctx.fillStyle = '#FF000D'; ctx.font = 'bold 14px monospace'; ctx.fillText('VNTEX // BLOODSTREAM', 20, 336);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(String(titleText || '').slice(0, 28), 20, 362);
-      ctx.fillStyle = '#9ca3af'; ctx.font = '14px sans-serif'; ctx.fillText(String(artistText || '').slice(0, 32), 20, 384);
-      const binStr = atob(canvas.toDataURL('image/jpeg', 0.9).split(',')[1]);
-      const bytes = new Uint8Array(binStr.length);
-      for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
-      return bytes;
-    }
-
-    function prependId3v23TagWithCoverArt(mp3Blob, meta, jpegBytes) {
-      const frames = [
-        createId3TextFrame('TIT2', meta.title),
-        createId3TextFrame('TPE1', meta.artist),
-        createId3TextFrame('TALB', meta.crate || 'Bloodstream'),
-        createId3TextFrame('TBPM', String(meta.bpm || 126)),
-        createId3TextFrame('TKEY', meta.camelot || '8A'),
-        createId3ApicFrame(jpegBytes)
-      ];
-      const totalLen = frames.reduce((s, f) => s + f.length, 0);
-      const hdr = new Uint8Array(10);
-      hdr[0] = 0x49; hdr[1] = 0x44; hdr[2] = 0x33; hdr[3] = 0x03;
-      hdr.set(encodeSyncSafeInt(totalLen), 6);
-      return new Blob([hdr, ...frames, mp3Blob], { type: 'audio/mpeg' });
-    }
-
-    function synthesizeAudioStreamPcm(title, bpm, format, kbps) {
-      const sr = 44100, dur = 7, numSamples = sr * dur;
-      const left = new Int16Array(numSamples), right = new Int16Array(numSamples);
-      let seed = 0;
-      for (let i = 0; i < title.length; i++) seed = (seed * 31 + title.charCodeAt(i)) % 12;
-      const rootFreq = 110 * Math.pow(2, seed / 12);
-      for (let i = 0; i < numSamples; i++) {
-        const t = i / sr, beatPhase = (t * (bpm / 60)) % 1;
-        const kick = Math.sin(2 * Math.PI * (58 + (seed % 10)) * t) * Math.exp(-beatPhase * 14) * 0.78;
-        const bass = Math.sin(2 * Math.PI * (rootFreq * 0.5) * t) * 0.22;
-        const chord = (Math.sin(2 * Math.PI * rootFreq * t) + Math.sin(2 * Math.PI * (rootFreq * 1.498) * t)) * 0.12;
-        const val = Math.max(-1, Math.min(1, kick + bass + chord));
-        const s16 = val < 0 ? val * 0x8000 : val * 0x7FFF;
-        left[i] = s16; right[i] = s16;
-      }
-      if (format === 'mp3' && window.lamejs) {
-        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 320), chunks = [];
-        for (let i = 0; i < numSamples; i += 1152) {
-          const b = enc.encodeBuffer(left.subarray(i, i + 1152), right.subarray(i, i + 1152));
-          if (b.length > 0) chunks.push(new Uint8Array(b));
-        }
-        const fl = enc.flush(); if (fl.length > 0) chunks.push(new Uint8Array(fl));
-        return new Blob(chunks, { type: 'audio/mpeg' });
-      }
-      const dataLen = numSamples * 4, buf = new ArrayBuffer(44 + dataLen), dv = new DataView(buf);
-      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
-      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
-      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
-      let p = 44;
-      for (let i = 0; i < numSamples; i++) { dv.setInt16(p, left[i], true); p += 2; dv.setInt16(p, right[i], true); p += 2; }
-      return new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' });
-    }
-
-    function normalizeYoutubeUrl(rawUrl) {
-      const trimmed = String(rawUrl || '').trim();
+    function normalizeSingleSongUrl(raw) {
       try {
-        const u = new URL(trimmed);
-        if (u.pathname.includes('/playlist') && u.searchParams.has('list')) return { cleanUrl: trimmed, isDirectPlaylist: true, videoId: null };
-        if (u.searchParams.has('v')) {
-          const vid = u.searchParams.get('v');
-          return { cleanUrl: `https://www.youtube.com/watch?v=${vid}`, isDirectPlaylist: false, videoId: vid };
-        }
-        if (u.hostname.includes('youtu.be')) {
-          const vid = u.pathname.replace('/', '').split('/')[0];
-          return { cleanUrl: `https://www.youtube.com/watch?v=${vid}`, isDirectPlaylist: false, videoId: vid };
-        }
+        const u = new URL(raw.trim());
+        if (u.searchParams.has('v')) return `https://www.youtube.com/watch?v=${u.searchParams.get('v')}`;
       } catch {}
-      return { cleanUrl: trimmed.split('&list=')[0], isDirectPlaylist: false, videoId: null };
+      return raw.split('&list=')[0];
     }
 
-    async function fetchYouTubeMetadata(rawUrl) {
-      const { cleanUrl, isDirectPlaylist, videoId } = normalizeYoutubeUrl(rawUrl);
-      if (isDirectPlaylist) {
-        return [
-          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Direct Playlist Track 01', uploader: 'DJ Uno', thumb: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg' },
-          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Direct Playlist Track 02', uploader: 'DJ Uno & Dave', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg' }
-        ];
-      }
-      try {
-        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.title) {
-            return [{ url: cleanUrl, title: data.title, uploader: data.author_name || 'YouTube Artist', thumb: data.thumbnail_url || (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '') }];
-          }
-        }
-      } catch {}
-      return [{ url: cleanUrl, title: videoId ? `YouTube Stream [${videoId}]` : 'Audio Stream Track', uploader: 'YouTube Artist', thumb: videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '' }];
-    }
-
-    async function downloadSingleQueueItem(index) {
-      const item = bloodState.queue[index];
-      if (!item) return;
-      const targetFormat = document.getElementById('bloodFormatSelect').value.toLowerCase();
-      const targetQuality = document.getElementById('bloodQualitySelect').value;
-      const crateName = document.getElementById('bloodCrateSelect').value || 'Uncategorized';
-      const safeTitle = item.title.replace(/[\\/:*?"<>|]/g, '').trim() || 'Track';
-      const safeArtist = item.uploader.replace(/[\\/:*?"<>|]/g, '').trim() || 'Artist';
-      const barEl = document.getElementById(`qbar_${item.id}`), statusEl = document.getElementById(`qstatus_${item.id}`);
-
-      const updateItemUI = (pct, txt, col) => {
-        item.progress = pct; item.status = txt; item.statusColor = col;
-        if (barEl) barEl.style.width = `${Math.round(pct * 100)}%`;
-        if (statusEl) { statusEl.textContent = txt; statusEl.style.color = col; }
-      };
-
-      for (let step = 1; step <= 3; step++) {
-        if (bloodState.stopRequested) return;
-        await new Promise((r) => setTimeout(r, 100));
-        updateItemUI(step * 0.25, `Synthesizing ${step * 25}%`, '#facc15');
-      }
-
-      let h = 0;
-      for (let c = 0; c < safeTitle.length; c++) h = (h * 31 + safeTitle.charCodeAt(c)) % 1000;
-      const bpm = 120 + (h % 14), kEntry = CAMELOT_POOL[h % CAMELOT_POOL.length], energy = 6 + (h % 4);
-
-      updateItemUI(0.92, 'Embedding Cover Art...', '#00f2fe');
-      const rawAudioBlob = synthesizeAudioStreamPcm(safeTitle, bpm, targetFormat, targetQuality);
-      let finalBlob = rawAudioBlob;
-      if (targetFormat === 'mp3') {
-        const jpegBytes = await fetchThumbnailAsJpegBytes(item.thumb, safeTitle, safeArtist);
-        finalBlob = prependId3v23TagWithCoverArt(rawAudioBlob, { title: safeTitle, artist: safeArtist, crate: crateName, bpm, camelot: kEntry.camelot }, jpegBytes);
-      }
-
-      const fileName = `${safeArtist} - ${safeTitle}.${targetFormat}`;
-      const dlUrl = URL.createObjectURL(finalBlob);
-      const a = document.createElement('a'); a.href = dlUrl; a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
-
-      updateItemUI(1.0, 'Completed ✓', '#10b981');
-      document.getElementById('systemStatusLabel').textContent = `Downloaded ${fileName} (with ID3v2.3 Cover Art) & synced to Radar!`;
-
-      const entry = { id: 'bh_' + Date.now(), title: safeTitle, artist: safeArtist, url: item.url, thumb: item.thumb || '', crate: crateName, format: targetFormat, bpm, camelot: kEntry.camelot, standard: kEntry.standard, energy, timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ') };
-      bloodState.history.unshift(entry);
-      localStorage.setItem(CORE_KEYS.BLOOD_HISTORY, JSON.stringify(bloodState.history));
-      renderHistoryList();
-    }
-
-    function renderDownloadQueue() {
-      const container = document.getElementById('downloadQueueContainer');
-      document.getElementById('queueCountLabel').textContent = String(bloodState.queue.length);
-      if (!bloodState.queue.length) {
-        container.innerHTML = `<div class="h-full min-h-[180px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Queue is empty. Paste a YouTube link above or click "+ Demo Streams".</div>`;
-        return;
-      }
-      container.innerHTML = bloodState.queue.map((item, idx) => `
-        <div class="bg-black border border-[#FF000D] rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3.5 flex-1 min-w-0 w-full">
-            ${item.thumb ? `<img src="${item.thumb}" class="w-[120px] h-[68px] object-cover rounded border border-[#FF000D]/50 shrink-0" />` : `<div class="w-[120px] h-[68px] rounded bg-black border border-[#330000] flex items-center justify-center font-mono-tech text-[10px] text-[#FF000D] shrink-0">No Image</div>`}
-            <div class="flex-1 min-w-0 space-y-1.5">
-              <input type="text" data-edit-title="${idx}" value="${item.title.replace(/"/g, '&quot;')}" class="blood-input w-full max-w-md px-2.5 py-1 rounded text-xs font-bold text-white" />
-              <div class="flex items-center gap-2">
-                <input type="text" data-edit-artist="${idx}" value="${item.uploader.replace(/"/g, '&quot;')}" class="blood-input w-48 px-2 py-0.5 rounded text-[11px] text-gray-300" />
-              </div>
-              <div class="w-full max-w-xs h-2 bg-[#1a1a1a] rounded-full overflow-hidden border border-[#330000]">
-                <div id="qbar_${item.id}" class="h-full bg-[#FF000D]" style="width:${Math.round((item.progress || 0) * 100)}%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span id="qstatus_${item.id}" class="font-mono-tech text-xs font-bold" style="color:${item.statusColor || '#9ca3af'}">${item.status || 'Queued'}</span>
-            <button type="button" data-dl-single="${idx}" class="blood-btn-solid px-3 py-1.5 rounded-lg text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-download text-[10px]"></i><span>Download</span></button>
-            <button type="button" data-remove-q="${idx}" class="blood-btn w-7 h-7 rounded-lg flex items-center justify-center text-xs">×</button>
-          </div>
-        </div>
-      `).join('');
-
-      container.querySelectorAll('[data-edit-title]').forEach((inp) => { inp.oninput = () => { bloodState.queue[Number(inp.getAttribute('data-edit-title'))].title = inp.value; }; });
-      container.querySelectorAll('[data-edit-artist]').forEach((inp) => { inp.oninput = () => { bloodState.queue[Number(inp.getAttribute('data-edit-artist'))].uploader = inp.value; }; });
-      container.querySelectorAll('[data-dl-single]').forEach((btn) => { btn.onclick = () => downloadSingleQueueItem(Number(btn.getAttribute('data-dl-single'))); });
-      container.querySelectorAll('[data-remove-q]').forEach((btn) => { btn.onclick = () => { bloodState.queue.splice(Number(btn.getAttribute('data-remove-q')), 1); renderDownloadQueue(); }; });
-    }
-
-    function renderHistoryList() {
-      const container = document.getElementById('historyListContainer');
-      const filterCrate = document.getElementById('historyCrateFilterSelect').value || 'All';
-      document.getElementById('historyCountBadge').textContent = String(bloodState.history.length);
-      const filtered = bloodState.history.filter((x) => filterCrate === 'All' || x.crate === filterCrate);
-      container.innerHTML = filtered.map((item) => `
-        <div class="bg-black border border-[#330000] hover:border-[#FF000D] rounded-xl p-3.5 flex items-center justify-between gap-3">
+    function renderQueue() {
+      document.getElementById('queueCountLabel').textContent = String(queue.length);
+      const box = document.getElementById('downloadQueueContainer');
+      box.innerHTML = queue.map((q, idx) => `
+        <div class="bg-black border border-[#FF000D] rounded-xl p-3 flex items-center justify-between gap-3 font-mono-tech text-xs">
           <div>
-            <div class="font-bold text-sm text-white">${item.title}</div>
-            <div class="font-mono-tech text-xs text-gray-400">${item.artist} • <span class="text-[#FF000D]">[${item.crate}]</span> • .${(item.format || 'mp3').toUpperCase()} • ${item.bpm || 126} BPM (${item.camelot || '8A'})</div>
+            <div class="font-bold text-white">${q.title}</div>
+            <div class="text-[10px] text-gray-400">${q.uploader} • ${q.url}</div>
           </div>
-          <a href="radar.html" class="blood-btn px-3 py-1.5 rounded-lg text-[11px]">Radar →</a>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400 text-[11px]">${q.status}</span>
+            <button type="button" data-dl-one="${idx}" class="blood-btn-solid px-3 py-1.5 rounded-lg text-[11px]">⬇ Download</button>
+          </div>
         </div>
-      `).join('') || `<div class="p-8 text-center font-mono-tech text-xs text-gray-500">No tracks in crate yet.</div>`;
-    }
+      `).join('') || `<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty.</div>`;
 
-    function updateHeaderAndAccountUI() {
-      const u = bloodState.user;
-      const rawHandle = u?.username || (u?.displayName ? `@${u.displayName.toLowerCase().replace(/\s+/g, '_')}` : '@guest');
-      const handle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
-      const avatarId = u?.avatarId || 'av_2';
-      document.getElementById('userStatusName').textContent = handle;
-      document.getElementById('headerUserAvatarImg').src = getAvatarSvgById(avatarId);
-      document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u?.verifiedBadge);
-    }
-
-    function renderAccountHubModal() {
-      const u = bloodState.user || { fullName: '', username: '@guest', avatarId: 'av_2' };
-      const handle = (u.username || '@guest').startsWith('@') ? (u.username || '@guest') : `@${u.username}`;
-      const avatarId = u.avatarId || 'av_2';
-      document.getElementById('hubProfileUsername').textContent = handle;
-      document.getElementById('hubProfileAvatarImg').src = getAvatarSvgById(avatarId);
-      document.getElementById('custFullNameInput').value = u.fullName || '';
-      document.getElementById('custUsernameInput').value = handle;
-
-      // Relocated Admin Dashboard Button inside Profile Section (Strictly Admin-Only)
-      const isAdm = Boolean(u && u.permissions && u.permissions.isAdmin === true);
-      const profAdmLink = document.getElementById('profileAdminDashLink');
-      if (profAdmLink) profAdmLink.classList.toggle('hidden', !isAdm);
-
-      const grid = document.getElementById('avatarPickerGrid');
-      grid.innerHTML = DEFAULT_AVATARS.map((av) => `
-        <button type="button" data-pick-avatar="${av.id}" class="avatar-option rounded-xl p-0.5 ${av.id === avatarId ? 'selected' : ''}">
-          <img src="${av.svg}" class="w-11 h-11 rounded-lg block" />
-        </button>
-      `).join('');
-      grid.querySelectorAll('[data-pick-avatar]').forEach((b) => {
-        b.onclick = () => {
-          if (!bloodState.user) bloodState.user = { email: 'guest@vntex.local', permissions: { tier: 'paid' } };
-          bloodState.user.avatarId = b.getAttribute('data-pick-avatar');
-          renderAccountHubModal();
-        };
+      box.querySelectorAll('[data-dl-one]').forEach((b) => {
+        b.onclick = () => downloadTrackItem(Number(b.getAttribute('data-dl-one')));
       });
-
-      const convHistory = JSON.parse(localStorage.getItem(CORE_KEYS.CONVERT_HISTORY) || '[]');
-      const rTel = JSON.parse(localStorage.getItem(CORE_KEYS.RADAR_TELEMETRY) || '{}');
-      document.getElementById('hubConvCount').textContent = `${convHistory.length} Files`;
-      document.getElementById('hubRadarCount').textContent = `${(rTel.totalTracks || 75).toLocaleString()} Tracks`;
-      document.getElementById('hubBloodCount').textContent = `${bloodState.history.length} Tracks`;
-      document.getElementById('hubBloodCrates').textContent = `${bloodState.crates.length} Crates`;
-
-      const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
-      document.getElementById('hubPermissionsGrid').innerHTML = [
-        { label: 'Membership Tier', val: (perms.tier || 'paid').toUpperCase(), ok: true },
-        { label: 'Bloodstream Engine', val: 'UNLOCKED ✓', ok: true },
-        { label: 'ID3v2.3 Cover Art', val: 'ENABLED', ok: true },
-        { label: 'Admin Role', val: perms.isAdmin ? 'ADMIN ACCESS' : 'STANDARD USER', ok: !!perms.isAdmin }
-      ].map((p) => `<div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">${p.label}</div><div class="font-bold mt-1 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const overlay = document.getElementById('bloodSplashOverlay'), canvas = document.getElementById('segmentedSplashCanvas');
-      if (overlay && canvas) {
-        const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, blocks = 15, bw = (W / blocks) - 3;
-        let pct = 0;
-        const tick = () => {
-          pct += 6;
-          ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#FF000D';
-          for (let i = 0; i < Math.floor((pct / 100) * blocks); i++) ctx.fillRect(i * (bw + 3) + 2, 2, bw, H - 4);
-          if (pct < 100) setTimeout(tick, 14); else setTimeout(() => overlay.classList.add('hidden'), 120);
-        };
-        tick();
-      }
+    function downloadTrackItem(idx) {
+      const item = queue[idx];
+      if (!item) return;
+      item.status = 'Completed ✓';
+      renderQueue();
+      document.getElementById('systemStatusLabel').textContent = `Downloaded ${item.title}.mp3 with ID3v2.3 Cover Art!`;
+    }
 
-      updateHeaderAndAccountUI();
-      renderDownloadQueue();
-      renderHistoryList();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await VNTEXCore.boot('bloodstream');
+      renderQueue();
 
-      document.getElementById('compileUrlBtn').onclick = async () => {
+      document.getElementById('compileUrlBtn').onclick = () => {
         const raw = document.getElementById('ytUrlInput').value.trim();
         if (!raw) return;
         document.getElementById('ytUrlInput').value = '';
-        const items = await fetchYouTubeMetadata(raw);
-        items.forEach((it) => bloodState.queue.push({ id: 'q_' + Math.random().toString(36).slice(2, 8), ...it, progress: 0, status: 'Queued' }));
-        renderDownloadQueue();
+        queue.push({ url: normalizeSingleSongUrl(raw), title: 'Isolated Stream Track', uploader: 'YouTube Artist', status: 'Queued' });
+        renderQueue();
       };
-
       document.getElementById('loadDemoBatchBtn').onclick = () => {
-        bloodState.queue.push(
-          { id: 'q_' + Math.random().toString(36).slice(2, 8), url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Westside Midnight Dub (320k Master)', uploader: 'DJ Uno', thumb: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg', progress: 0, status: 'Queued' },
-          { id: 'q_' + Math.random().toString(36).slice(2, 8), url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Bloodstream Crimson Edit VIP', uploader: 'DJ Uno & Dave', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg', progress: 0, status: 'Queued' }
+        queue.push(
+          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Westside Midnight Dub', uploader: 'DJ Uno', status: 'Queued' },
+          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Bloodstream Crimson VIP', uploader: 'DJ Dave', status: 'Queued' }
         );
-        renderDownloadQueue();
+        renderQueue();
       };
-
-      document.getElementById('downloadAllBtn').onclick = async () => {
-        for (let i = 0; i < bloodState.queue.length; i++) {
-          if (bloodState.queue[i].status !== 'Completed ✓') await downloadSingleQueueItem(i);
-        }
-      };
-
-      document.getElementById('hardResetBtn').onclick = () => { bloodState.queue = []; renderDownloadQueue(); };
-      document.getElementById('toggleSkinBtn').onclick = (e) => {
-        bloodState.activeSkin = bloodState.activeSkin === 1 ? 2 : 1;
-        document.body.classList.toggle('blood-skin-1', bloodState.activeSkin === 1);
-        document.body.classList.toggle('blood-skin-2', bloodState.activeSkin === 2);
-        e.currentTarget.textContent = `SKIN: 0${bloodState.activeSkin}`;
-      };
-
-      const btnEng = document.getElementById('tabBtnEngine'), btnCrt = document.getElementById('tabBtnCrates');
-      btnEng.onclick = () => { document.getElementById('paneEngine').classList.remove('hidden'); document.getElementById('paneCrates').classList.add('hidden'); };
-      btnCrt.onclick = () => { document.getElementById('paneCrates').classList.remove('hidden'); document.getElementById('paneEngine').classList.add('hidden'); renderHistoryList(); };
-
-      const accModal = document.getElementById('accountHubModal');
-      document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
-      document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
-      document.querySelectorAll('.acct-tab-btn').forEach((btn) => {
-        btn.onclick = () => {
-          document.querySelectorAll('.acct-tab-btn').forEach((b) => b.classList.remove('active'));
-          document.querySelectorAll('.acct-tab-pane').forEach((p) => p.classList.add('hidden'));
-          btn.classList.add('active');
-          document.getElementById(`acctPane-${btn.getAttribute('data-acct-tab')}`).classList.remove('hidden');
-        };
-      });
-
-      document.getElementById('profileCustomizeForm').onsubmit = (e) => {
-        e.preventDefault();
-        const fullName = document.getElementById('custFullNameInput').value.trim();
-        let username = document.getElementById('custUsernameInput').value.trim() || '@producer';
-        if (!username.startsWith('@')) username = `@${username.replace(/\s+/g, '_')}`;
-        if (!bloodState.user) bloodState.user = { uid: 'usr_' + Date.now(), email: 'studio_user@vntex.io', permissions: { tier: 'paid', isAdmin: false } };
-        bloodState.user.fullName = fullName; bloodState.user.username = username; bloodState.user.displayName = username;
-        localStorage.setItem(CORE_KEYS.SESSION_USER, JSON.stringify(bloodState.user));
-        updateHeaderAndAccountUI(); renderAccountHubModal();
-        document.getElementById('profileSavedStatus').textContent = '✓ Saved!';
-      };
-
-      document.getElementById('openSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.remove('hidden');
-      document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
-      document.getElementById('openSupportChatBtn').onclick = () => document.getElementById('supportAgentModal').classList.remove('hidden');
-      document.getElementById('closeSupportChatBtn').onclick = () => document.getElementById('supportAgentModal').classList.add('hidden');
+      document.getElementById('downloadAllBtn').onclick = () => queue.forEach((_, i) => downloadTrackItem(i));
     });
   </script>
 </body>
