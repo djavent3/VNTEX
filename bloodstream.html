@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="theme-blood">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,9 +8,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="vntex-core.js"></script>
 
   <style>
+    /* DEFAULT BLOODSTREAM UI: ORIGINAL BLOOD-RED THEME (#000000 / #050505 / #FF000D) */
     :root {
       --bg-void: #000000;
       --bg-panel: #050505;
@@ -26,13 +29,14 @@
     body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
     .hud-glass { background: color-mix(in srgb, var(--bg-panel) 90%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); }
-    .blood-panel { background: var(--bg-panel); border: 1px solid var(--accent-primary); }
+    .blood-panel { background: var(--bg-panel); border: 1px solid var(--accent-primary); box-shadow: 0 0 24px rgba(255, 0, 13, 0.12); }
     .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); }
-    .blood-input { background: #000; border: 1px solid var(--accent-primary); color: #fff; }
-    .blood-btn { background: #000; border: 1px solid var(--accent-primary); color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; }
-    .blood-btn-solid { background: var(--accent-primary); border: 1px solid var(--accent-primary); color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800; cursor: pointer; }
+    .blood-input { background: #000000; border: 1px solid var(--accent-primary); color: #ffffff; }
+    .blood-btn { background: #000000; border: 1px solid var(--accent-primary); color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; }
+    .blood-btn:hover { background: #220000; }
+    .blood-btn-solid { background: var(--accent-primary); border: 1px solid var(--accent-primary); color: #000000; font-family: 'JetBrains Mono', monospace; font-weight: 800; cursor: pointer; }
     .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; }
-    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(255,0,13,0.14); border-color: var(--accent-primary); }
+    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(255, 0, 13, 0.14); border-color: var(--accent-primary); }
     .verified-badge-icon { color: #00f2fe; }
     .avatar-option { border: 2px solid transparent; cursor: pointer; }
     .avatar-option.selected { border-color: var(--accent-primary); }
@@ -46,7 +50,7 @@
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/60 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
         <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
-        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-[#FF000D]/15 text-[#FF000D] border border-[#FF000D]/40">ARGON4</span>
+        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-[#FF000D]/15 text-[#FF000D] border border-[#FF000D]/40">BLOODSTREAM</span>
       </div>
 
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
@@ -78,14 +82,14 @@
       <div class="flex flex-wrap items-center gap-2.5">
         <input id="ytUrlInput" type="text" placeholder="Paste YouTube Song Link (auto-isolates single song if inside a mix)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
         <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase">Compile</button>
-        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">+ Demo Streams</button>
+        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">+ Sample Streams</button>
       </div>
     </div>
 
     <div class="blood-panel rounded-xl flex-1 flex flex-col overflow-hidden">
       <div class="px-4 py-2.5 border-b border-[#330000] font-mono-tech text-xs text-[#FF000D] font-bold flex justify-between">
         <span>Download Queue (<span id="queueCountLabel">0</span>)</span>
-        <span class="text-gray-400">100% Client-Side Audio + ID3v2.3 Cover Art</span>
+        <span class="text-gray-400">100% Client-Side Audio + ID3v2.3 Cover Art • Auto-Queues for Radar Import</span>
       </div>
       <div id="downloadQueueContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
     </div>
@@ -111,18 +115,23 @@
       document.getElementById('queueCountLabel').textContent = String(queue.length);
       const box = document.getElementById('downloadQueueContainer');
       box.innerHTML = queue.map((q, idx) => `
-        <div class="bg-black border border-[#FF000D] rounded-xl p-3 flex items-center justify-between gap-3 font-mono-tech text-xs">
-          <div>
-            <div class="font-bold text-white">${q.title}</div>
-            <div class="text-[10px] text-gray-400">${q.uploader} • ${q.url}</div>
+        <div class="bg-black border border-[#FF000D] rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
+          <div class="space-y-1 flex-1 min-w-[200px]">
+            <input type="text" data-q-title="${idx}" value="${q.title}" class="blood-input px-2.5 py-1 rounded text-xs font-bold w-full max-w-md" />
+            <div class="flex items-center gap-2">
+              <input type="text" data-q-artist="${idx}" value="${q.uploader}" class="blood-input px-2 py-0.5 rounded text-[11px] text-gray-300 w-44" />
+              <span class="text-[10px] text-gray-500 truncate">${q.url}</span>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-emerald-400 text-[11px]">${q.status}</span>
             <button type="button" data-dl-one="${idx}" class="blood-btn-solid px-3 py-1.5 rounded-lg text-[11px]">⬇ Download</button>
           </div>
         </div>
-      `).join('') || `<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty.</div>`;
+      `).join('') || `<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty. Paste a YouTube link above and click Compile.</div>`;
 
+      box.querySelectorAll('[data-q-title]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-title'))].title = inp.value; }; });
+      box.querySelectorAll('[data-q-artist]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-artist'))].uploader = inp.value; }; });
       box.querySelectorAll('[data-dl-one]').forEach((b) => {
         b.onclick = () => downloadTrackItem(Number(b.getAttribute('data-dl-one')));
       });
@@ -133,27 +142,50 @@
       if (!item) return;
       item.status = 'Completed ✓';
       renderQueue();
-      document.getElementById('systemStatusLabel').textContent = `Downloaded ${item.title}.mp3 with ID3v2.3 Cover Art!`;
+      // Record song in VNTEXCore so logged-in user sees "Load Suite Songs" button in Radar!
+      VNTEXCore.recordSuiteSong({
+        title: item.title,
+        artist: item.uploader,
+        bpm: 124 + (idx * 2),
+        camelot: idx % 2 === 0 ? '8A' : '9A',
+        energy: 8,
+        genre: 'Electronic',
+        sourceTool: 'bloodstream'
+      });
+      document.getElementById('systemStatusLabel').textContent = `Downloaded "${item.title}" with ID3v2.3 Cover Art & queued for Radar import!`;
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCore.boot('bloodstream');
       renderQueue();
 
-      document.getElementById('compileUrlBtn').onclick = () => {
+      document.getElementById('compileUrlBtn').onclick = async () => {
         const raw = document.getElementById('ytUrlInput').value.trim();
         if (!raw) return;
         document.getElementById('ytUrlInput').value = '';
-        queue.push({ url: normalizeSingleSongUrl(raw), title: 'Isolated Stream Track', uploader: 'YouTube Artist', status: 'Queued' });
+        const clean = normalizeSingleSongUrl(raw);
+        let title = 'Compiled Stream Track';
+        let uploader = 'Stream Artist';
+        try {
+          const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(clean)}`);
+          if (r.ok) {
+            const d = await r.json();
+            if (d.title) title = d.title;
+            if (d.author_name) uploader = d.author_name;
+          }
+        } catch {}
+        queue.push({ url: clean, title, uploader, status: 'Queued' });
         renderQueue();
       };
+
       document.getElementById('loadDemoBatchBtn').onclick = () => {
         queue.push(
-          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Westside Midnight Dub', uploader: 'DJ Uno', status: 'Queued' },
-          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Bloodstream Crimson VIP', uploader: 'DJ Dave', status: 'Queued' }
+          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Midnight SubZero Master', uploader: 'VNTEX Studio', status: 'Queued' },
+          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Crimson Horizon VIP', uploader: 'Synth Collective', status: 'Queued' }
         );
         renderQueue();
       };
+
       document.getElementById('downloadAllBtn').onclick = () => queue.forEach((_, i) => downloadTrackItem(i));
     });
   </script>

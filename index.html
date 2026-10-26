@@ -140,8 +140,8 @@
           <i class="fa-regular fa-comment-dots"></i>
         </button>
 
-        <button id="openAccountBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
-          <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
+        <button id="openAccountBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
+          <img id="headerUserAvatarImg" src="" alt="" class="w-4 h-4 rounded-full object-cover border border-[var(--accent-primary)]" />
           <span id="headerAccountLabel" class="font-mono-tech">@guest</span>
           <i id="headerVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
         </button>
@@ -579,7 +579,7 @@
         <form id="signUpForm" class="hidden space-y-3" autocomplete="off">
           <div>
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Producer / DJ Name</label>
-            <input id="signUpNameInput" type="text" required placeholder="e.g. DJ Uno" class="hardware-well w-full px-3 py-2 text-xs" />
+            <input id="signUpNameInput" type="text" required placeholder="e.g. Studio Artist" class="hardware-well w-full px-3 py-2 text-xs" />
           </div>
           <div>
             <label class="block text-[10px] font-mono-tech uppercase text-[var(--text-secondary)] mb-1">Email Address</label>
@@ -2673,8 +2673,8 @@
     async function loadDemoTracks() {
       const ctx = getAudioContext();
       const demos = [
-        { title: 'Westside Slow Jam', artist: 'Uno', targetBpm: 92, notes: [87.31, 174.61, 207.65, 261.63] },
-        { title: 'SubZero Crate Dub', artist: 'DJ Uno & Dave', targetBpm: 126, notes: [82.41, 164.81, 196.00, 246.94] },
+        { title: 'Westside Slow Jam', artist: 'Producer', targetBpm: 92, notes: [87.31, 174.61, 207.65, 261.63] },
+        { title: 'SubZero Crate Dub', artist: 'Studio Artist & Dave', targetBpm: 126, notes: [82.41, 164.81, 196.00, 246.94] },
         { title: 'Plains Midnight VIP', artist: 'VNTEX DSP', targetBpm: 145, notes: [146.83, 293.66, 185.00, 220.00] }
       ];
 
@@ -3223,21 +3223,21 @@
         const hash1 = await VNTEXAuthEngine.hashPassword('Studio#2026', salt1);
         state.usersRegistry = [
           {
-            uid: 'usr_uno01', displayName: 'Darren (DJ Uno)', email: 'darren@auburn.edu', provider: 'Google OAuth',
+            uid: 'usr_uno01', displayName: 'Admin (Studio Artist)', email: 'Admin@auburn.edu', provider: 'Google OAuth',
             salt: salt1, passwordHash: hash1, emailVerified: true, verifiedBadge: true,
             activeRigName: 'Pioneer DDJ-GRV6 Controller', lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: true, unlimitedApiOverride: true }
           },
           {
-            uid: 'usr_dave02', displayName: 'DJ Dave', email: 'dave@booth.audio', provider: 'Firebase Email',
+            uid: 'usr_dave02', displayName: 'Producer B', email: 'dave@booth.audio', provider: 'Firebase Email',
             salt: salt1, passwordHash: hash1, emailVerified: true, verifiedBadge: true,
             activeRigName: 'Pioneer CDJ-3000 / NXS2 Club Rig', lastLogin: now,
             permissions: { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false, unlimitedApiOverride: false }
           }
         ];
         state.downloadHistory = [
-          { id: 'log_101', timestamp: now, userEmail: 'darren@auburn.edu', artist: 'Uno', trackTitle: 'Westside Slow Jam', bpm: '92', key: '4A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
-          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'DJ Uno & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
+          { id: 'log_101', timestamp: now, userEmail: 'Admin@auburn.edu', artist: 'Producer', trackTitle: 'Westside Slow Jam', bpm: '92', key: '4A', outputFormat: 'MP3', qualitySpec: '320kbps', targetDevice: 'Pioneer DDJ-GRV6 Controller', fileSize: 4820100 },
+          { id: 'log_102', timestamp: now, userEmail: 'dave@booth.audio', artist: 'Studio Artist & Dave', trackTitle: 'SubZero Crate Dub', bpm: '126', key: '9A', outputFormat: 'AIFF', qualitySpec: '24-Bit', targetDevice: 'Pioneer CDJ-3000 / NXS2 Club Rig', fileSize: 34910000 }
         ];
         saveState();
         updateAccountAndGatingUI();
