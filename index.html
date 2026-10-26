@@ -115,48 +115,46 @@
        VIEW 1: PUBLIC USER CONVERTER APP
        ========================================================================== -->
   <div id="userAppWrapper">
-    <header class="border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/90 backdrop-blur-md sticky top-0 z-30">
-      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
-          <span class="font-extrabold tracking-tight text-base text-[var(--text-primary)]">VNTEX</span>
-          <span id="activeRigBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--accent-primary)]"></span>
-          <nav class="hardware-well p-1 flex items-center gap-1 ml-2">
-            <a href="index.html" class="px-2.5 py-1 rounded font-mono-tech text-[11px] font-bold text-[var(--accent-primary)] bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)] flex items-center gap-1.5">
-              <i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span>
-            </a>
-            <a href="radar.html" class="px-2.5 py-1 rounded font-mono-tech text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-compass text-[10px] text-[var(--accent-primary)]"></i><span>Harmonic Radar</span>
-            </a>
-            <span class="hidden sm:inline-flex px-2.5 py-1 rounded font-mono-tech text-[11px] font-bold text-[var(--text-muted)] items-center gap-1.5 opacity-60" title="Bloodstream Web App — Coming Soon">
-              <i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span>
-            </span>
-          </nav>
-        </div>
-
+        <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30 sticky top-0">
+      <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
-          <!-- Seamless Admin Dash Toggle (Only visible when logged-in user has isAdmin: true) -->
-          <button id="headerAdminSwitchBtn" type="button" class="hidden hardware-well px-3 py-1.5 text-xs font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400 transition flex items-center gap-1.5">
-            <i class="fa-solid fa-shield-halved text-[11px]"></i>
-            <span>Admin Dash</span>
-          </button>
-
-          <button id="openStudioHubBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)] transition">
-            <i id="studioHubLockIcon" class="fa-solid fa-lock text-[10px] text-[var(--text-muted)]"></i>
-            <span>Studio Hub</span>
-            <span class="hidden sm:inline text-[10px] font-mono-tech text-[var(--text-secondary)]">(Rig • Automation • Themes)</span>
-          </button>
-
-          <button id="openAccountBtn" type="button" class="hardware-well px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)] transition">
-            <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[11px]"></i>
-            <span id="headerAccountLabel">Sign In</span>
-            <i id="headerVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[11px] hidden" title="Verified VNTEX Producer"></i>
-          </button>
+          <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
+          <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
+          <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">ARGON4</span>
+          <span id="activeRigBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--bg-well)] border border-[var(--border-hairline)] text-[var(--accent-primary)]"></span>
         </div>
+
+        <nav class="hardware-well p-0.5 rounded-lg flex items-center gap-1">
+          <a href="index.html" class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--accent-primary)] bg-[var(--bg-panel-elevated)] border border-[var(--accent-primary)] flex items-center gap-1.5"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
+          <a href="radar.html" class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--text-secondary)] hover:text-white flex items-center gap-1.5 transition"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
+          <span class="px-2.5 py-1 rounded-md font-mono-tech text-[11px] font-bold text-[var(--text-muted)] opacity-60 flex items-center gap-1.5"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span class="hidden sm:inline">Bloodstream</span></span>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="openStudioHubBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] flex items-center gap-1.5" title="Studio Hub (Device Rigs, Automation & UI Palettes)">
+          <i id="studioHubLockIcon" class="fa-solid fa-sliders text-[11px] text-[var(--accent-primary)]"></i>
+          <span class="hidden sm:inline font-mono-tech text-[11px]">Studio Hub</span>
+        </button>
+
+        <button id="headerElevateOwnerBtn" type="button" class="hidden hardware-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Elevate Session to Master Owner">
+          <i class="fa-solid fa-key mr-1"></i><span>Elevate Owner</span>
+        </button>
+
+        <button id="headerAdminSwitchBtn" type="button" class="hidden hardware-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-[10px]"></i>
+          <span>Admin Dash</span>
+        </button>
+
+        <button id="openAccountBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
+          <i id="headerAccountIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
+          <span id="headerAccountLabel">Sign In / Profile</span>
+          <i id="headerVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
+        </button>
       </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
+    <main class="w-full max-w-[1600px] mx-auto px-5 py-5 space-y-4">
       <!-- 1. FILE DROPZONE FIRST -->
       <section id="dropzone" class="studio-panel p-7 sm:p-9 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition cursor-pointer text-center space-y-3">
         <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
@@ -310,7 +308,7 @@
        ========================================================================== -->
   <div id="adminPortalWrapper" class="hidden min-h-screen bg-[#030305] text-[#f3f4f8]">
     <header class="border-b border-[#181824] bg-[#030305]/95 backdrop-blur-md sticky top-0 z-30">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="w-full max-w-[1600px] mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono-tech font-extrabold text-xs border border-amber-400/50 bg-[#040406] text-amber-400">VX</div>
           <div class="flex items-center gap-2">
@@ -371,7 +369,7 @@
     </div>
 
     <!-- UNLOCKED ADMIN DASHBOARD -->
-    <div id="adminDashboardContent" class="hidden max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div id="adminDashboardContent" class="hidden w-full max-w-[1600px] mx-auto px-5 py-6 space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="studio-panel p-4">
           <div class="font-mono-tech text-[10px] uppercase text-gray-400">Registered Users</div>
@@ -402,6 +400,18 @@
           </button>
           <button type="button" data-admin-monitor="activity" class="admin-monitor-tab tab-pill px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
             <i class="fa-solid fa-wave-square"></i><span>Activity Monitor</span>
+          </button>
+          <button type="button" data-admin-monitor="radar" class="admin-monitor-tab tab-pill px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
+            <i class="fa-solid fa-braille text-cyan-400"></i><span>Radar Monitor</span>
+          </button>
+          <button type="button" data-admin-monitor="bloodstream" class="admin-monitor-tab tab-pill px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
+            <i class="fa-solid fa-droplet text-rose-500"></i><span>Bloodstream Monitor</span>
+          </button>
+          <button type="button" data-admin-monitor="support" class="admin-monitor-tab tab-pill px-4 py-2 text-xs font-mono-tech font-bold flex items-center gap-2">
+            <i class="fa-solid fa-headset text-emerald-400"></i><span>Support &amp; Broadcasts</span>
+          </button>
+          <button id="elevateToOwnerBtn" type="button" class="px-3.5 py-2 rounded-lg bg-amber-400/15 border border-amber-400 text-amber-300 font-mono-tech font-extrabold text-xs hover:bg-amber-400 hover:text-black transition">
+            🔑 Elevate to Master Owner
           </button>
         </div>
         <div class="text-[11px] font-mono-tech text-gray-400">
@@ -1626,6 +1636,29 @@
           syncActiveUserIfMatching(user);
           saveState();
           updateAccountAndGatingUI();
+
+      if (localStorage.getItem("vntex_core_owner_elevated") === "true") {
+        state.directOwnerUnlocked = true;
+        state.adminActingRole = "owner";
+      }
+      const hdrElev = document.getElementById("headerElevateOwnerBtn");
+      if (hdrElev) {
+        hdrElev.classList.toggle("hidden", !isSignedInUserAdmin() && !state.directOwnerUnlocked);
+        hdrElev.onclick = async () => {
+          const code = prompt("Enter Master Owner Access Code (Ownr$88!Vntx#Plains92Z):");
+          if (!code) return;
+          if (await verifyDirectMasterCode(code)) {
+            state.directOwnerUnlocked = true;
+            state.adminActingRole = "owner";
+            localStorage.setItem("vntex_core_owner_elevated", "true");
+            window.location.hash = "#admin";
+            checkRouteMode();
+          } else {
+            alert("Invalid Master Access Code.");
+          }
+        };
+      }
+
           renderAdminDashboard();
         };
       });
@@ -2711,6 +2744,89 @@
      **************************************************************************/
     document.addEventListener('DOMContentLoaded', () => {
       VNTEXAuthEngine.boot();
+
+      // Argon5 Owner Elevation & Multi-Tool Admin Monitors
+      const elevBtn = document.getElementById("elevateToOwnerBtn");
+      if (elevBtn) {
+        elevBtn.onclick = async () => {
+          const code = prompt("Enter Master Owner Access Code to elevate your current session:");
+          if (!code) return;
+          if (await verifyDirectMasterCode(code)) {
+            state.directOwnerUnlocked = true;
+            state.adminActingRole = "owner";
+            renderAdminDashboard();
+            alert("✓ Session elevated to Master Owner!");
+          } else {
+            alert("✕ Invalid Master Owner code.");
+          }
+        };
+      }
+
+      document.querySelectorAll(".admin-monitor-tab").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const m = btn.getAttribute("data-admin-monitor");
+          ["users", "activity", "radar", "bloodstream", "support"].forEach((k) => {
+            const el = document.getElementById("adminMonitor-" + k);
+            if (el) el.classList.toggle("hidden", k !== m);
+          });
+          const rTel = JSON.parse(localStorage.getItem("vntex_core_radar_telemetry") || "{}");
+          const rtEl = document.getElementById("adminRadarTotalTracks");
+          if (rtEl) {
+            rtEl.textContent = (rTel.totalTracks || 0).toLocaleString() + " Tracks";
+            document.getElementById("adminRadarUnknowns").textContent = (rTel.unknownCount || 0) + " Unknown";
+            document.getElementById("adminRadarSetlists").textContent = (rTel.setlistCount || 1) + " Setlist(s)";
+          }
+          renderAdminSupportTickets();
+        });
+      });
+
+      function renderAdminSupportTickets() {
+        const box = document.getElementById("adminSupportTicketsList");
+        if (!box) return;
+        const tickets = JSON.parse(localStorage.getItem("vntex_core_support_tickets") || "[]");
+        box.innerHTML = !tickets.length
+          ? `<div class="hardware-well p-4 text-center text-gray-500 font-mono-tech">No support tickets escalated yet.</div>`
+          : tickets.map((t, i) => `
+              <div class="hardware-well p-3 space-y-2 border-l-2 ${t.status === "escalated" ? "border-l-amber-400" : "border-l-emerald-400"}">
+                <div class="flex justify-between font-mono-tech text-[10px] text-gray-400">
+                  <span>User: <strong class="text-cyan-400">${t.userEmail}</strong> (${t.app || "Suite"})</span>
+                  <span>${new Date(t.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="font-bold text-white">${t.question}</div>
+                ${t.adminReply ? `<div class="text-emerald-400 font-mono-tech text-[11px]">✓ Replied: ${t.adminReply}</div>` : ""}
+                <div class="flex gap-2">
+                  <input id="replyIn_${i}" type="text" placeholder="Write direct reply to user..." class="hardware-well flex-1 px-2.5 py-1 text-xs" />
+                  <button type="button" data-reply-idx="${i}" class="px-3 py-1 rounded bg-cyan-400 text-black font-mono-tech font-bold text-[10px]">Reply to User</button>
+                </div>
+              </div>
+            `).join("");
+        box.querySelectorAll("[data-reply-idx]").forEach((b) => {
+          b.onclick = () => {
+            const idx = Number(b.getAttribute("data-reply-idx"));
+            const val = document.getElementById("replyIn_" + idx).value.trim();
+            if (!val) return;
+            tickets[idx].adminReply = val;
+            tickets[idx].status = "resolved";
+            localStorage.setItem("vntex_core_support_tickets", JSON.stringify(tickets));
+            renderAdminSupportTickets();
+          };
+        });
+      }
+
+      const bForm = document.getElementById("adminBroadcastForm");
+      if (bForm) {
+        bForm.onsubmit = (e) => {
+          e.preventDefault();
+          const msg = document.getElementById("adminBroadcastInput").value.trim();
+          if (!msg) return;
+          const list = JSON.parse(localStorage.getItem("vntex_core_notifications") || "[]");
+          list.unshift({ id: "notif_" + Date.now(), message: msg, timestamp: new Date().toISOString() });
+          localStorage.setItem("vntex_core_notifications", JSON.stringify(list));
+          document.getElementById("adminBroadcastInput").value = "";
+          alert("✓ Broadcast sent to all user inboxes!");
+        };
+      }
+
       updateAccountAndGatingUI();
       checkRouteMode();
       window.addEventListener('hashchange', checkRouteMode);

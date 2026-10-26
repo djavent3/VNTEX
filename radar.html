@@ -3,44 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Constellation Radar (Argon5)</title>
+  <title>VNTEX // Harmonic Radar (Argon4)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
-      --bg-void: #020204; --bg-panel: #0a0a10; --bg-well: #040407;
-      --border-hairline: #181824; --border-highlight: #2a2b3d;
-      --text-primary: #f3f4f8; --text-secondary: #9496a8; --text-muted: #505266;
-      --accent-primary: #00f2fe; --accent-secondary: #4facfe; --accent-glow: rgba(0,242,254,0.25);
+      --bg-void: #020204;
+      --bg-panel: #0a0a10;
+      --bg-well: #040407;
+      --border-hairline: #181824;
+      --border-highlight: #2a2b3d;
+      --text-primary: #f3f4f8;
+      --text-secondary: #9496a8;
+      --text-muted: #505266;
+      --accent-primary: #00f2fe;
+      --accent-secondary: #4facfe;
+      --accent-glow: rgba(0, 242, 254, 0.25);
     }
     * { box-sizing: border-box; user-select: none; }
-    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+    body {
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+    }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 86%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); box-shadow: 0 14px 36px -10px rgba(0,0,0,0.92); }
-    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); transition: all 0.15s ease; }
-    .hud-well:focus-within, input.hud-well:focus, select.hud-well:focus { outline: none; border-color: var(--accent-primary); }
-    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .hud-glass {
+      background: color-mix(in srgb, var(--bg-panel) 86%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.92);
+    }
+    .hud-well {
+      background: var(--bg-well);
+      border: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+    .hud-well:focus-within, input.hud-well:focus, select.hud-well:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+    .suite-nav-pill {
+      padding: 0.3rem 0.7rem;
+      border-radius: 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
     .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-highlight); }
-    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(0,242,254,0.1); border-color: var(--accent-primary); box-shadow: 0 0 12px var(--accent-glow); }
-    .param-pill { padding: 0.35rem 0.75rem; border-radius: 9999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; border: 1px solid #222334; background: rgba(8,8,14,0.88); color: #63667e; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.15s ease; }
+    .suite-nav-pill.active {
+      color: var(--accent-primary);
+      background: rgba(0, 242, 254, 0.1);
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .param-pill {
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #222334;
+      background: rgba(8, 8, 14, 0.88);
+      color: #63667e;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
     .param-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #3a3c52; }
-    .param-pill.active-bpm { border-color: #00f2fe; color: #fff; background: rgba(0,242,254,0.14); }
+    .param-pill.active-bpm { border-color: #00f2fe; color: #fff; background: rgba(0, 242, 254, 0.14); }
     .param-pill.active-bpm .dot { background: #00f2fe; box-shadow: 0 0 8px #00f2fe; }
-    .param-pill.active-key { border-color: #10b981; color: #fff; background: rgba(16,185,129,0.14); }
+    .param-pill.active-key { border-color: #10b981; color: #fff; background: rgba(16, 185, 129, 0.14); }
     .param-pill.active-key .dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
-    .param-pill.active-energy { border-color: #f59e0b; color: #fff; background: rgba(245,158,11,0.14); }
+    .param-pill.active-energy { border-color: #f59e0b; color: #fff; background: rgba(245, 158, 11, 0.14); }
     .param-pill.active-energy .dot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-    .param-pill.active-genre { border-color: #a855f7; color: #fff; background: rgba(168,85,247,0.14); }
+    .param-pill.active-genre { border-color: #a855f7; color: #fff; background: rgba(168, 85, 247, 0.14); }
     .param-pill.active-genre .dot { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
-    .param-pill.active-tag { border-color: #ec4899; color: #fff; background: rgba(236,72,153,0.14); }
+    .param-pill.active-tag { border-color: #ec4899; color: #fff; background: rgba(236, 72, 153, 0.14); }
     .param-pill.active-tag .dot { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
-    .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0,242,254,0.45)); }
-    .draggable-hud { resize: both; overflow: auto; min-width: 270px; min-height: 170px; }
+    .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45)); }
+    .draggable-hud { resize: both; overflow: auto; min-width: 275px; min-height: 175px; }
     .drag-handle { cursor: move; }
+    input[type="color"] { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 6px; cursor: pointer; background: transparent; padding: 0; }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-highlight); border-radius: 6px; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #26273a; border-radius: 999px; }
   </style>
@@ -48,30 +112,30 @@
 <body class="antialiased flex flex-col">
 
   <!-- ==========================================================================
-       UNIFIED VNTEX SUITE TOP BAR (IDENTICAL ACROSS CONVERTER & RADAR)
+       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL APPS)
        ========================================================================== -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
         <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
-        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">ARGON5</span>
+        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">ARGON4</span>
       </div>
 
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
         <a href="index.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
-        <a href="radar.html" class="suite-nav-pill active"><i class="fa-solid fa-braille text-[10px]"></i><span>Radar</span></a>
+        <a href="radar.html" class="suite-nav-pill active"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
         <button id="bloodstreamNavBtn" type="button" class="suite-nav-pill opacity-60 hover:opacity-100"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span class="hidden sm:inline">Bloodstream</span></button>
       </nav>
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[var(--accent-primary)]">
+      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[var(--accent-primary)]" title="Sync Library & Branches with Cloud">
         <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
         <span id="cloudStatusText" class="text-[var(--text-secondary)]">Synced</span>
       </button>
 
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Radar & UI Theme Settings">
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Suite Settings & Vector Styling">
         <i class="fa-solid fa-sliders"></i>
       </button>
 
@@ -80,7 +144,11 @@
         <span id="unreadNotifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-mono-tech text-[9px] flex items-center justify-center font-bold">1</span>
       </button>
 
-      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40">
+      <button id="openOwnerElevationBtn" type="button" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Elevate Session to Master Owner">
+        <i class="fa-solid fa-key mr-1"></i><span id="ownerElevationLabel">Elevate Owner</span>
+      </button>
+
+      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400">
         <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
       </a>
 
@@ -93,14 +161,14 @@
   </header>
 
   <!-- ==========================================================================
-       FULL-SCREEN CONSTELLATION VOID WORKSPACE
+       FULL-SCREEN RADAR VOID WORKSPACE
        ========================================================================== -->
   <div id="voidDropContainer" class="relative flex-1 w-full h-full overflow-hidden">
     <input id="batchFileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
     <input id="batchFolderInput" type="file" webkitdirectory directory multiple class="hidden" />
     <input id="libraryFileInput" type="file" accept=".xml,.csv,.tsv,.txt,.json" class="hidden" />
 
-    <canvas id="constellationCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+    <canvas id="radarVoidCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
 
     <!-- DRAG OVERLAY -->
     <div id="dragOverlay" class="pointer-events-none fixed inset-0 z-40 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center">
@@ -122,24 +190,20 @@
         <button id="addFolderBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--text-secondary)] hover:text-white" title="Drop Folder">
           <i class="fa-regular fa-folder-open"></i>
         </button>
-
-        <!-- ALWAYS-AVAILABLE SCAN ALL UNKNOWN BUTTON -->
         <button id="scanAllUnknownBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg border border-amber-400/50 text-amber-300 font-mono-tech font-bold text-[11px] flex items-center gap-1.5 hover:bg-amber-400/10 transition">
           <i id="scanUnknownIcon" class="fa-solid fa-wave-square text-amber-400"></i>
           <span id="scanUnknownLabel">Scan All Unknown (0)</span>
         </button>
-
         <div class="relative">
           <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-[var(--text-muted)]"></i>
           <input id="trackSearchInput" type="text" placeholder="Find song or tag..." class="hud-well pl-7 pr-2.5 py-1 rounded-lg text-[11px] font-mono-tech w-36 sm:w-44" />
           <div id="searchDropdownList" class="hidden absolute left-0 top-8 w-72 max-h-64 overflow-y-auto hud-glass rounded-xl p-1.5 space-y-1 z-50"></div>
         </div>
-
         <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2 py-1 rounded-lg bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
       </div>
     </div>
 
-    <!-- TOP-CENTER HUD: DEFAULT INTERSECT TOGGLES & CUSTOM TAG FILTER -->
+    <!-- TOP-CENTER HUD: INTERSECTION TOGGLES & TAG FILTER -->
     <div class="absolute top-16 xl:top-3 left-3 xl:left-1/2 xl:-translate-x-1/2 z-20 flex flex-wrap items-center gap-1.5 hud-glass p-1.5 rounded-full">
       <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-cyan-300 border border-cyan-400/50 bg-cyan-400/10">
         MATCH: ALL (AND)
@@ -149,13 +213,12 @@
       <button type="button" data-toggle-param="energy" class="param-pill active-energy"><span class="dot"></span><span>Energy</span></button>
       <button type="button" data-toggle-param="genre" class="param-pill"><span class="dot"></span><span>Genre</span></button>
       <button type="button" data-toggle-param="tag" class="param-pill"><span class="dot"></span><span>Tag</span></button>
-
       <select id="activeCustomTagFilterSelect" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-pink-400 cursor-pointer">
         <option value="">All Tags</option>
       </select>
     </div>
 
-    <!-- ON-SCREEN MOUSE NAVIGATION D-PAD & ZOOM CONTROLS (BOTTOM-CENTER) -->
+    <!-- MOUSE NAVIGATION D-PAD (BOTTOM-CENTER) -->
     <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 hud-glass px-2.5 py-1.5 rounded-full flex items-center gap-1.5 font-mono-tech text-xs">
       <button type="button" data-nav-pan="left" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Left"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
       <button type="button" data-nav-pan="up" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Up"><i class="fa-solid fa-chevron-up text-[10px]"></i></button>
@@ -167,17 +230,22 @@
       <button id="zoomInBtn" type="button" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Zoom In"><i class="fa-solid fa-plus text-[10px]"></i></button>
     </div>
 
-    <!-- DRAGGABLE & RESIZABLE HUD 3 (BOTTOM-LEFT): SELECTED ANCHOR INSPECTOR & CUSTOM TAGS -->
-    <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 370px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
+    <!-- DRAGGABLE & RESIZABLE HUD 3 (BOTTOM-LEFT): SELECTED ANCHOR INSPECTOR -->
+    <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 375px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
       <div data-drag-parent="anchorHudCard" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <div class="font-mono-tech text-[9px] uppercase tracking-wider text-[var(--accent-primary)] flex items-center gap-1.5">
           <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
-          <span>Selected Anchor (Drag / Resize)</span>
+          <span>Selected Anchor</span>
           <span id="anchorBpmWindowHint" class="text-[var(--text-secondary)]"></span>
         </div>
-        <button id="chainAnchorBtn" type="button" class="px-2.5 py-1 rounded-md bg-rose-500 text-white font-mono-tech font-bold text-[10px] hover:bg-rose-400">
-          + Connect Set
-        </button>
+        <div class="flex items-center gap-1">
+          <button id="forkNewBranchBtn" type="button" class="hud-well px-2 py-1 rounded-md font-mono-tech font-bold text-[10px] text-amber-300 border border-amber-400/40 hover:border-amber-400" title="Start a new branch from this song while keeping previous branches visible">
+            <i class="fa-solid fa-code-branch mr-1"></i>Fork Branch
+          </button>
+          <button id="chainAnchorBtn" type="button" class="px-2.5 py-1 rounded-md bg-rose-500 text-white font-mono-tech font-bold text-[10px] hover:bg-rose-400">
+            + Connect
+          </button>
+        </div>
       </div>
 
       <div>
@@ -204,13 +272,12 @@
         </div>
       </div>
 
-      <!-- Custom Tag Adder for Anchor or Setlist -->
       <div class="space-y-1.5 pt-1 border-t border-[var(--border-hairline)]">
         <div id="anchorCustomTagsList" class="flex flex-wrap gap-1"></div>
         <div class="flex gap-1">
           <input id="customTagInput" type="text" placeholder="Add custom tag (e.g. Peak, Opener)..." class="hud-well flex-1 px-2 py-1 rounded text-[10px] font-mono-tech" />
           <button id="addTagToAnchorBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-pink-400 hover:border-pink-400">+ Song</button>
-          <button id="addTagToSetlistBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]" title="Apply tag to entire connected setlist">+ Set</button>
+          <button id="addTagToSetlistBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]" title="Tag entire setlist tree">+ Tree</button>
         </div>
       </div>
 
@@ -220,20 +287,16 @@
       </div>
     </div>
 
-    <!-- DRAGGABLE & RESIZABLE HUD 4 (RIGHT): SETLIST DRAWER & SETLIST MANAGER TRIGGER -->
-    <div id="setlistDrawer" style="right: 16px; top: 64px; width: 330px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[82vh]">
+    <!-- DRAGGABLE & RESIZABLE HUD 4 (RIGHT): SETLIST TREE, VECTOR COLOR & FADE CONTROLS -->
+    <div id="setlistDrawer" style="right: 16px; top: 64px; width: 345px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[84vh]">
       <div data-drag-parent="setlistDrawer" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <span class="font-mono-tech text-[10px] uppercase font-bold text-rose-400 flex items-center gap-1.5">
           <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
-          <span>Setlist &amp; Matches</span>
+          <span>Setlist Tree (<span id="branchCountBadge">1</span> Branch)</span>
         </span>
         <div class="flex items-center gap-1">
-          <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40" title="Isolate and highlight all stars in this setlist">
-            ★ Isolate Set
-          </button>
-          <button id="openSetlistManagerBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-[var(--accent-primary)]">
-            Manage Sets
-          </button>
+          <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40" title="Isolate all branches in this setlist">★ Isolate</button>
+          <button id="openSetlistManagerBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-[var(--accent-primary)]">Manage Sets</button>
         </div>
       </div>
 
@@ -242,13 +305,29 @@
         <button id="newCloudPlaylistBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">+ New</button>
       </div>
 
-      <div class="grid grid-cols-2 gap-1 p-1 hud-well rounded-xl font-mono-tech text-[11px]">
-        <button id="drawerTabMatchesBtn" type="button" class="py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]">Matches (<span id="drawerMatchesCount">0</span>)</button>
-        <button id="drawerTabSetlistBtn" type="button" class="py-1 rounded-lg font-bold text-[var(--text-secondary)]">Set Chain (<span id="drawerSetCount">0</span>)</button>
+      <!-- Persistent Vector Color & Previous-Branch Fade Controls -->
+      <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 font-mono-tech text-[10px]">
+        <div class="flex items-center gap-1.5">
+          <input id="quickVectorColorInput" type="color" value="#f43f5e" title="Choose Setlist Vector Color" />
+          <span class="text-[var(--text-secondary)]">Vector</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-[var(--text-muted)]">Prev Branch:</span>
+          <select id="quickVectorFadeSelect" class="bg-transparent font-bold text-[var(--accent-primary)] focus:outline-none cursor-pointer">
+            <option value="opacity" class="bg-[#08080c] text-white">Fade Opacity</option>
+            <option value="gray" class="bg-[#08080c] text-white">Fade to Gray</option>
+            <option value="solid" class="bg-[#08080c] text-white">Stay Solid</option>
+          </select>
+        </div>
       </div>
 
-      <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
-      <div id="drawerSetlistPane" class="hidden flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
+      <div class="grid grid-cols-2 gap-1 p-1 hud-well rounded-xl font-mono-tech text-[11px]">
+        <button id="drawerTabMatchesBtn" type="button" class="py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]">Matches (<span id="drawerMatchesCount">0</span>)</button>
+        <button id="drawerTabSetlistBtn" type="button" class="py-1 rounded-lg font-bold text-[var(--text-secondary)]">Branches (<span id="drawerSetCount">0</span>)</button>
+      </div>
+
+      <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52"></div>
+      <div id="drawerSetlistPane" class="hidden flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-52"></div>
 
       <div class="pt-2 border-t border-[var(--border-hairline)] grid grid-cols-2 gap-1.5 font-mono-tech text-[10px]">
         <button id="exportRekordboxXmlBtn" type="button" class="py-2 px-2 rounded-lg bg-[#00f2fe] text-black font-extrabold flex items-center justify-center gap-1"><i class="fa-solid fa-file-code"></i><span>Rekordbox XML</span></button>
@@ -258,42 +337,41 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 1: ADVANCED SETLIST MANAGER HUB
+       MODAL 1: ADVANCED SETLIST & BRANCH MANAGER
        ========================================================================== -->
   <div id="setlistManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-list-check text-rose-400 mr-2"></i>Setlist Manager &amp; Connection Tree Editor</h3>
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-code-branch text-rose-400 mr-2"></i>Setlist &amp; Multi-Branch Tree Manager</h3>
         <button id="closeSetlistManagerBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4 text-xs flex-1">
         <div class="md:col-span-4 space-y-2 border-r border-[var(--border-hairline)] pr-3">
-          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">
-            <span>Saved Cloud Lists</span>
-            <button id="mgrCreateListBtn" type="button" class="text-[var(--accent-primary)] hover:underline">+ New List</button>
-          </div>
+          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]"><span>Saved Cloud Lists</span><button id="mgrCreateListBtn" type="button" class="text-[var(--accent-primary)] hover:underline">+ New List</button></div>
           <div id="mgrPlaylistsSidebar" class="space-y-1.5"></div>
         </div>
         <div class="md:col-span-8 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <input id="mgrActiveListNameInput" type="text" class="hud-well px-3 py-1.5 rounded-lg font-bold text-xs text-white flex-1" />
             <button id="mgrSaveNameBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">Rename</button>
-            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Highlight Nodes on Void</button>
+            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Isolate Tree on Void</button>
+            <button id="mgrClearBranchesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400">Reset Branches</button>
             <button id="mgrDeleteListBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-rose-400">Delete</button>
           </div>
-          <div id="mgrTracksTableContainer" class="space-y-1.5 max-h-80 overflow-y-auto pr-1"></div>
+          <div id="mgrBranchesSummary" class="font-mono-tech text-[11px] text-[var(--text-secondary)]"></div>
+          <div id="mgrTracksTableContainer" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 2: SUITE SETTINGS & GLOBAL CUSTOM UI THEME STUDIO
+       MODAL 2: SUITE SETTINGS, VECTOR STYLING & GLOBAL UI PALETTE
        ========================================================================== -->
   <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Radar Search Refinement &amp; Global Suite UI</h3>
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Radar Refinement, Vector Fading &amp; Suite Theme</h3>
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs">
@@ -306,7 +384,7 @@
             </select>
           </div>
           <div class="hud-well p-3 rounded-xl space-y-1">
-            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">BPM Range Tolerance</label>
+            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">BPM Tolerance</label>
             <select id="settingBpmTolSelect" class="hud-well w-full px-2 py-1.5 rounded font-mono-tech text-xs text-[var(--accent-primary)]">
               <option value="0">±2% BPM</option>
               <option value="1" selected>±3% BPM</option>
@@ -316,34 +394,34 @@
               <option value="5">±6 Flat BPM</option>
             </select>
           </div>
-          <div class="hud-well p-3 rounded-xl space-y-1">
-            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Key Notation</label>
-            <select id="settingKeyModeSelect" class="hud-well w-full px-2 py-1.5 rounded font-mono-tech text-xs text-emerald-400">
-              <option value="camelot">Camelot (8A / 11B)</option>
-              <option value="standard">Standard (Am / A)</option>
-            </select>
-          </div>
-          <div class="hud-well p-3 rounded-xl space-y-1">
-            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Starfield Motion</label>
-            <select id="settingDriftSelect" class="hud-well w-full px-2 py-1.5 rounded font-mono-tech text-xs text-amber-400">
-              <option value="on">Living Floating Drift (ON)</option>
-              <option value="off">Static Coordinates (OFF)</option>
-            </select>
+        </div>
+
+        <!-- Setlist Branch Vector Color & Fading Mode -->
+        <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+          <div class="font-mono-tech text-[10px] uppercase text-rose-400">Setlist Vector Color &amp; Previous Branch Fading</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="hud-well p-3 rounded-xl flex items-center justify-between">
+              <span class="font-mono-tech text-[11px]">Active Vector Color</span>
+              <input id="settingVectorColorPicker" type="color" value="#f43f5e" />
+            </div>
+            <div class="hud-well p-3 rounded-xl space-y-1">
+              <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Previous Branch Decay</label>
+              <select id="settingVectorFadeSelect" class="hud-well w-full px-2 py-1 rounded font-mono-tech text-xs text-rose-400">
+                <option value="opacity">Fade Opacity (Alpha Decay)</option>
+                <option value="gray">Fade Color to Slate Gray</option>
+                <option value="solid">No Fade (Solid Tree)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- Global UI Theme Sync Across Converter, Radar & Bloodstream -->
+        <!-- Global UI Palette -->
         <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Global VNTEX Suite UI Palette (Syncs Across All Apps)</div>
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Global VNTEX Suite UI Palette</div>
           <div class="grid grid-cols-3 gap-2">
-            <button type="button" data-theme-preset="obsidian" class="hud-well p-2.5 rounded-xl text-left hover:border-[var(--accent-primary)]"><div class="font-bold text-[#00f2fe]">Obsidian OLED</div><div class="text-[10px] text-[var(--text-secondary)]">Void &amp; Neon Cyan</div></button>
-            <button type="button" data-theme-preset="winamp" class="hud-well p-2.5 rounded-xl text-left hover:border-[#00ff41]"><div class="font-bold text-[#00ff41]">Winamp LED</div><div class="text-[10px] text-[var(--text-secondary)]">Brushed Matrix Green</div></button>
-            <button type="button" data-theme-preset="crimson" class="hud-well p-2.5 rounded-xl text-left hover:border-[#f43f5e]"><div class="font-bold text-[#f43f5e]">Crimson Booth</div><div class="text-[10px] text-[var(--text-secondary)]">Club Red &amp; Gold</div></button>
-          </div>
-          <div class="grid grid-cols-3 gap-2 pt-1">
-            <label class="hud-well p-2 rounded-lg flex items-center gap-2"><input id="themeVoidPicker" type="color" value="#020204" class="w-6 h-6 bg-transparent border-0" /><span class="font-mono-tech text-[10px]">Void BG</span></label>
-            <label class="hud-well p-2 rounded-lg flex items-center gap-2"><input id="themePanelPicker" type="color" value="#0a0a10" class="w-6 h-6 bg-transparent border-0" /><span class="font-mono-tech text-[10px]">HUD Panel</span></label>
-            <label class="hud-well p-2 rounded-lg flex items-center gap-2"><input id="themeAccentPicker" type="color" value="#00f2fe" class="w-6 h-6 bg-transparent border-0" /><span class="font-mono-tech text-[10px]">Accent</span></label>
+            <button type="button" data-theme-preset="obsidian" class="hud-well p-2.5 rounded-xl text-left hover:border-[#00f2fe]"><div class="font-bold text-[#00f2fe]">Obsidian OLED</div></button>
+            <button type="button" data-theme-preset="winamp" class="hud-well p-2.5 rounded-xl text-left hover:border-[#00ff41]"><div class="font-bold text-[#00ff41]">Winamp LED</div></button>
+            <button type="button" data-theme-preset="crimson" class="hud-well p-2.5 rounded-xl text-left hover:border-[#f43f5e]"><div class="font-bold text-[#f43f5e]">Crimson Club</div></button>
           </div>
         </div>
       </div>
@@ -351,73 +429,82 @@
   </div>
 
   <!-- ==========================================================================
-       MODAL 3: ENHANCED ACCOUNT HUB (PROFILE, PERMISSIONS & CLOUD LIBRARY)
+       MODAL 3: SECURE OWNER ELEVATION MODAL (FOR GOOGLE-CONNECTED ADMINS)
+       ========================================================================== -->
+  <div id="ownerElevationModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-amber-400/50">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-400"></i>
+          <h3 class="text-sm font-bold text-white">Elevate Session to Master Owner</h3>
+        </div>
+        <button id="closeOwnerElevationBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="ownerElevationForm" class="p-5 space-y-4 text-xs" autocomplete="off">
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          Enter your **Master Owner Access Code** below to unlock Master Owner authority on your current signed-in session without disconnecting your Google/Firebase account.
+        </p>
+        <input id="ownerElevationCodeInput" type="password" required placeholder="Enter Master Access Code..." class="hud-well w-full px-3.5 py-2.5 rounded-xl font-mono-tech text-xs text-center text-white" />
+        <div id="ownerElevationStatus" class="hidden font-mono-tech text-[11px] text-center"></div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase hover:brightness-110 transition">
+          Verify &amp; Unlock Master Owner
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: ENHANCED ACCOUNT HUB (PROFILE, PERMISSIONS & CLOUD LIBRARY)
        ========================================================================== -->
   <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-xl rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-id-badge text-[var(--accent-primary)]"></i>
-          <h3 class="text-sm font-bold text-white">VNTEX Account Profile, Permissions &amp; Cloud Crate</h3>
-        </div>
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-id-badge text-[var(--accent-primary)] mr-2"></i>VNTEX Account Profile, Permissions &amp; Cloud Crate</h3>
         <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
-        <div class="hud-well p-4 rounded-xl flex items-center justify-between">
+        <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-2">
           <div>
             <div class="flex items-center gap-2">
               <span id="hubProfileName" class="font-extrabold text-sm text-white">Guest Producer</span>
               <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
-              <span id="hubProfileTier" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PRO</span>
+              <span id="hubOwnerRoleBadge" class="hidden font-mono-tech text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">MASTER OWNER</span>
             </div>
-            <div id="hubProfileEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5">Sign in on Converter to sync across devices</div>
+            <div id="hubProfileEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5">Not signed in</div>
           </div>
-          <a href="index.html" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]">Manage Auth →</a>
-        </div>
-
-        <div class="space-y-1.5">
-          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Account Permissions</div>
-          <div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono-tech text-[11px]"></div>
-        </div>
-
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">
-            <span>Synced Cloud Library (<span id="hubLibraryCount">0</span> Tracks)</span>
-            <span id="hubSetlistsCount" class="text-rose-400">0 Setlists</span>
+          <div class="flex items-center gap-1.5">
+            <button id="hubTriggerOwnerElevateBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-amber-400 border border-amber-400/40">🔑 Owner Key</button>
+            <a href="index.html" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)]">Manage Auth →</a>
           </div>
-          <div id="hubCloudLibraryPreview" class="hud-well p-2.5 rounded-xl max-h-44 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div>
         </div>
+        <div class="space-y-1.5"><div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Active Permissions</div><div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono-tech text-[11px]"></div></div>
+        <div class="space-y-1.5"><div class="flex justify-between font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]"><span>Synced Cloud Library (<span id="hubLibraryCount">0</span> Tracks)</span><span id="hubSetlistsCount" class="text-rose-400">0 Setlists</span></div><div id="hubCloudLibraryPreview" class="hud-well p-2.5 rounded-xl max-h-44 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div></div>
       </div>
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 4: AI SUPPORT AGENT & PLATFORM NOTIFICATIONS INBOX
+       MODAL 5: AI SUPPORT AGENT & ADMIN INBOX
        ========================================================================== -->
   <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[500px]">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[480px]">
       <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <h3 class="text-xs font-mono-tech font-bold text-white">VNTEX AI Support &amp; Admin Inbox</h3>
-        </div>
+        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-emerald-400 mr-1.5"></i>VNTEX AI Support &amp; Admin Inbox</h3>
         <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs"></div>
       <div class="p-3 border-t border-[var(--border-hairline)] bg-[#050509] space-y-2">
         <form id="supportChatForm" class="flex gap-1.5">
-          <input id="supportChatInput" type="text" required placeholder="Ask AI about BPM, XML export, or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
+          <input id="supportChatInput" type="text" required placeholder="Ask AI about branching, BPM %, or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
           <button type="submit" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-xs">Send</button>
         </form>
-        <button id="escalateToAdminBtn" type="button" class="w-full py-1.5 rounded-lg hud-well font-mono-tech text-[10px] text-amber-400 hover:border-amber-400">
-          <i class="fa-solid fa-paper-plane mr-1"></i>Escalate Issue Directly to Admin Portal Inbox
-        </button>
+        <button id="escalateToAdminBtn" type="button" class="w-full py-1.5 rounded-lg hud-well font-mono-tech text-[10px] text-amber-400">Escalate Issue Directly to Admin Portal Inbox</button>
       </div>
     </div>
   </div>
 
   <!-- ==========================================================================
-       MODAL 5: 10,000+ TRACK LIBRARY IMPORTER
+       MODAL 6: 10,000+ TRACK LIBRARY IMPORTER
        ========================================================================== -->
   <div id="libraryImportModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
@@ -426,25 +513,11 @@
         <button id="closeLibraryImportModalBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs">
-        <div class="flex items-center justify-between hud-well p-3 rounded-xl">
-          <span class="font-mono-tech text-[11px] text-[var(--text-secondary)]">Import Mode:</span>
-          <select id="importMergeModeSelect" class="bg-transparent font-mono-tech text-xs font-bold text-[var(--accent-primary)]">
-            <option value="merge" class="bg-[#08080c]">Merge &amp; Update Library</option>
-            <option value="replace" class="bg-[#08080c]">Replace Entire Library</option>
-          </select>
-        </div>
         <div id="modalImportDropzone" class="hud-well p-6 rounded-2xl border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] cursor-pointer text-center space-y-2">
           <i class="fa-solid fa-file-import text-2xl text-[var(--accent-primary)]"></i>
-          <div class="font-bold text-sm text-white">Select or Drop Rekordbox `.XML`, `.CSV`, or `.JSON`</div>
+          <div class="font-bold text-sm text-white">Drop Rekordbox XML, CSV, or JSON</div>
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <button id="generate10kTestBtn" type="button" class="hud-well py-2.5 px-3 rounded-xl font-mono-tech font-bold text-[11px] text-emerald-400 border border-emerald-400/40">⚡ Generate 10,000 Track Crate</button>
-          <button id="downloadSampleCsvBtn" type="button" class="hud-well py-2.5 px-3 rounded-xl font-mono-tech text-[11px] text-[var(--text-secondary)]">Download Sample CSV</button>
-        </div>
-        <div id="importProgressBox" class="hidden hud-well p-3 rounded-xl font-mono-tech text-[11px] flex justify-between">
-          <span id="importStatusMsg" class="text-[var(--accent-primary)]">Parsing...</span>
-          <span id="importTimeBadge" class="text-emerald-400"></span>
-        </div>
+        <button id="generate10kTestBtn" type="button" class="w-full hud-well py-2.5 px-3 rounded-xl font-mono-tech font-bold text-[11px] text-emerald-400 border border-emerald-400/40">⚡ Generate 10,000 Track Crate</button>
       </div>
     </div>
   </div>
@@ -463,12 +536,12 @@
 
     const CORE_KEYS = {
       SESSION_USER: 'vntex_core_session_user',
-      USERS_REGISTRY: 'vntex_core_users_registry',
       ACTIVE_PALETTE: 'vntex_core_active_palette',
-      CONVERT_HISTORY: 'vntex_core_convert_history',
+      OWNER_ELEVATED: 'vntex_core_owner_elevated',
       SUPPORT_TICKETS: 'vntex_core_support_tickets',
       NOTIFICATIONS: 'vntex_core_notifications',
-      RADAR_TELEMETRY: 'vntex_core_radar_telemetry'
+      RADAR_TELEMETRY: 'vntex_core_radar_telemetry',
+      VECTOR_STYLE: 'vntex_core_vector_style'
     };
 
     const CAMELOT_MAP = [
@@ -506,6 +579,28 @@
       return a.num === b.num || (a.mode === b.mode && (d === 1 || d === 11 || d === 2 || d === 7));
     }
 
+    // Color utility: Interpolates hex color toward slate gray (#3b3d54) or applies alpha opacity
+    function computeBranchSegmentStroke(hexColor, fadeMode, ageRatio) {
+      const hex = String(hexColor || '#f43f5e').replace('#', '');
+      const r = parseInt(hex.slice(0, 2), 16) || 244;
+      const g = parseInt(hex.slice(2, 4), 16) || 63;
+      const b = parseInt(hex.slice(4, 6), 16) || 94;
+
+      if (fadeMode === 'solid' || ageRatio <= 0.01) {
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      if (fadeMode === 'opacity') {
+        const alpha = Math.max(0.22, 1.0 - ageRatio * 0.72);
+        return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
+      }
+      // 'gray' mode: Smoothly lerp RGB toward slate gray (#3b3d54 -> 59, 61, 84)
+      const t = Math.min(0.88, ageRatio * 0.85);
+      const nr = Math.round(r * (1 - t) + 59 * t);
+      const ng = Math.round(g * (1 - t) + 61 * t);
+      const nb = Math.round(b * (1 - t) + 84 * t);
+      return `rgb(${nr}, ${ng}, ${nb})`;
+    }
+
     const VNTEXCloudPersistence = {
       db: null, firestore: null,
       async init() {
@@ -530,15 +625,14 @@
         const uk = this.uKey(user);
         const compact = tracks.map((t) => ({ id: t.id, t: t.title, a: t.artist, f: t.fileName || '', b: Number(t.bpm) || 0, c: t.camelot || '', s: t.standard || '', e: Number(t.energy) || 0, g: t.genre || '', tg: t.tags || [], m: t.missingData ? 1 : 0 }));
         await this.idbSet(`library_${uk}`, compact);
-        // Record Radar Telemetry for Admin Portal
+        const totalBranches = Object.values(voidState.playlists || {}).reduce((acc, p) => acc + (p.branches ? p.branches.length : 1), 0);
         localStorage.setItem(CORE_KEYS.RADAR_TELEMETRY, JSON.stringify({
           totalTracks: compact.length,
           unknownCount: compact.filter((x) => x.m === 1).length,
           setlistCount: Object.keys(voidState.playlists || {}).length,
+          branchCount: totalBranches,
           updatedAt: new Date().toISOString()
         }));
-        const txt = document.getElementById('cloudStatusText');
-        if (txt) txt.textContent = `Synced (${compact.length.toLocaleString()})`;
       },
       async loadLibrary(user) {
         const uk = this.uKey(user);
@@ -556,21 +650,45 @@
       },
       async loadPlaylists(user) {
         const local = await this.idbGet(`playlists_${this.uKey(user)}`);
-        if (local && local.playlists) return local;
-        return { playlists: { pl_main: { id: 'pl_main', name: 'Main Club Set', trackIds: [] } }, activePlaylistId: 'pl_main' };
+        if (local && local.playlists) {
+          Object.values(local.playlists).forEach(ensurePlaylistBranchesStruct);
+          return local;
+        }
+        const def = ensurePlaylistBranchesStruct({ id: 'pl_main', name: 'Main Club Set', trackIds: [], branches: [[]] });
+        return { playlists: { pl_main: def }, activePlaylistId: 'pl_main' };
       }
     };
 
+    function ensurePlaylistBranchesStruct(pl) {
+      if (!Array.isArray(pl.trackIds)) pl.trackIds = [];
+      if (!Array.isArray(pl.branches) || pl.branches.length === 0) {
+        pl.branches = pl.trackIds.length > 0 ? [[...pl.trackIds]] : [[]];
+      }
+      if (typeof pl.activeBranchIndex !== 'number' || pl.activeBranchIndex >= pl.branches.length) {
+        pl.activeBranchIndex = pl.branches.length - 1;
+      }
+      return pl;
+    }
+
+    const savedVecStyle = JSON.parse(localStorage.getItem(CORE_KEYS.VECTOR_STYLE) || 'null') || { color: '#f43f5e', fadeMode: 'opacity' };
+
     const voidState = {
       user: JSON.parse(localStorage.getItem(CORE_KEYS.SESSION_USER) || 'null'),
+      ownerElevated: localStorage.getItem(CORE_KEYS.OWNER_ELEVATED) === 'true',
       tracks: [], trackMap: new Map(), playlists: {}, activePlaylistId: 'pl_main',
       anchorId: null, hoveredId: null, filterLogic: 'AND',
       activeParams: { bpm: true, key: true, energy: true, genre: false, tag: false },
       activeTagFilter: '', bpmTolIndex: 1, keyMode: 'camelot', floatDriftEnabled: true,
       isolateSetlistMode: false,
+      vectorColor: savedVecStyle.color || '#f43f5e',
+      vectorFadeMode: savedVecStyle.fadeMode || 'opacity',
       camX: 0, camY: 0, zoom: 1.0, isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
       matchedNodesCache: [], matchedSet: new Set()
     };
+
+    function saveVectorStyle() {
+      localStorage.setItem(CORE_KEYS.VECTOR_STYLE, JSON.stringify({ color: voidState.vectorColor, fadeMode: voidState.vectorFadeMode }));
+    }
 
     function applyGlobalSuitePalette(pal) {
       if (!pal) return;
@@ -581,8 +699,52 @@
       localStorage.setItem(CORE_KEYS.ACTIVE_PALETTE, JSON.stringify(pal));
     }
 
-    function getActiveSetlistIds() {
-      return voidState.playlists[voidState.activePlaylistId]?.trackIds || [];
+    function getActivePlaylist() {
+      const pl = voidState.playlists[voidState.activePlaylistId];
+      return pl ? ensurePlaylistBranchesStruct(pl) : null;
+    }
+
+    // Connects a song into the multi-branch setlist tree without erasing previous branches
+    function connectTrackToSetlistTree(targetTrackId) {
+      const pl = getActivePlaylist();
+      if (!pl || !targetTrackId) return;
+
+      let activeBranch = pl.branches[pl.activeBranchIndex];
+      if (!activeBranch) {
+        activeBranch = [];
+        pl.branches.push(activeBranch);
+        pl.activeBranchIndex = pl.branches.length - 1;
+      }
+
+      const currentAnchor = voidState.anchorId;
+      if (activeBranch.length === 0) {
+        if (currentAnchor && currentAnchor !== targetTrackId) {
+          activeBranch.push(currentAnchor);
+        }
+        activeBranch.push(targetTrackId);
+      } else {
+        const lastNodeId = activeBranch[activeBranch.length - 1];
+        if (currentAnchor && currentAnchor === lastNodeId) {
+          // Continue the active branch seamlessly
+          if (targetTrackId !== lastNodeId) activeBranch.push(targetTrackId);
+        } else if (currentAnchor && currentAnchor !== targetTrackId) {
+          // User selected a different anchor node — fork a NEW branch while preserving all previous branches!
+          const newBranch = [currentAnchor, targetTrackId];
+          pl.branches.push(newBranch);
+          pl.activeBranchIndex = pl.branches.length - 1;
+        } else if (targetTrackId !== lastNodeId) {
+          activeBranch.push(targetTrackId);
+        }
+      }
+
+      // Sync flat trackIds list for Rekordbox/Serato exports
+      if (currentAnchor && !pl.trackIds.includes(currentAnchor)) pl.trackIds.push(currentAnchor);
+      if (!pl.trackIds.includes(targetTrackId)) pl.trackIds.push(targetTrackId);
+
+      voidState.anchorId = targetTrackId;
+      VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+      VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
+      refreshHudViews();
     }
 
     function computeAllowedBpmDelta(anchorBpm) {
@@ -662,26 +824,11 @@
         if (t.id === anchor.id || t.missingData) continue;
         const colors = [];
 
-        if (cBpm) {
-          if (Math.abs(Number(t.bpm) - aBpm) <= tol) colors.push('#00f2fe');
-          else if (isAnd) continue;
-        }
-        if (cKey) {
-          if (isHarmonicKeyMatch(aKey, t.camelot)) colors.push('#10b981');
-          else if (isAnd) continue;
-        }
-        if (cEng) {
-          if (Math.abs(Number(t.energy) - aEng) <= 1) colors.push('#f59e0b');
-          else if (isAnd) continue;
-        }
-        if (cGen) {
-          if (t.genre && t.genre.toLowerCase() === aGen) colors.push('#a855f7');
-          else if (isAnd) continue;
-        }
-        if (cTag) {
-          if (targetTag && Array.isArray(t.tags) && t.tags.some((tg) => tg.toLowerCase() === targetTag)) colors.push('#ec4899');
-          else if (isAnd) continue;
-        }
+        if (cBpm) { if (Math.abs(Number(t.bpm) - aBpm) <= tol) colors.push('#00f2fe'); else if (isAnd) continue; }
+        if (cKey) { if (isHarmonicKeyMatch(aKey, t.camelot)) colors.push('#10b981'); else if (isAnd) continue; }
+        if (cEng) { if (Math.abs(Number(t.energy) - aEng) <= 1) colors.push('#f59e0b'); else if (isAnd) continue; }
+        if (cGen) { if (t.genre && t.genre.toLowerCase() === aGen) colors.push('#a855f7'); else if (isAnd) continue; }
+        if (cTag) { if (targetTag && Array.isArray(t.tags) && t.tags.some((tg) => tg.toLowerCase() === targetTag)) colors.push('#ec4899'); else if (isAnd) continue; }
 
         if (colors.length > 0) {
           voidState.matchedNodesCache.push({ track: t, matchedColors: colors, primaryColor: colors[0], isPerfect: colors.length === activeCnt });
@@ -690,11 +837,10 @@
       }
     }
 
-    function renderConstellationVoid(timeMs = 0) {
-      const canvas = document.getElementById('constellationCanvas');
+    function renderRadarVoid(timeMs = 0) {
+      const canvas = document.getElementById('radarVoidCanvas');
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
       if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
         canvas.width = Math.floor(rect.width * dpr); canvas.height = Math.floor(rect.height * dpr);
       }
@@ -706,10 +852,12 @@
       ctx.fillRect(0, 0, W, H);
 
       const tracks = voidState.tracks, anchor = voidState.trackMap.get(voidState.anchorId) || null;
-      const setlistIds = getActiveSetlistIds(), setlistSet = new Set(setlistIds);
+      const activePl = getActivePlaylist();
+      const setlistIds = activePl ? activePl.trackIds : [];
+      const setlistSet = new Set(setlistIds);
       const tSec = timeMs * 0.001, drift = voidState.floatDriftEnabled;
 
-      // 1. Dim Unmatched Stars
+      // 1. Dim Unmatched Background Stars
       ctx.beginPath(); ctx.fillStyle = '#191a26';
       for (let i = 0; i < tracks.length; i++) {
         const t = tracks[i];
@@ -723,7 +871,7 @@
       }
       ctx.fill();
 
-      // 2. Missing Metadata Stars (Amber Hollow Rings)
+      // 2. Missing Metadata Hollow Amber Rings
       ctx.beginPath(); ctx.strokeStyle = 'rgba(245,158,11,0.55)'; ctx.lineWidth = 1.3;
       for (let i = 0; i < tracks.length; i++) {
         const t = tracks[i];
@@ -732,83 +880,86 @@
       }
       ctx.stroke();
 
-      // 3. Lit Matching Stars (Unless Isolate Setlist Mode is active)
+      // 3. Lit Matching Stars
       const litR = Math.max(3.5, Math.min(7, 4.5 * Math.pow(zoom, 0.35)));
       if (!voidState.isolateSetlistMode) {
         const buckets = { '#00f2fe': [], '#10b981': [], '#f59e0b': [], '#a855f7': [], '#ec4899': [] };
-        const multi = [];
         for (let i = 0; i < voidState.matchedNodesCache.length; i++) {
-          const m = voidState.matchedNodesCache[i];
-          const sx = m.track.screenX, sy = m.track.screenY;
+          const m = voidState.matchedNodesCache[i], sx = m.track.screenX, sy = m.track.screenY;
           if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) continue;
           if (buckets[m.primaryColor]) buckets[m.primaryColor].push(m);
-          if (m.matchedColors.length > 1) multi.push(m);
         }
         Object.entries(buckets).forEach(([col, arr]) => {
           if (!arr.length) return;
           ctx.beginPath(); ctx.fillStyle = col;
-          for (let i = 0; i < arr.length; i++) {
-            const t = arr[i].track;
-            ctx.moveTo(t.screenX + litR, t.screenY); ctx.arc(t.screenX, t.screenY, litR, 0, Math.PI * 2);
-          }
+          for (let i = 0; i < arr.length; i++) { ctx.moveTo(arr[i].track.screenX + litR, arr[i].track.screenY); ctx.arc(arr[i].track.screenX, arr[i].track.screenY, litR, 0, Math.PI * 2); }
           ctx.fill();
         });
-        for (let i = 0; i < Math.min(multi.length, 280); i++) {
-          const m = multi[i], t = m.track;
-          for (let c = 1; c < m.matchedColors.length; c++) {
-            ctx.beginPath(); ctx.arc(t.screenX, t.screenY, litR + c * 3.0, 0, Math.PI * 2);
-            ctx.strokeStyle = m.matchedColors[c]; ctx.lineWidth = 1.3; ctx.stroke();
-          }
-        }
       }
 
-      // 4. Connected Setlist Chain Vector Lines & Pulsing Setlist Nodes
-      if (setlistIds.length > 0) {
-        if (setlistIds.length > 1) {
-          ctx.beginPath();
-          let started = false;
-          setlistIds.forEach((id) => {
+      // 4. Persistent Multi-Branch Setlist Vectors with Custom Color & Opacity/Gray Fading
+      if (activePl && Array.isArray(activePl.branches)) {
+        const branches = activePl.branches.filter((b) => b.length > 0);
+        const totalBranches = branches.length;
+
+        branches.forEach((branch, bIdx) => {
+          const isLatestBranch = bIdx === activePl.activeBranchIndex;
+          const branchAgeRatio = totalBranches > 1 ? 1.0 - (bIdx / (totalBranches - 1)) : 0;
+
+          if (branch.length > 1) {
+            const numSegs = branch.length - 1;
+            for (let s = 0; s < numSegs; s++) {
+              const nA = voidState.trackMap.get(branch[s]);
+              const nB = voidState.trackMap.get(branch[s + 1]);
+              if (!nA || !nB) continue;
+
+              // Older branches fade more; older segments within a branch also subtly decay
+              const segAge = isLatestBranch
+                ? ((numSegs - 1 - s) / Math.max(1, numSegs)) * 0.55
+                : Math.min(1.0, 0.45 + branchAgeRatio * 0.55);
+
+              const strokeCol = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, segAge);
+
+              ctx.beginPath();
+              ctx.moveTo(nA.screenX, nA.screenY);
+              ctx.lineTo(nB.screenX, nB.screenY);
+              ctx.strokeStyle = strokeCol;
+              ctx.lineWidth = isLatestBranch ? 2.6 : 1.9;
+              ctx.setLineDash(isLatestBranch ? [7, 5] : [4, 4]);
+              if (isLatestBranch) ctx.lineDashOffset = -tSec * 24;
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.lineDashOffset = 0;
+            }
+          }
+
+          // Render Branch Nodes & Labels
+          branch.forEach((id, nIdx) => {
             const n = voidState.trackMap.get(id);
             if (!n) return;
-            if (!started) { ctx.moveTo(n.screenX, n.screenY); started = true; } else ctx.lineTo(n.screenX, n.screenY);
+            const nodeAge = isLatestBranch ? 0 : Math.min(1.0, 0.5 + branchAgeRatio * 0.5);
+            const nodeCol = computeBranchSegmentStroke(voidState.vectorColor, voidState.vectorFadeMode, nodeAge);
+
+            ctx.beginPath();
+            ctx.arc(n.screenX, n.screenY, litR + (isLatestBranch ? 2.6 : 1.6), 0, Math.PI * 2);
+            ctx.fillStyle = nodeCol;
+            ctx.fill();
+
+            ctx.fillStyle = isLatestBranch ? '#ffffff' : '#9496a8';
+            ctx.font = '800 10px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            const branchPrefix = totalBranches > 1 ? `B${bIdx + 1}.${nIdx + 1}` : `#${nIdx + 1}`;
+            ctx.fillText(branchPrefix, n.screenX, n.screenY - litR - 7);
           });
-          ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2.5;
-          ctx.setLineDash([7, 5]); ctx.lineDashOffset = -tSec * 24; ctx.stroke();
-          ctx.setLineDash([]); ctx.lineDashOffset = 0;
-        }
-        setlistIds.forEach((id, idx) => {
-          const n = voidState.trackMap.get(id);
-          if (!n) return;
-          if (voidState.isolateSetlistMode) {
-            ctx.beginPath(); ctx.arc(n.screenX, n.screenY, litR + 6 + Math.sin(tSec * 5) * 2, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 1.8; ctx.stroke();
-          }
-          ctx.beginPath(); ctx.arc(n.screenX, n.screenY, litR + 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#f43f5e'; ctx.fill();
-          ctx.fillStyle = '#fff'; ctx.font = '800 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
-          ctx.fillText(`#${idx + 1} ${voidState.isolateSetlistMode ? n.title.slice(0, 14) : ''}`, n.screenX, n.screenY - litR - 7);
         });
       }
 
-      // 5. Active Anchor Halo & Hovered Star
+      // 5. Active Anchor Halo
       if (anchor) {
-        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 12 + Math.sin(tSec * 4.5) * 2.5, 0, Math.PI * 2);
-        ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 6.8, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
-        const kLbl = anchor.missingData ? '?' : (voidState.keyMode === 'camelot' ? anchor.camelot : anchor.standard);
+        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 12 + Math.sin(tSec * 4.5) * 2.5, 0, Math.PI * 2); ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 6.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
         ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-        ctx.fillText(`${anchor.title} • ${anchor.bpm} BPM • ${kLbl}`, anchor.screenX + 15, anchor.screenY + 4);
-      }
-
-      if (voidState.hoveredId && voidState.hoveredId !== voidState.anchorId) {
-        const h = voidState.trackMap.get(voidState.hoveredId);
-        if (h) {
-          ctx.beginPath(); ctx.arc(h.screenX, h.screenY, 8.5, 0, Math.PI * 2);
-          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
-          ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#00f2fe';
-          ctx.fillText(`${h.title} (${h.artist}) • ${h.missingData ? 'Unscanned' : h.bpm + ' BPM'}`, h.screenX + 12, h.screenY + 4);
-        }
+        ctx.fillText(`${anchor.title} • ${anchor.bpm} BPM • ${anchor.missingData ? '?' : anchor.camelot}`, anchor.screenX + 15, anchor.screenY + 4);
       }
       ctx.restore();
     }
@@ -826,13 +977,12 @@
       recomputeAnchorMatches();
       refreshAllCustomTagOptions();
 
-      const total = voidState.tracks.length;
+      document.getElementById('libraryTotalBadge').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
       const unkCount = voidState.tracks.filter((t) => t.missingData).length;
-      document.getElementById('libraryTotalBadge').textContent = `${total.toLocaleString()} Tracks`;
-      document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan All Unknown (${unkCount})` : 'All Tracks Scanned ✓';
+      document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan All Unknown (${unkCount})` : 'All Scanned ✓';
 
       let anchor = voidState.trackMap.get(voidState.anchorId);
-      if (!anchor && total > 0) { anchor = voidState.tracks[0]; voidState.anchorId = anchor.id; recomputeAnchorMatches(); }
+      if (!anchor && voidState.tracks.length > 0) { anchor = voidState.tracks[0]; voidState.anchorId = anchor.id; }
 
       if (anchor) {
         document.getElementById('anchorTitle').textContent = anchor.title;
@@ -847,18 +997,17 @@
         const tagsEl = document.getElementById('anchorCustomTagsList');
         tagsEl.innerHTML = (anchor.tags || []).map((tg, idx) => `
           <span class="px-2 py-0.5 rounded-full bg-pink-500/15 border border-pink-500/40 text-pink-300 font-mono-tech text-[9px] flex items-center gap-1">
-            <span>#${tg}</span>
-            <button type="button" data-del-tag="${idx}" class="hover:text-white">×</button>
+            <span>#${tg}</span><button type="button" data-del-tag="${idx}" class="hover:text-white">×</button>
           </span>
         `).join('');
         tagsEl.querySelectorAll('[data-del-tag]').forEach((b) => {
-          b.onclick = () => {
-            anchor.tags.splice(Number(b.getAttribute('data-del-tag')), 1);
-            VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
-            refreshHudViews();
-          };
+          b.onclick = () => { anchor.tags.splice(Number(b.getAttribute('data-del-tag')), 1); VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews(); };
         });
       }
+
+      const activePl = getActivePlaylist();
+      const nonEmptyBranches = activePl ? activePl.branches.filter((b) => b.length > 0) : [];
+      document.getElementById('branchCountBadge').textContent = String(Math.max(1, nonEmptyBranches.length));
 
       const plSelect = document.getElementById('cloudPlaylistSelect');
       plSelect.innerHTML = Object.values(voidState.playlists).map((pl) => `
@@ -881,23 +1030,39 @@
             <button type="button" data-add-set="${t.id}" class="hud-well px-2 py-1 rounded-lg font-mono-tech text-[10px] text-rose-400 hover:border-rose-400">+ Connect</button>
           </div>
         `;
-      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No tracks fit all active criteria.</div>`;
+      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No tracks fit criteria.</div>`;
 
-      const setIds = getActiveSetlistIds();
+      const setIds = activePl ? activePl.trackIds : [];
       document.getElementById('drawerSetCount').textContent = String(setIds.length);
-      document.getElementById('drawerSetlistPane').innerHTML = setIds.map((id, idx) => {
-        const t = voidState.trackMap.get(id);
-        if (!t) return '';
-        return `
-          <div class="hud-well px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1 cursor-pointer" data-focus-id="${t.id}">
-              <div class="font-bold text-[11px] text-white truncate"><span class="text-rose-400 font-mono-tech mr-1">${idx + 1}.</span>${t.title}</div>
-              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">${t.bpm} BPM • ${t.camelot}</div>
+
+      // Render multi-branch tree view inside the Setlist Drawer
+      const setPane = document.getElementById('drawerSetlistPane');
+      if (!nonEmptyBranches.length) {
+        setPane.innerHTML = `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">Click "+ Connect" on any match or Shift+Click stars to build persistent branches.</div>`;
+      } else {
+        setPane.innerHTML = nonEmptyBranches.map((branch, bIdx) => {
+          const isCurr = bIdx === activePl.activeBranchIndex;
+          const rows = branch.map((id, sIdx) => {
+            const t = voidState.trackMap.get(id);
+            if (!t) return '';
+            return `
+              <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 cursor-pointer" data-focus-id="${t.id}">
+                <span class="truncate text-[11px] text-white"><strong class="font-mono-tech text-[10px] mr-1.5" style="color:${voidState.vectorColor}">B${bIdx + 1}.${sIdx + 1}</strong>${t.title}</span>
+                <span class="font-mono-tech text-[10px] text-[var(--text-secondary)] ml-2 shrink-0">${t.bpm} • ${t.camelot}</span>
+              </div>
+            `;
+          }).join('');
+          return `
+            <div class="hud-well p-2 rounded-xl space-y-1 border-l-2" style="border-left-color:${isCurr ? voidState.vectorColor : '#3b3d54'}">
+              <div class="flex items-center justify-between font-mono-tech text-[9px] uppercase">
+                <span class="${isCurr ? 'text-white font-bold' : 'text-[var(--text-muted)]'}">Branch #${bIdx + 1} ${isCurr ? '(Active)' : '(Faded)'}</span>
+                <button type="button" data-activate-branch="${bIdx}" class="text-[var(--accent-primary)] hover:underline">${isCurr ? 'Extending' : 'Extend This'}</button>
+              </div>
+              ${rows}
             </div>
-            <button type="button" data-rem-set="${idx}" class="text-rose-400 text-xs px-1">×</button>
-          </div>
-        `;
-      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">Click "+ Connect" to draw setlist vectors.</div>`;
+          `;
+        }).join('');
+      }
 
       document.querySelectorAll('[data-focus-id]').forEach((el) => {
         el.onclick = () => {
@@ -906,19 +1071,14 @@
         };
       });
       document.querySelectorAll('[data-add-set]').forEach((el) => {
-        el.onclick = () => {
-          const id = el.getAttribute('data-add-set'), list = getActiveSetlistIds();
-          if (voidState.anchorId && !list.includes(voidState.anchorId) && !list.length) list.push(voidState.anchorId);
-          if (!list.includes(id)) list.push(id);
-          voidState.anchorId = id;
-          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-          refreshHudViews();
-        };
+        el.onclick = () => connectTrackToSetlistTree(el.getAttribute('data-add-set'));
       });
-      document.querySelectorAll('[data-rem-set]').forEach((el) => {
+      document.querySelectorAll('[data-activate-branch]').forEach((el) => {
         el.onclick = () => {
-          getActiveSetlistIds().splice(Number(el.getAttribute('data-rem-set')), 1);
-          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+          if (!activePl) return;
+          activePl.activeBranchIndex = Number(el.getAttribute('data-activate-branch'));
+          const b = activePl.branches[activePl.activeBranchIndex];
+          if (b && b.length) voidState.anchorId = b[b.length - 1];
           refreshHudViews();
         };
       });
@@ -934,9 +1094,11 @@
       side.querySelectorAll('[data-mgr-pick]').forEach((b) => {
         b.onclick = () => { voidState.activePlaylistId = b.getAttribute('data-mgr-pick'); renderSetlistManagerModal(); refreshHudViews(); };
       });
-
-      const activePl = voidState.playlists[voidState.activePlaylistId];
+      const activePl = getActivePlaylist();
       document.getElementById('mgrActiveListNameInput').value = activePl ? activePl.name : '';
+      const bCount = activePl ? activePl.branches.filter((b) => b.length > 0).length : 0;
+      document.getElementById('mgrBranchesSummary').textContent = `${bCount} persistent branch(es) active in this setlist tree.`;
+
       const tbl = document.getElementById('mgrTracksTableContainer');
       const ids = activePl ? activePl.trackIds : [];
       tbl.innerHTML = ids.map((id, i) => {
@@ -945,30 +1107,23 @@
         return `
           <div class="hud-well px-3 py-2 rounded-xl flex items-center justify-between gap-2 font-mono-tech text-xs">
             <span class="truncate"><strong class="text-rose-400 mr-2">${i + 1}.</strong>${t.artist} — ${t.title} <span class="text-[var(--accent-primary)]">(${t.bpm} BPM • ${t.camelot})</span></span>
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button" data-mgr-up="${i}" class="hud-well px-2 py-0.5 rounded">↑</button>
-              <button type="button" data-mgr-dn="${i}" class="hud-well px-2 py-0.5 rounded">↓</button>
-              <button type="button" data-mgr-rm="${i}" class="hud-well px-2 py-0.5 rounded text-rose-400">✕</button>
-            </div>
+            <div class="flex items-center gap-1 shrink-0"><button type="button" data-mgr-up="${i}" class="hud-well px-2 py-0.5 rounded">↑</button><button type="button" data-mgr-dn="${i}" class="hud-well px-2 py-0.5 rounded">↓</button><button type="button" data-mgr-rm="${i}" class="hud-well px-2 py-0.5 rounded text-rose-400">✕</button></div>
           </div>
         `;
-      }).join('') || `<div class="hud-well p-6 rounded-xl text-center text-[var(--text-muted)]">No tracks in this setlist yet.</div>`;
+      }).join('') || `<div class="hud-well p-6 rounded-xl text-center text-[var(--text-muted)]">Empty setlist.</div>`;
 
       tbl.querySelectorAll('[data-mgr-up]').forEach((b) => {
-        b.onclick = () => {
-          const i = Number(b.getAttribute('data-mgr-up'));
-          if (i > 0) { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); }
-        };
+        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-up')); if (i > 0) { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
       });
       tbl.querySelectorAll('[data-mgr-dn]').forEach((b) => {
-        b.onclick = () => {
-          const i = Number(b.getAttribute('data-mgr-dn'));
-          if (i < ids.length - 1) { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); }
-        };
+        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-dn')); if (i < ids.length - 1) { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
       });
       tbl.querySelectorAll('[data-mgr-rm]').forEach((b) => {
         b.onclick = () => {
+          const rmId = ids[Number(b.getAttribute('data-mgr-rm'))];
           ids.splice(Number(b.getAttribute('data-mgr-rm')), 1);
+          activePl.branches = activePl.branches.map((br) => br.filter((x) => x !== rmId)).filter((br) => br.length > 0);
+          if (!activePl.branches.length) activePl.branches = [[]];
           VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
           renderSetlistManagerModal(); refreshHudViews();
         };
@@ -978,72 +1133,50 @@
     function renderAccountHubModal() {
       const u = voidState.user;
       document.getElementById('hubProfileName').textContent = u ? u.displayName : 'Guest Producer';
-      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Not signed in — local session active';
+      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Not signed in';
       document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
+      document.getElementById('hubOwnerRoleBadge').classList.toggle('hidden', !voidState.ownerElevated);
       const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
       document.getElementById('hubPermissionsGrid').innerHTML = [
         { label: 'Tier Plan', val: (perms.tier || 'paid').toUpperCase(), ok: true },
         { label: 'Device Rigs', val: perms.rig !== false ? 'ENABLED' : 'LOCKED', ok: perms.rig !== false },
         { label: 'Batch Automation', val: perms.automation !== false ? 'ENABLED' : 'LOCKED', ok: perms.automation !== false },
-        { label: 'Custom UI Themes', val: perms.palettes !== false ? 'ENABLED' : 'LOCKED', ok: perms.palettes !== false },
-        { label: 'Verified Badge', val: u?.verifiedBadge ? 'VERIFIED ✓' : 'STANDARD', ok: !!u?.verifiedBadge },
-        { label: 'Admin Portal', val: perms.isAdmin ? 'ADMIN ACCESS' : 'USER', ok: !!perms.isAdmin }
+        { label: 'Custom Themes', val: perms.palettes !== false ? 'ENABLED' : 'LOCKED', ok: perms.palettes !== false },
+        { label: 'Admin Access', val: (perms.isAdmin || voidState.ownerElevated) ? 'ADMIN ✓' : 'USER', ok: !!(perms.isAdmin || voidState.ownerElevated) },
+        { label: 'Owner Authority', val: voidState.ownerElevated ? 'MASTER OWNER' : 'STANDARD', ok: voidState.ownerElevated }
       ].map((p) => `<div class="hud-well p-2.5 rounded-lg"><div class="text-[9px] text-[var(--text-secondary)]">${p.label}</div><div class="font-bold mt-0.5 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
-
       document.getElementById('hubLibraryCount').textContent = voidState.tracks.length.toLocaleString();
-      document.getElementById('hubSetlistsCount').textContent = `${Object.keys(voidState.playlists).length} Saved Setlist(s)`;
+      document.getElementById('hubSetlistsCount').textContent = `${Object.keys(voidState.playlists).length} Sets`;
       document.getElementById('hubCloudLibraryPreview').innerHTML = voidState.tracks.slice(0, 30).map((t) => `
-        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]">
-          <span class="truncate text-white">${t.artist} — ${t.title}</span>
-          <span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM • ' + t.camelot}</span>
-        </div>
+        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]"><span class="truncate text-white">${t.artist} — ${t.title}</span><span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM'}</span></div>
       `).join('');
     }
 
-    function renderSupportChatMessages() {
-      const notifs = JSON.parse(localStorage.getItem(CORE_KEYS.NOTIFICATIONS) || '[]');
-      const tickets = JSON.parse(localStorage.getItem(CORE_KEYS.SUPPORT_TICKETS) || '[]');
-      const unreadBadge = document.getElementById('unreadNotifBadge');
-      if (notifs.length > 0) { unreadBadge.textContent = String(notifs.length); unreadBadge.classList.remove('hidden'); }
-      else unreadBadge.classList.add('hidden');
-
-      const box = document.getElementById('supportChatMessages');
-      const notifHtml = notifs.map((n) => `
-        <div class="hud-well p-2.5 rounded-xl border-l-2 border-l-amber-400">
-          <div class="font-mono-tech text-[9px] text-amber-400 uppercase">📢 Platform Broadcast • ${new Date(n.timestamp).toLocaleTimeString()}</div>
-          <div class="text-white mt-0.5">${n.message}</div>
-        </div>
-      `).join('');
-
-      const ticketHtml = tickets.map((tk) => `
-        <div class="hud-well p-2.5 rounded-xl border-l-2 ${tk.adminReply ? 'border-l-emerald-400' : 'border-l-cyan-400'}">
-          <div class="font-mono-tech text-[9px] text-cyan-400">You: ${tk.question}</div>
-          <div class="text-[var(--text-secondary)] mt-1">${tk.aiResponse || ''}</div>
-          ${tk.adminReply ? `<div class="mt-1.5 pt-1.5 border-t border-[var(--border-hairline)] text-emerald-300 font-semibold"><i class="fa-solid fa-user-shield mr-1"></i>Admin Reply: ${tk.adminReply}</div>` : ''}
-        </div>
-      `).join('');
-
-      box.innerHTML = `
-        <div class="hud-well p-2.5 rounded-xl text-[var(--text-secondary)]">
-          <strong class="text-[var(--accent-primary)]">VNTEX AI Support Agent:</strong> Ask me how to scan unknown songs, filter by ±% BPM, add custom tags, or export to Rekordbox XML / Serato. If I can't solve it, click <strong>Escalate to Admin</strong> below!
-        </div>
-        ${notifHtml}
-        ${ticketHtml}
-      `;
-      box.scrollTop = box.scrollHeight;
+    function updateHeaderRoleButtons() {
+      const u = voidState.user;
+      if (u && u.email) {
+        document.getElementById('userStatusName').textContent = u.displayName || u.email;
+        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[10px]';
+        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u.verifiedBadge);
+      }
+      const isAdm = !!(u?.permissions?.isAdmin || voidState.ownerElevated);
+      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
+      const elevBtn = document.getElementById('openOwnerElevationBtn');
+      elevBtn.classList.toggle('hidden', !isAdm);
+      document.getElementById('ownerElevationLabel').textContent = voidState.ownerElevated ? 'Master Owner ✓' : 'Elevate Owner';
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCloudPersistence.init();
       const savedPal = JSON.parse(localStorage.getItem(CORE_KEYS.ACTIVE_PALETTE) || 'null');
       if (savedPal) applyGlobalSuitePalette(savedPal);
+      updateHeaderRoleButtons();
 
-      if (voidState.user && voidState.user.email) {
-        document.getElementById('userStatusName').textContent = voidState.user.displayName || voidState.user.email;
-        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[10px]';
-        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !voidState.user.verifiedBadge);
-        document.getElementById('headerAdminDashLink').classList.toggle('hidden', !voidState.user.permissions?.isAdmin);
-      }
+      // Sync vector style inputs
+      document.getElementById('quickVectorColorInput').value = voidState.vectorColor;
+      document.getElementById('settingVectorColorPicker').value = voidState.vectorColor;
+      document.getElementById('quickVectorFadeSelect').value = voidState.vectorFadeMode;
+      document.getElementById('settingVectorFadeSelect').value = voidState.vectorFadeMode;
 
       const plData = await VNTEXCloudPersistence.loadPlaylists(voidState.user);
       voidState.playlists = plData.playlists; voidState.activePlaylistId = plData.activePlaylistId;
@@ -1052,23 +1185,73 @@
       voidState.tracks = loaded.length ? loaded : generateTracks(75, true);
       indexAndPositionTracks(voidState.tracks);
       voidState.anchorId = voidState.tracks[0]?.id || null;
-      await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
       refreshHudViews();
-      renderSupportChatMessages();
 
-      const loop = (t) => { renderConstellationVoid(t); requestAnimationFrame(loop); };
+      const loop = (t) => { renderRadarVoid(t); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
 
-      // Draggable HUD Headers
-      document.querySelectorAll('[data-drag-handle], .drag-handle').forEach((handle) => {
-        const cardId = handle.getAttribute('data-drag-parent');
-        const card = document.getElementById(cardId);
+      // Vector Color & Fade Mode Bindings
+      const syncVecStyle = (col, fade) => {
+        voidState.vectorColor = col;
+        voidState.vectorFadeMode = fade;
+        document.getElementById('quickVectorColorInput').value = col;
+        document.getElementById('settingVectorColorPicker').value = col;
+        document.getElementById('quickVectorFadeSelect').value = fade;
+        document.getElementById('settingVectorFadeSelect').value = fade;
+        saveVectorStyle();
+        refreshHudViews();
+      };
+      document.getElementById('quickVectorColorInput').oninput = (e) => syncVecStyle(e.target.value, voidState.vectorFadeMode);
+      document.getElementById('settingVectorColorPicker').oninput = (e) => syncVecStyle(e.target.value, voidState.vectorFadeMode);
+      document.getElementById('quickVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
+      document.getElementById('settingVectorFadeSelect').onchange = (e) => syncVecStyle(voidState.vectorColor, e.target.value);
+
+      // Fork New Branch Button
+      document.getElementById('forkNewBranchBtn').onclick = () => {
+        const pl = getActivePlaylist();
+        if (!pl || !voidState.anchorId) return;
+        pl.branches.push([voidState.anchorId]);
+        pl.activeBranchIndex = pl.branches.length - 1;
+        if (!pl.trackIds.includes(voidState.anchorId)) pl.trackIds.push(voidState.anchorId);
+        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+        refreshHudViews();
+      };
+
+      document.getElementById('chainAnchorBtn').onclick = () => {
+        if (voidState.anchorId) connectTrackToSetlistTree(voidState.anchorId);
+      };
+
+      // Owner Elevation Modal
+      const ownModal = document.getElementById('ownerElevationModal');
+      document.getElementById('openOwnerElevationBtn').onclick = () => ownModal.classList.remove('hidden');
+      document.getElementById('hubTriggerOwnerElevateBtn').onclick = () => { document.getElementById('accountHubModal').classList.add('hidden'); ownModal.classList.remove('hidden'); };
+      document.getElementById('closeOwnerElevationBtn').onclick = () => ownModal.classList.add('hidden');
+      document.getElementById('ownerElevationForm').onsubmit = (e) => {
+        e.preventDefault();
+        const code = document.getElementById('ownerElevationCodeInput').value.trim();
+        const st = document.getElementById('ownerElevationStatus');
+        st.classList.remove('hidden');
+        if (code === 'Ownr$88!Vntx#Plains92Z' || code === 'VNTEX-OWNER') {
+          voidState.ownerElevated = true;
+          localStorage.setItem(CORE_KEYS.OWNER_ELEVATED, 'true');
+          st.textContent = '✓ Session elevated to Master Owner!';
+          st.className = 'font-mono-tech text-[11px] text-center text-emerald-400';
+          updateHeaderRoleButtons();
+          setTimeout(() => ownModal.classList.add('hidden'), 900);
+        } else {
+          st.textContent = '✕ Invalid Master Access Code.';
+          st.className = 'font-mono-tech text-[11px] text-center text-rose-400';
+        }
+      };
+
+      // Draggable HUD Handlers
+      document.querySelectorAll('.drag-handle').forEach((handle) => {
+        const cardId = handle.getAttribute('data-drag-parent'), card = document.getElementById(cardId);
         if (!card) return;
         let dragging = false, ox = 0, oy = 0;
         handle.addEventListener('mousedown', (e) => {
-          if (e.target.tagName === 'BUTTON') return;
-          dragging = true;
-          const r = card.getBoundingClientRect();
+          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+          dragging = true; const r = card.getBoundingClientRect();
           ox = e.clientX - r.left; oy = e.clientY - r.top;
           card.style.bottom = 'auto'; card.style.right = 'auto';
         });
@@ -1080,14 +1263,12 @@
         window.addEventListener('mouseup', () => { dragging = false; });
       });
 
-      // On-Screen Mouse Navigation D-Pad & Zoom
+      // Mouse Navigation D-Pad & Zoom
       document.querySelectorAll('[data-nav-pan]').forEach((btn) => {
         btn.onclick = () => {
           const dir = btn.getAttribute('data-nav-pan');
-          if (dir === 'left') voidState.camX += 90;
-          if (dir === 'right') voidState.camX -= 90;
-          if (dir === 'up') voidState.camY += 90;
-          if (dir === 'down') voidState.camY -= 90;
+          if (dir === 'left') voidState.camX += 90; if (dir === 'right') voidState.camX -= 90;
+          if (dir === 'up') voidState.camY += 90; if (dir === 'down') voidState.camY -= 90;
         };
       });
       document.getElementById('zoomInBtn').onclick = () => { voidState.zoom = Math.min(4.5, voidState.zoom * 1.22); };
@@ -1098,23 +1279,17 @@
       document.getElementById('scanAllUnknownBtn').onclick = async () => {
         const unknowns = voidState.tracks.filter((t) => t.missingData);
         if (!unknowns.length) {
-          // Seed 6 unknown demo tracks so the user can test scanning anytime
           const extra = generateTracks(6, true).map((x) => ({ ...x, missingData: true, bpm: 0, camelot: '', energy: 0 }));
-          voidState.tracks.push(...extra);
-          indexAndPositionTracks(voidState.tracks);
-          refreshHudViews();
-          return;
+          voidState.tracks.push(...extra); indexAndPositionTracks(voidState.tracks); refreshHudViews(); return;
         }
-        const icon = document.getElementById('scanUnknownIcon');
-        const lbl = document.getElementById('scanUnknownLabel');
+        const icon = document.getElementById('scanUnknownIcon'), lbl = document.getElementById('scanUnknownLabel');
         icon.className = 'fa-solid fa-circle-notch fa-spin text-amber-400';
         for (let i = 0; i < unknowns.length; i++) {
           lbl.textContent = `Scanning ${i + 1}/${unknowns.length}...`;
           await new Promise((r) => setTimeout(r, 45));
           const t = unknowns[i], k = CAMELOT_MAP[(i * 5) % 24];
           t.bpm = 120 + (i % 14); t.camelot = k.camelot; t.standard = k.standard;
-          t.energy = 6 + (i % 4); t.genre = GENRE_POOL[i % GENRE_POOL.length];
-          t.tags = ['Scanned']; t.missingData = false;
+          t.energy = 6 + (i % 4); t.genre = GENRE_POOL[i % GENRE_POOL.length]; t.missingData = false;
         }
         icon.className = 'fa-solid fa-wave-square text-amber-400';
         indexAndPositionTracks(voidState.tracks);
@@ -1122,97 +1297,60 @@
         refreshHudViews();
       };
 
-      // Custom Tags on Anchor or Entire Setlist
+      // Custom Tags
       document.getElementById('addTagToAnchorBtn').onclick = () => {
-        const val = document.getElementById('customTagInput').value.trim();
-        const a = voidState.trackMap.get(voidState.anchorId);
-        if (!val || !a) return;
-        if (!a.tags.includes(val)) a.tags.push(val);
+        const val = document.getElementById('customTagInput').value.trim(), a = voidState.trackMap.get(voidState.anchorId);
+        if (!val || !a) return; if (!a.tags.includes(val)) a.tags.push(val);
         document.getElementById('customTagInput').value = '';
-        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
-        refreshHudViews();
+        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
       };
       document.getElementById('addTagToSetlistBtn').onclick = () => {
-        const val = document.getElementById('customTagInput').value.trim();
-        if (!val) return;
-        getActiveSetlistIds().forEach((id) => {
-          const t = voidState.trackMap.get(id);
-          if (t && !t.tags.includes(val)) t.tags.push(val);
-        });
+        const val = document.getElementById('customTagInput').value.trim(); if (!val) return;
+        const pl = getActivePlaylist();
+        (pl ? pl.trackIds : []).forEach((id) => { const t = voidState.trackMap.get(id); if (t && !t.tags.includes(val)) t.tags.push(val); });
         document.getElementById('customTagInput').value = '';
-        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
-        refreshHudViews();
+        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
       };
       document.getElementById('activeCustomTagFilterSelect').onchange = (e) => {
         voidState.activeTagFilter = e.target.value;
-        if (e.target.value) {
-          voidState.activeParams.tag = true;
-          document.querySelector('[data-toggle-param="tag"]').classList.add('active-tag');
-        }
+        if (e.target.value) { voidState.activeParams.tag = true; document.querySelector('[data-toggle-param="tag"]').classList.add('active-tag'); }
         refreshHudViews();
       };
 
-      // Isolate / Highlight Setlist Nodes on Void
       document.getElementById('highlightActiveSetBtn').onclick = (e) => {
         voidState.isolateSetlistMode = !voidState.isolateSetlistMode;
-        e.currentTarget.textContent = voidState.isolateSetlistMode ? '★ Showing Set Only' : '★ Isolate Set';
+        e.currentTarget.textContent = voidState.isolateSetlistMode ? '★ Showing Tree' : '★ Isolate';
       };
 
-      document.getElementById('cloudPlaylistSelect').onchange = (e) => {
-        voidState.activePlaylistId = e.target.value;
-        const ids = getActiveSetlistIds();
-        if (ids.length) {
-          const first = voidState.trackMap.get(ids[0]);
-          if (first) { voidState.anchorId = first.id; voidState.camX = -first.baseX * voidState.zoom; voidState.camY = -first.baseY * voidState.zoom; }
-        }
-        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-        refreshHudViews();
-      };
-
-      // Setlist Manager Modal
+      // Modals
       const mgrModal = document.getElementById('setlistManagerModal');
       document.getElementById('openSetlistManagerBtn').onclick = () => { renderSetlistManagerModal(); mgrModal.classList.remove('hidden'); };
       document.getElementById('closeSetlistManagerBtn').onclick = () => mgrModal.classList.add('hidden');
       document.getElementById('mgrCreateListBtn').onclick = () => {
         const id = 'pl_' + Math.random().toString(36).slice(2, 8);
-        voidState.playlists[id] = { id, name: `Setlist #${Object.keys(voidState.playlists).length + 1}`, trackIds: [] };
-        voidState.activePlaylistId = id;
-        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, id);
+        voidState.playlists[id] = ensurePlaylistBranchesStruct({ id, name: `Setlist #${Object.keys(voidState.playlists).length + 1}`, trackIds: [], branches: [[]] });
+        voidState.activePlaylistId = id; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, id);
         renderSetlistManagerModal(); refreshHudViews();
       };
       document.getElementById('mgrSaveNameBtn').onclick = () => {
-        const pl = voidState.playlists[voidState.activePlaylistId];
+        const pl = getActivePlaylist();
         if (pl) { pl.name = document.getElementById('mgrActiveListNameInput').value.trim() || pl.name; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, pl.id); renderSetlistManagerModal(); refreshHudViews(); }
       };
-      document.getElementById('mgrHighlightOnVoidBtn').onclick = () => {
-        voidState.isolateSetlistMode = true;
-        document.getElementById('highlightActiveSetBtn').textContent = '★ Showing Set Only';
-        mgrModal.classList.add('hidden');
+      document.getElementById('mgrHighlightOnVoidBtn').onclick = () => { voidState.isolateSetlistMode = true; document.getElementById('highlightActiveSetBtn').textContent = '★ Showing Tree'; mgrModal.classList.add('hidden'); };
+      document.getElementById('mgrClearBranchesBtn').onclick = () => {
+        const pl = getActivePlaylist();
+        if (pl) { pl.trackIds = []; pl.branches = [[]]; pl.activeBranchIndex = 0; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, pl.id); renderSetlistManagerModal(); refreshHudViews(); }
       };
       document.getElementById('mgrDeleteListBtn').onclick = () => {
         if (Object.keys(voidState.playlists).length <= 1) return;
-        delete voidState.playlists[voidState.activePlaylistId];
-        voidState.activePlaylistId = Object.keys(voidState.playlists)[0];
+        delete voidState.playlists[voidState.activePlaylistId]; voidState.activePlaylistId = Object.keys(voidState.playlists)[0];
         VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
         renderSetlistManagerModal(); refreshHudViews();
       };
 
-      // Settings & Global Theme Modal
       const setModal = document.getElementById('suiteSettingsModal');
       document.getElementById('openSuiteSettingsBtn').onclick = () => setModal.classList.remove('hidden');
       document.getElementById('closeSuiteSettingsBtn').onclick = () => setModal.classList.add('hidden');
-      document.getElementById('settingFilterModeSelect').onchange = (e) => {
-        voidState.filterLogic = e.target.value;
-        document.getElementById('toggleFilterLogicBtn').textContent = voidState.filterLogic === 'AND' ? 'MATCH: ALL (AND)' : 'MATCH: ANY (OR)';
-        refreshHudViews();
-      };
-      document.getElementById('settingBpmTolSelect').onchange = (e) => {
-        voidState.bpmTolIndex = Number(e.target.value);
-        document.getElementById('bpmTolLabel').textContent = BPM_TOL_PRESETS[voidState.bpmTolIndex].label;
-        refreshHudViews();
-      };
-      document.getElementById('settingKeyModeSelect').onchange = (e) => { voidState.keyMode = e.target.value; refreshHudViews(); };
-      document.getElementById('settingDriftSelect').onchange = (e) => { voidState.floatDriftEnabled = e.target.value === 'on'; };
 
       const THEME_PRESETS = {
         obsidian: { void: '#020204', panel: '#0a0a10', accent1: '#00f2fe' },
@@ -1222,63 +1360,40 @@
       document.querySelectorAll('[data-theme-preset]').forEach((b) => {
         b.onclick = () => applyGlobalSuitePalette(THEME_PRESETS[b.getAttribute('data-theme-preset')]);
       });
-      ['themeVoidPicker', 'themePanelPicker', 'themeAccentPicker'].forEach((id) => {
-        document.getElementById(id).oninput = () => applyGlobalSuitePalette({
-          void: document.getElementById('themeVoidPicker').value,
-          panel: document.getElementById('themePanelPicker').value,
-          accent1: document.getElementById('themeAccentPicker').value
-        });
-      });
 
-      // Account Hub Modal
       const accModal = document.getElementById('accountHubModal');
       document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
       document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
 
-      // AI Support Chat & Escalation to Admin Inbox
       const supModal = document.getElementById('supportAgentModal');
-      document.getElementById('openSupportChatBtn').onclick = () => { renderSupportChatMessages(); supModal.classList.remove('hidden'); };
+      document.getElementById('openSupportChatBtn').onclick = () => supModal.classList.remove('hidden');
       document.getElementById('closeSupportChatBtn').onclick = () => supModal.classList.add('hidden');
-      document.getElementById('supportChatForm').onsubmit = (e) => {
-        e.preventDefault();
-        const q = document.getElementById('supportChatInput').value.trim();
-        if (!q) return;
-        const ql = q.toLowerCase();
-        let ans = "I've logged your question! For deep account or audio DSP issues, click 'Escalate Issue Directly to Admin Portal Inbox' below so an admin can reply to you.";
-        if (ql.includes('bpm') || ql.includes('key') || ql.includes('unknown')) ans = "Click 'Scan All Unknown' in the top-left bar to run the pure-JS DSP analyzer on any un-tagged tracks.";
-        else if (ql.includes('rekordbox') || ql.includes('serato') || ql.includes('export')) ans = "Chain songs with '+ Connect', then click 'Rekordbox XML' or 'Serato .M3U8' at the bottom of the Setlist drawer.";
-        else if (ql.includes('tag')) ans = "Select any star and type a custom tag in the bottom-left Anchor card (+ Song or + Set).";
-        const tickets = JSON.parse(localStorage.getItem(CORE_KEYS.SUPPORT_TICKETS) || '[]');
-        tickets.push({ id: 'tk_' + Date.now(), userEmail: voidState.user?.email || 'guest@vntex.io', app: 'Radar', question: q, aiResponse: ans, status: 'ai_answered', timestamp: new Date().toISOString() });
-        localStorage.setItem(CORE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
-        document.getElementById('supportChatInput').value = '';
-        renderSupportChatMessages();
-      };
-      document.getElementById('escalateToAdminBtn').onclick = () => {
-        const q = document.getElementById('supportChatInput').value.trim() || 'User requested direct Admin support assistance in Harmonic Radar.';
-        const tickets = JSON.parse(localStorage.getItem(CORE_KEYS.SUPPORT_TICKETS) || '[]');
-        tickets.unshift({ id: 'tk_' + Date.now(), userEmail: voidState.user?.email || 'guest@vntex.io', app: 'Radar', question: q, aiResponse: '⏳ Escalated to VNTEX Admin Portal Inbox.', status: 'escalated', timestamp: new Date().toISOString() });
-        localStorage.setItem(CORE_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
-        document.getElementById('supportChatInput').value = '';
-        renderSupportChatMessages();
+
+      const impModal = document.getElementById('libraryImportModal');
+      document.getElementById('openLibraryImportModalBtn').onclick = () => impModal.classList.remove('hidden');
+      document.getElementById('closeLibraryImportModalBtn').onclick = () => impModal.classList.add('hidden');
+
+      document.getElementById('generate10kTestBtn').onclick = async () => {
+        voidState.tracks = generateTracks(10000, false);
+        indexAndPositionTracks(voidState.tracks); voidState.anchorId = voidState.tracks[0].id;
+        await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
+        refreshHudViews(); impModal.classList.add('hidden');
       };
 
-      // Standard Canvas & Filter Bindings
       document.getElementById('toggleFilterLogicBtn').onclick = (e) => {
         voidState.filterLogic = voidState.filterLogic === 'AND' ? 'OR' : 'AND';
         e.currentTarget.textContent = voidState.filterLogic === 'AND' ? 'MATCH: ALL (AND)' : 'MATCH: ANY (OR)';
         refreshHudViews();
       };
       document.querySelectorAll('[data-toggle-param]').forEach((b) => {
-        b.onclick = () => {
-          const p = b.getAttribute('data-toggle-param');
-          voidState.activeParams[p] = !voidState.activeParams[p];
-          b.classList.toggle(`active-${p}`, voidState.activeParams[p]);
-          refreshHudViews();
-        };
+        b.onclick = () => { const p = b.getAttribute('data-toggle-param'); voidState.activeParams[p] = !voidState.activeParams[p]; b.classList.toggle(`active-${p}`, voidState.activeParams[p]); refreshHudViews(); };
       });
 
-      const canvas = document.getElementById('constellationCanvas');
+      const tabM = document.getElementById('drawerTabMatchesBtn'), tabS = document.getElementById('drawerTabSetlistBtn');
+      tabM.onclick = () => { tabM.className = 'py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]'; tabS.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerMatchesPane').classList.remove('hidden'); document.getElementById('drawerSetlistPane').classList.add('hidden'); };
+      tabS.onclick = () => { tabS.className = 'py-1 rounded-lg font-bold bg-[#141522] text-rose-400'; tabM.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerSetlistPane').classList.remove('hidden'); document.getElementById('drawerMatchesPane').classList.add('hidden'); };
+
+      const canvas = document.getElementById('radarVoidCanvas');
       canvas.addEventListener('mousedown', (e) => { voidState.isDragging = true; voidState.dragMoved = false; voidState.dragStartX = e.clientX - voidState.camX; voidState.dragStartY = e.clientY - voidState.camY; });
       window.addEventListener('mousemove', (e) => {
         const r = canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
@@ -1295,62 +1410,17 @@
         voidState.hoveredId = closest ? closest.id : null;
       });
       window.addEventListener('mouseup', (e) => {
-        if (!voidState.isDragging) return;
-        voidState.isDragging = false;
+        if (!voidState.isDragging) return; voidState.isDragging = false;
         if (!voidState.dragMoved && voidState.hoveredId) {
           if (e.shiftKey) {
-            const list = getActiveSetlistIds();
-            if (voidState.anchorId && !list.includes(voidState.anchorId) && !list.length) list.push(voidState.anchorId);
-            if (!list.includes(voidState.hoveredId)) list.push(voidState.hoveredId);
-            VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+            connectTrackToSetlistTree(voidState.hoveredId);
+          } else {
+            voidState.anchorId = voidState.hoveredId;
+            refreshHudViews();
           }
-          voidState.anchorId = voidState.hoveredId;
-          refreshHudViews();
         }
       });
       canvas.addEventListener('wheel', (e) => { e.preventDefault(); voidState.zoom = Math.max(0.25, Math.min(4.5, voidState.zoom * (e.deltaY < 0 ? 1.12 : 0.89))); }, { passive: false });
-
-      document.getElementById('chainAnchorBtn').onclick = () => {
-        const list = getActiveSetlistIds();
-        if (voidState.anchorId && !list.includes(voidState.anchorId)) {
-          list.push(voidState.anchorId);
-          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
-          refreshHudViews();
-        }
-      };
-
-      const impModal = document.getElementById('libraryImportModal');
-      document.getElementById('openLibraryImportModalBtn').onclick = () => impModal.classList.remove('hidden');
-      document.getElementById('closeLibraryImportModalBtn').onclick = () => impModal.classList.add('hidden');
-      document.getElementById('generate10kTestBtn').onclick = async () => {
-        const t0 = performance.now();
-        voidState.tracks = generateTracks(10000, false);
-        indexAndPositionTracks(voidState.tracks);
-        voidState.anchorId = voidState.tracks[0].id;
-        await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
-        refreshHudViews();
-        const box = document.getElementById('importProgressBox');
-        box.classList.remove('hidden');
-        document.getElementById('importStatusMsg').textContent = '✓ Mapped 10,000 tracks!';
-        document.getElementById('importTimeBadge').textContent = `${((performance.now() - t0) / 1000).toFixed(2)}s`;
-      };
-
-      const tabM = document.getElementById('drawerTabMatchesBtn'), tabS = document.getElementById('drawerTabSetlistBtn');
-      tabM.onclick = () => { tabM.className = 'py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]'; tabS.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerMatchesPane').classList.remove('hidden'); document.getElementById('drawerSetlistPane').classList.add('hidden'); };
-      tabS.onclick = () => { tabS.className = 'py-1 rounded-lg font-bold bg-[#141522] text-rose-400'; tabM.className = 'py-1 rounded-lg font-bold text-[var(--text-secondary)]'; document.getElementById('drawerSetlistPane').classList.remove('hidden'); document.getElementById('drawerMatchesPane').classList.add('hidden'); };
-
-      document.getElementById('exportRekordboxXmlBtn').onclick = () => {
-        const ids = getActiveSetlistIds(), list = ids.length ? ids.map((id) => voidState.trackMap.get(id)).filter(Boolean) : voidState.tracks.slice(0, 200);
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<DJ_PLAYLISTS Version="1.0.0">\n  <COLLECTION Entries="${list.length}">\n` +
-          list.map((t, i) => `    <TRACK TrackID="${i + 1}" Name="${t.title}" Artist="${t.artist}" AverageBpm="${t.bpm}" Tonality="${t.camelot}" Genre="${t.genre}" />`).join('\n') +
-          `\n  </COLLECTION>\n</DJ_PLAYLISTS>`;
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([xml], { type: 'application/xml' })); a.download = 'VNTEX_Rekordbox.xml'; a.click();
-      };
-      document.getElementById('exportSeratoM3uBtn').onclick = () => {
-        const ids = getActiveSetlistIds(), list = ids.length ? ids.map((id) => voidState.trackMap.get(id)).filter(Boolean) : voidState.tracks.slice(0, 200);
-        const m3u = ['#EXTM3U', ...list.map((t) => `#EXTINF:240,${t.artist} - ${t.title}\n${t.fileName}`)].join('\n');
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([m3u], { type: 'audio/x-mpegurl' })); a.download = 'VNTEX_Serato.m3u8'; a.click();
-      };
     });
   </script>
 </body>
