@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-obsidian">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNTEX // Constellation Radar (Argon5)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-void: #020204; --bg-panel: #0a0a10; --bg-well: #040407;
+      --border-hairline: #181824; --border-highlight: #2a2b3d;
+      --text-primary: #f3f4f8; --text-secondary: #9496a8; --text-muted: #505266;
+      --accent-primary: #00f2fe; --accent-secondary: #4facfe; --accent-glow: rgba(0,242,254,0.25);
+    }
+    * { box-sizing: border-box; user-select: none; }
+    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 86%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); box-shadow: 0 14px 36px -10px rgba(0,0,0,0.92); }
+    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); transition: all 0.15s ease; }
+    .hud-well:focus-within, input.hud-well:focus, select.hud-well:focus { outline: none; border-color: var(--accent-primary); }
+    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-highlight); }
+    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(0,242,254,0.1); border-color: var(--accent-primary); box-shadow: 0 0 12px var(--accent-glow); }
+    .param-pill { padding: 0.35rem 0.75rem; border-radius: 9999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; border: 1px solid #222334; background: rgba(8,8,14,0.88); color: #63667e; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.15s ease; }
+    .param-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #3a3c52; }
+    .param-pill.active-bpm { border-color: #00f2fe; color: #fff; background: rgba(0,242,254,0.14); }
+    .param-pill.active-bpm .dot { background: #00f2fe; box-shadow: 0 0 8px #00f2fe; }
+    .param-pill.active-key { border-color: #10b981; color: #fff; background: rgba(16,185,129,0.14); }
+    .param-pill.active-key .dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .param-pill.active-energy { border-color: #f59e0b; color: #fff; background: rgba(245,158,11,0.14); }
+    .param-pill.active-energy .dot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .param-pill.active-genre { border-color: #a855f7; color: #fff; background: rgba(168,85,247,0.14); }
+    .param-pill.active-genre .dot { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+    .param-pill.active-tag { border-color: #ec4899; color: #fff; background: rgba(236,72,153,0.14); }
+    .param-pill.active-tag .dot { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
+    .verified-badge-icon { color: #00f2fe; filter: drop-shadow(0 0 6px rgba(0,242,254,0.45)); }
+    .draggable-hud { resize: both; overflow: auto; min-width: 270px; min-height: 170px; }
+    .drag-handle { cursor: move; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #26273a; border-radius: 999px; }
+  </style>
+</head>
+<body class="antialiased flex flex-col">
+
+  <!-- ==========================================================================
+       UNIFIED VNTEX SUITE TOP BAR
+       ========================================================================== -->
+  <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
+        <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
+        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">ARGON5</span>
+      </div>
+
+      <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
+        <a href="index.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
+        <a href="constellation.html" class="suite-nav-pill active"><i class="fa-solid fa-braille text-[10px]"></i><span>Constellation</span></a>
+        <button id="bloodstreamNavBtn" type="button" class="suite-nav-pill opacity-60 hover:opacity-100"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span class="hidden sm:inline">Bloodstream</span></button>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="forceCloudSyncBtn" type="button" class="hidden sm:flex hud-well px-2.5 py-1 rounded-md text-[10px] font-mono-tech items-center gap-1.5 hover:border-[var(--accent-primary)]">
+        <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="cloudStatusText" class="text-[var(--text-secondary)]">Synced</span>
+      </button>
+
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Constellation & UI Theme Settings">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+
+      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] relative" title="AI Support Agent & Notifications">
+        <i class="fa-regular fa-comment-dots"></i>
+        <span id="unreadNotifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-mono-tech text-[9px] flex items-center justify-center font-bold">1</span>
+      </button>
+
+      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40">
+        <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
+      </a>
+
+      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
+        <i id="userStatusIcon" class="fa-regular fa-user text-[var(--accent-primary)] text-[10px]"></i>
+        <span id="userStatusName">Sign In / Profile</span>
+        <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       FULL-SCREEN CONSTELLATION VOID WORKSPACE
+       ========================================================================== -->
+  <div id="voidDropContainer" class="relative flex-1 w-full h-full overflow-hidden">
+    <input id="batchFileInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.aif,.m4a,.aac,.ogg,.opus" class="hidden" />
+    <input id="batchFolderInput" type="file" webkitdirectory directory multiple class="hidden" />
+    <input id="libraryFileInput" type="file" accept=".xml,.csv,.tsv,.txt,.json" class="hidden" />
+
+    <canvas id="constellationCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+    <!-- DRAG OVERLAY -->
+    <div id="dragOverlay" class="pointer-events-none fixed inset-0 z-40 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center">
+      <div class="hud-glass px-8 py-6 rounded-2xl border-2 border-dashed border-[var(--accent-primary)] text-center space-y-2">
+        <i class="fa-solid fa-cloud-arrow-up text-3xl text-[var(--accent-primary)]"></i>
+        <div class="font-mono-tech font-bold text-sm text-white">Drop Rekordbox XML, CSV Library, or Audio Batch</div>
+      </div>
+    </div>
+
+    <!-- TOP-LEFT HUD -->
+    <div class="absolute top-3 left-3 z-20 flex flex-wrap items-center gap-2 max-w-[calc(100vw-24px)]">
+      <div class="hud-glass p-1.5 rounded-xl flex flex-wrap items-center gap-1.5">
+        <button id="openLibraryImportModalBtn" type="button" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[11px] flex items-center gap-1.5 hover:brightness-110 transition">
+          <i class="fa-solid fa-database"></i><span>Import Library</span>
+        </button>
+        <button id="addFilesBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] hover:border-[var(--accent-primary)] flex items-center gap-1">
+          <i class="fa-solid fa-plus text-[var(--accent-primary)]"></i><span>Audio</span>
+        </button>
+        <button id="addFolderBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--text-secondary)] hover:text-white" title="Drop Folder">
+          <i class="fa-regular fa-folder-open"></i>
+        </button>
+        <button id="scanAllUnknownBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg border border-amber-400/50 text-amber-300 font-mono-tech font-bold text-[11px] flex items-center gap-1.5 hover:bg-amber-400/10 transition">
+          <i id="scanUnknownIcon" class="fa-solid fa-wave-square text-amber-400"></i>
+          <span id="scanUnknownLabel">Scan All Unknown (0)</span>
+        </button>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-[var(--text-muted)]"></i>
+          <input id="trackSearchInput" type="text" placeholder="Find song or tag..." class="hud-well pl-7 pr-2.5 py-1 rounded-lg text-[11px] font-mono-tech w-36 sm:w-44" />
+          <div id="searchDropdownList" class="hidden absolute left-0 top-8 w-72 max-h-64 overflow-y-auto hud-glass rounded-xl p-1.5 space-y-1 z-50"></div>
+        </div>
+        <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2 py-1 rounded-lg bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
+      </div>
+    </div>
+
+    <!-- TOP-CENTER HUD -->
+    <div class="absolute top-16 xl:top-3 left-3 xl:left-1/2 xl:-translate-x-1/2 z-20 flex flex-wrap items-center gap-1.5 hud-glass p-1.5 rounded-full">
+      <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-cyan-300 border border-cyan-400/50 bg-cyan-400/10">
+        MATCH: ALL (AND)
+      </button>
+      <button type="button" data-toggle-param="bpm" class="param-pill active-bpm"><span class="dot"></span><span>BPM</span><span id="bpmTolLabel" class="text-[9px] opacity-80">±3%</span></button>
+      <button type="button" data-toggle-param="key" class="param-pill active-key"><span class="dot"></span><span>Key</span></button>
+      <button type="button" data-toggle-param="energy" class="param-pill active-energy"><span class="dot"></span><span>Energy</span></button>
+      <button type="button" data-toggle-param="genre" class="param-pill"><span class="dot"></span><span>Genre</span></button>
+      <button type="button" data-toggle-param="tag" class="param-pill"><span class="dot"></span><span>Tag</span></button>
+      <select id="activeCustomTagFilterSelect" class="hud-well px-2 py-1 rounded-full font-mono-tech text-[10px] text-pink-400 cursor-pointer">
+        <option value="">All Tags</option>
+      </select>
+    </div>
+
+    <!-- MOUSE NAVIGATION D-PAD -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 hud-glass px-2.5 py-1.5 rounded-full flex items-center gap-1.5 font-mono-tech text-xs">
+      <button type="button" data-nav-pan="left" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Left"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+      <button type="button" data-nav-pan="up" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Up"><i class="fa-solid fa-chevron-up text-[10px]"></i></button>
+      <button type="button" data-nav-pan="down" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Down"><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+      <button type="button" data-nav-pan="right" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Pan Right"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+      <span class="text-[var(--border-highlight)]">|</span>
+      <button id="zoomOutBtn" type="button" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Zoom Out"><i class="fa-solid fa-minus text-[10px]"></i></button>
+      <button id="recenterVoidBtn" type="button" class="hud-well px-2.5 h-7 rounded-full text-[10px] hover:border-[var(--accent-primary)]" title="Recenter Void">⌖ Center</button>
+      <button id="zoomInBtn" type="button" class="hud-well w-7 h-7 rounded-full flex items-center justify-center hover:border-[var(--accent-primary)]" title="Zoom In"><i class="fa-solid fa-plus text-[10px]"></i></button>
+    </div>
+
+    <!-- BOTTOM-LEFT HUD: ANCHOR INSPECTOR -->
+    <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 370px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
+      <div data-drag-parent="anchorHudCard" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
+        <div class="font-mono-tech text-[9px] uppercase tracking-wider text-[var(--accent-primary)] flex items-center gap-1.5">
+          <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
+          <span>Selected Anchor (Drag / Resize)</span>
+          <span id="anchorBpmWindowHint" class="text-[var(--text-secondary)]"></span>
+        </div>
+        <button id="chainAnchorBtn" type="button" class="px-2.5 py-1 rounded-md bg-rose-500 text-white font-mono-tech font-bold text-[10px] hover:bg-rose-400">
+          + Connect Set
+        </button>
+      </div>
+
+      <div>
+        <h2 id="anchorTitle" class="font-extrabold text-sm text-white truncate">Click Any Star</h2>
+        <p id="anchorArtist" class="text-xs text-[var(--text-secondary)] truncate">—</p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-1.5 font-mono-tech text-center">
+        <div class="hud-well py-1 px-1 rounded-lg border-b-2 border-b-[#00f2fe]">
+          <div class="text-[8px] uppercase text-[var(--text-secondary)]">BPM</div>
+          <div id="anchorBpmVal" class="text-xs font-bold text-[#00f2fe]">—</div>
+        </div>
+        <div class="hud-well py-1 px-1 rounded-lg border-b-2 border-b-[#10b981]">
+          <div class="text-[8px] uppercase text-[var(--text-secondary)]">Key</div>
+          <div id="anchorKeyVal" class="text-xs font-bold text-[#10b981]">—</div>
+        </div>
+        <div class="hud-well py-1 px-1 rounded-lg border-b-2 border-b-[#f59e0b]">
+          <div class="text-[8px] uppercase text-[var(--text-secondary)]">Energy</div>
+          <div id="anchorEnergyVal" class="text-xs font-bold text-[#f59e0b]">—</div>
+        </div>
+        <div class="hud-well py-1 px-1 rounded-lg border-b-2 border-b-[#a855f7]">
+          <div class="text-[8px] uppercase text-[var(--text-secondary)]">Genre</div>
+          <div id="anchorGenreVal" class="text-[10px] font-bold text-[#a855f7] truncate px-1">—</div>
+        </div>
+      </div>
+
+      <div class="space-y-1.5 pt-1 border-t border-[var(--border-hairline)]">
+        <div id="anchorCustomTagsList" class="flex flex-wrap gap-1"></div>
+        <div class="flex gap-1">
+          <input id="customTagInput" type="text" placeholder="Add custom tag..." class="hud-well flex-1 px-2 py-1 rounded text-[10px] font-mono-tech" />
+          <button id="addTagToAnchorBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-pink-400 hover:border-pink-400">+ Song</button>
+          <button id="addTagToSetlistBtn" type="button" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)]" title="Apply tag to set">+ Set</button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-[10px] font-mono-tech text-[var(--text-secondary)]">
+        <span id="matchStatsLabel">0 matches lit</span>
+        <button id="clearVoidBtn" type="button" class="text-rose-400 hover:underline">Clear Crate</button>
+      </div>
+    </div>
+
+    <!-- RIGHT HUD: SETLIST DRAWER -->
+    <div id="setlistDrawer" style="right: 16px; top: 64px; width: 330px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[82vh]">
+      <div data-drag-parent="setlistDrawer" class="drag-handle flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
+        <span class="font-mono-tech text-[10px] uppercase font-bold text-rose-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-grip-vertical text-[var(--text-muted)]"></i>
+          <span>Setlist &amp; Matches</span>
+        </span>
+        <div class="flex items-center gap-1">
+          <button id="highlightActiveSetBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-rose-400 border border-rose-500/40" title="Isolate stars">★ Isolate</button>
+          <button id="openSetlistManagerBtn" type="button" class="hud-well px-2 py-0.5 rounded font-mono-tech text-[9px] text-[var(--accent-primary)]">Manage Sets</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <select id="cloudPlaylistSelect" class="hud-well flex-1 px-2.5 py-1.5 rounded-lg font-mono-tech text-[11px] text-white cursor-pointer"></select>
+        <button id="newCloudPlaylistBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">+ New</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1 p-1 hud-well rounded-xl font-mono-tech text-[11px]">
+        <button id="drawerTabMatchesBtn" type="button" class="py-1 rounded-lg font-bold bg-[#141522] text-[var(--accent-primary)]">Matches (<span id="drawerMatchesCount">0</span>)</button>
+        <button id="drawerTabSetlistBtn" type="button" class="py-1 rounded-lg font-bold text-[var(--text-secondary)]">Set Chain (<span id="drawerSetCount">0</span>)</button>
+      </div>
+
+      <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
+      <div id="drawerSetlistPane" class="hidden flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-56"></div>
+
+      <div class="pt-2 border-t border-[var(--border-hairline)] grid grid-cols-2 gap-1.5 font-mono-tech text-[10px]">
+        <button id="exportRekordboxXmlBtn" type="button" class="py-2 px-2 rounded-lg bg-[#00f2fe] text-black font-extrabold flex items-center justify-center gap-1"><i class="fa-solid fa-file-code"></i><span>Rekordbox XML</span></button>
+        <button id="exportSeratoM3uBtn" type="button" class="py-2 px-2 rounded-lg bg-emerald-400 text-black font-extrabold flex items-center justify-center gap-1"><i class="fa-solid fa-compact-disc"></i><span>Serato .M3U8</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================MODALS (Setlist Manager, Settings, Account Hub, AI Support)================ -->
+  <div id="setlistManagerModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[86vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-list-check text-rose-400 mr-2"></i>Setlist Manager &amp; Connection Tree Editor</h3>
+        <button id="closeSetlistManagerBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4 text-xs flex-1">
+        <div class="md:col-span-4 space-y-2 border-r border-[var(--border-hairline)] pr-3">
+          <div class="flex items-center justify-between font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]"><span>Saved Cloud Lists</span><button id="mgrCreateListBtn" type="button" class="text-[var(--accent-primary)] hover:underline">+ New List</button></div>
+          <div id="mgrPlaylistsSidebar" class="space-y-1.5"></div>
+        </div>
+        <div class="md:col-span-8 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <input id="mgrActiveListNameInput" type="text" class="hud-well px-3 py-1.5 rounded-lg font-bold text-xs text-white flex-1" />
+            <button id="mgrSaveNameBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)]">Rename</button>
+            <button id="mgrHighlightOnVoidBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white font-mono-tech font-bold text-[10px]">★ Highlight Nodes</button>
+            <button id="mgrDeleteListBtn" type="button" class="hud-well px-2.5 py-1.5 rounded-lg font-mono-tech text-[10px] text-rose-400">Delete</button>
+          </div>
+          <div id="mgrTracksTableContainer" class="space-y-1.5 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Radar Search &amp; Suite UI Settings</h3>
+        <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="hud-well p-3 rounded-xl space-y-1">
+            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">Selection Filter Rule</label>
+            <select id="settingFilterModeSelect" class="hud-well w-full px-2 py-1.5 rounded font-mono-tech text-xs text-[var(--accent-primary)]"><option value="AND">Strict Intersect (ALL)</option><option value="OR">Broad Union (ANY)</option></select>
+          </div>
+          <div class="hud-well p-3 rounded-xl space-y-1">
+            <label class="font-mono-tech text-[10px] uppercase text-[var(--text-secondary)]">BPM Tolerance</label>
+            <select id="settingBpmTolSelect" class="hud-well w-full px-2 py-1.5 rounded font-mono-tech text-xs text-[var(--accent-primary)]"><option value="0">±2%</option><option value="1" selected>±3%</option><option value="2">±5%</option><option value="3">±8%</option><option value="4">±3 BPM</option><option value="5">±6 BPM</option></select>
+          </div>
+        </div>
+        <div class="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+          <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Global Suite UI Palette</div>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-theme-preset="obsidian" class="hud-well p-2.5 rounded-xl text-left"><div class="font-bold text-[#00f2fe]">Obsidian</div></button>
+            <button type="button" data-theme-preset="winamp" class="hud-well p-2.5 rounded-xl text-left"><div class="font-bold text-[#00ff41]">Winamp LED</div></button>
+            <button type="button" data-theme-preset="crimson" class="hud-well p-2.5 rounded-xl text-left"><div class="font-bold text-[#f43f5e]">Crimson</div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-xl rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-sm font-bold text-white">VNTEX Account Profile &amp; Cloud Library</h3>
+        <button id="closeAccountHubBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
+        <div class="hud-well p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="hubProfileName" class="font-extrabold text-sm text-white">Guest Producer</span>
+              <i id="hubProfileBadge" class="fa-solid fa-certificate verified-badge-icon hidden"></i>
+            </div>
+            <div id="hubProfileEmail" class="font-mono-tech text-[11px] text-[var(--text-secondary)] mt-0.5">Not signed in</div>
+          </div>
+          <a href="index.html" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)]">Manage Auth →</a>
+        </div>
+        <div class="space-y-1.5"><div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]">Permissions</div><div id="hubPermissionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono-tech text-[11px]"></div></div>
+        <div class="space-y-1.5"><div class="flex justify-between font-mono-tech text-[10px] uppercase text-[var(--accent-primary)]"><span>Cloud Library (<span id="hubLibraryCount">0</span>)</span><span id="hubSetlistsCount" class="text-rose-400">0 Setlists</span></div><div id="hubCloudLibraryPreview" class="hud-well p-2.5 rounded-xl max-h-44 overflow-y-auto space-y-1 font-mono-tech text-[11px]"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
+    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col h-[480px]">
+      <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-emerald-400 mr-1.5"></i>AI Support &amp; Admin Inbox</h3>
+        <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="supportChatMessages" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs"></div>
+      <div class="p-3 border-t border-[var(--border-hairline)] bg-[#050509] space-y-2">
+        <form id="supportChatForm" class="flex gap-1.5">
+          <input id="supportChatInput" type="text" required placeholder="Ask AI or message Admin..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs" />
+          <button type="submit" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-xs">Send</button>
+        </form>
+        <button id="escalateToAdminBtn" type="button" class="w-full py-1.5 rounded-lg hud-well font-mono-tech text-[10px] text-amber-400">Escalate Issue to Admin Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="libraryImportModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
+      <div class="px-5 py-4 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-bolt text-[var(--accent-primary)] mr-2"></i>Library Importer</h3>
+        <button id="closeLibraryImportModalBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div id="modalImportDropzone" class="hud-well p-6 rounded-2xl border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] cursor-pointer text-center space-y-2">
+          <i class="fa-solid fa-file-import text-2xl text-[var(--accent-primary)]"></i>
+          <div class="font-bold text-sm text-white">Drop Rekordbox XML, CSV, or JSON</div>
+        </div>
+        <button id="generate10kTestBtn" type="button" class="w-full hud-well py-2.5 px-3 rounded-xl font-mono-tech font-bold text-[11px] text-emerald-400 border border-emerald-400/40">⚡ Generate 10,000 Track Crate</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SIN_LUT = new Float32Array(2048);
+    for (let i = 0; i < 2048; i++) SIN_LUT[i] = Math.sin((i / 2048) * Math.PI * 2);
+    const fastSin = (r) => SIN_LUT[Math.floor(r * (2048 / (Math.PI * 2))) & 2047];
+    const fastCos = (r) => SIN_LUT[(Math.floor(r * (2048 / (Math.PI * 2))) + 512) & 2047];
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A", authDomain: "vntex-e24a5.firebaseapp.com",
+      projectId: "vntex-e24a5", storageBucket: "vntex-e24a5.firebasestorage.app",
+      messagingSenderId: "977209087831", appId: "1:977209087831:web:ab22e81f799442164b5012"
+    };
+
+    const CORE_KEYS = {
+      SESSION_USER: 'vntex_core_session_user', ACTIVE_PALETTE: 'vntex_core_active_palette',
+      SUPPORT_TICKETS: 'vntex_core_support_tickets', NOTIFICATIONS: 'vntex_core_notifications', RADAR_TELEMETRY: 'vntex_core_radar_telemetry'
+    };
+
+    const VNTEXCloudPersistence = {
+      db: null, firestore: null,
+      async init() {
+        try { if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG); this.firestore = firebase.firestore(); } catch {}
+        return new Promise((res) => {
+          const req = indexedDB.open('VNTEX_CloudCache_IDB', 1);
+          req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains('kv')) e.target.result.createObjectStore('kv'); };
+          req.onsuccess = (e) => { this.db = e.target.result; res(true); };
+          req.onerror = () => res(false);
+        });
+      },
+      async idbGet(k) {
+        if (!this.db) return null;
+        return new Promise((r) => { const req = this.db.transaction('kv', 'readonly').objectStore('kv').get(k); req.onsuccess = () => r(req.result || null); req.onerror = () => r(null); });
+      },
+      async idbSet(k, v) {
+        if (!this.db) return;
+        return new Promise((r) => { const tx = this.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => r(true); tx.onerror = () => r(false); });
+      },
+      uKey(u) { return (!u || !u.email) ? 'guest_local' : (u.uid || u.email.toLowerCase().replace(/[^a-z0-9]/g, '_')); },
+      async saveLibrary(user, tracks) {
+        const uk = this.uKey(user);
+        const compact = tracks.map((t) => ({ id: t.id, t: t.title, a: t.artist, f: t.fileName || '', b: Number(t.bpm) || 0, c: t.camelot || '', s: t.standard || '', e: Number(t.energy) || 0, g: t.genre || '', tg: t.tags || [], m: t.missingData ? 1 : 0 }));
+        await this.idbSet(`library_${uk}`, compact);
+      },
+      async loadLibrary(user) {
+        const uk = this.uKey(user);
+        const cached = await this.idbGet(`library_${uk}`);
+        if (cached && cached.length) {
+          return cached.map((item) => ({
+            id: item.id, title: item.t, artist: item.a, fileName: item.f, bpm: Number(item.b) || 0,
+            camelot: item.c, standard: item.s, energy: Number(item.e) || 0, genre: item.g, tags: item.tg || [], missingData: item.m === 1
+          }));
+        }
+        return [];
+      },
+      async savePlaylists(user, playlists, activeId) { await this.idbSet(`playlists_${this.uKey(user)}`, { playlists, activePlaylistId: activeId }); },
+      async loadPlaylists(user) {
+        const local = await this.idbGet(`playlists_${this.uKey(user)}`);
+        if (local && local.playlists) return local;
+        return { playlists: { pl_main: { id: 'pl_main', name: 'Main Club Set', trackIds: [] } }, activePlaylistId: 'pl_main' };
+      }
+    };
+
+    const voidState = {
+      user: JSON.parse(localStorage.getItem(CORE_KEYS.SESSION_USER) || 'null'),
+      tracks: [], trackMap: new Map(), playlists: {}, activePlaylistId: 'pl_main',
+      anchorId: null, hoveredId: null, filterLogic: 'AND',
+      activeParams: { bpm: true, key: true, energy: true, genre: false, tag: false },
+      activeTagFilter: '', bpmTolIndex: 1, keyMode: 'camelot', floatDriftEnabled: true,
+      isolateSetlistMode: false,
+      camX: 0, camY: 0, zoom: 1.0, isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
+      matchedNodesCache: [], matchedSet: new Set()
+    };
+
+    function applyGlobalSuitePalette(pal) {
+      if (!pal) return;
+      const r = document.documentElement;
+      if (pal.void) r.style.setProperty('--bg-void', pal.void);
+      if (pal.panel) r.style.setProperty('--bg-panel', pal.panel);
+      if (pal.accent1) r.style.setProperty('--accent-primary', pal.accent1);
+      localStorage.setItem(CORE_KEYS.ACTIVE_PALETTE, JSON.stringify(pal));
+    }
+
+    function getActiveSetlistIds() { return voidState.playlists[voidState.activePlaylistId]?.trackIds || []; }
+
+    function computeAllowedBpmDelta(anchorBpm) {
+      const spec = BPM_TOL_PRESETS[voidState.bpmTolIndex] || BPM_TOL_PRESETS[1];
+      return spec.mode === 'pct' ? (Number(anchorBpm) * spec.value) / 100.0 : Number(spec.value);
+    }
+
+    function indexAndPositionTracks(list) {
+      voidState.trackMap.clear();
+      for (let i = 0; i < list.length; i++) {
+        const t = list[i];
+        if (!Array.isArray(t.tags)) t.tags = [];
+        let h = (i * 2654435761) >>> 0;
+        for (let c = 0; c < Math.min((t.title || '').length, 8); c++) h = ((h << 5) - h + t.title.charCodeAt(c)) >>> 0;
+        const randA = ((h % 1000) / 1000 - 0.5) * 0.48;
+        const randR = (((h >> 10) % 1000) / 1000 - 0.5) * 145;
+        t.phaseX = (h % 628) / 100; t.phaseY = ((h >> 8) % 628) / 100;
+        t.freqX = 0.45 + (h % 50) / 100; t.freqY = 0.4 + ((h >> 4) % 50) / 100;
+        t.driftAmp = 4.5 + (h % 7);
+
+        if (t.missingData) {
+          const a = (h % 360) * (Math.PI / 180), r = 540 + (h % 120);
+          t.baseX = Math.cos(a) * r; t.baseY = Math.sin(a) * r;
+        } else {
+          const ke = lookupKeyEntry(t.camelot) || CAMELOT_MAP[7];
+          const ang = ((ke.num - 1) / 12) * Math.PI * 2 + (ke.mode === 'B' ? 0.14 : -0.14) + randA;
+          const rad = Math.max(45, 70 + (Number(t.bpm || 125) - 75) * 4.5 + (Number(t.energy || 6) - 5.5) * 18 + randR);
+          t.baseX = Math.cos(ang) * rad; t.baseY = Math.sin(ang) * rad;
+        }
+        t.x = t.baseX; t.y = t.baseY;
+        voidState.trackMap.set(t.id, t);
+      }
+    }
+
+    function recomputeAnchorMatches() {
+      voidState.matchedNodesCache = [];
+      voidState.matchedSet.clear();
+      const anchor = voidState.trackMap.get(voidState.anchorId);
+      if (!anchor || anchor.missingData) return;
+
+      const { bpm: cBpm, key: cKey, energy: cEng, genre: cGen, tag: cTag } = voidState.activeParams;
+      const activeCnt = (cBpm?1:0) + (cKey?1:0) + (cEng?1:0) + (cGen?1:0) + (cTag?1:0);
+      if (activeCnt === 0) return;
+
+      const aBpm = Number(anchor.bpm), tol = computeAllowedBpmDelta(aBpm);
+      const aKey = anchor.camelot, aEng = Number(anchor.energy), aGen = (anchor.genre || '').toLowerCase();
+      const targetTag = (voidState.activeTagFilter || (anchor.tags && anchor.tags[0]) || '').toLowerCase();
+      const isAnd = voidState.filterLogic === 'AND';
+
+      for (let i = 0; i < voidState.tracks.length; i++) {
+        const t = voidState.tracks[i];
+        if (t.id === anchor.id || t.missingData) continue;
+        const colors = [];
+
+        if (cBpm) { if (Math.abs(Number(t.bpm) - aBpm) <= tol) colors.push('#00f2fe'); else if (isAnd) continue; }
+        if (cKey) { if (isHarmonicKeyMatch(aKey, t.camelot)) colors.push('#10b981'); else if (isAnd) continue; }
+        if (cEng) { if (Math.abs(Number(t.energy) - aEng) <= 1) colors.push('#f59e0b'); else if (isAnd) continue; }
+        if (cGen) { if (t.genre && t.genre.toLowerCase() === aGen) colors.push('#a855f7'); else if (isAnd) continue; }
+        if (cTag) { if (targetTag && Array.isArray(t.tags) && t.tags.some((tg) => tg.toLowerCase() === targetTag)) colors.push('#ec4899'); else if (isAnd) continue; }
+
+        if (colors.length > 0) {
+          voidState.matchedNodesCache.push({ track: t, matchedColors: colors, primaryColor: colors[0], isPerfect: colors.length === activeCnt });
+          voidState.matchedSet.add(t.id);
+        }
+      }
+    }
+
+    function renderConstellationVoid(timeMs = 0) {
+      const canvas = document.getElementById('constellationCanvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
+        canvas.width = Math.floor(rect.width * dpr); canvas.height = Math.floor(rect.height * dpr);
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.save(); ctx.scale(dpr, dpr);
+      const W = rect.width, H = rect.height, cx = W / 2 + voidState.camX, cy = H / 2 + voidState.camY, zoom = voidState.zoom;
+
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-void').trim() || '#020204';
+      ctx.fillRect(0, 0, W, H);
+
+      const tracks = voidState.tracks, anchor = voidState.trackMap.get(voidState.anchorId) || null;
+      const setlistIds = getActiveSetlistIds(), setlistSet = new Set(setlistIds);
+      const tSec = timeMs * 0.001, drift = voidState.floatDriftEnabled;
+
+      ctx.beginPath(); ctx.fillStyle = '#191a26';
+      for (let i = 0; i < tracks.length; i++) {
+        const t = tracks[i];
+        t.x = drift ? t.baseX + fastCos(tSec * t.freqX + t.phaseX) * t.driftAmp : t.baseX;
+        t.y = drift ? t.baseY + fastSin(tSec * t.freqY + t.phaseY) * t.driftAmp : t.baseY;
+        t.screenX = cx + t.x * zoom; t.screenY = cy + t.y * zoom;
+        if (t.screenX < -20 || t.screenX > W + 20 || t.screenY < -20 || t.screenY > H + 20) continue;
+        if (!t.missingData && (!voidState.matchedSet.has(t.id) || voidState.isolateSetlistMode) && (!anchor || t.id !== anchor.id) && !setlistSet.has(t.id)) {
+          ctx.rect(t.screenX - 1, t.screenY - 1, 2.2, 2.2);
+        }
+      }
+      ctx.fill();
+
+      const litR = Math.max(3.5, Math.min(7, 4.5 * Math.pow(zoom, 0.35)));
+      if (!voidState.isolateSetlistMode) {
+        const buckets = { '#00f2fe': [], '#10b981': [], '#f59e0b': [], '#a855f7': [], '#ec4899': [] };
+        for (let i = 0; i < voidState.matchedNodesCache.length; i++) {
+          const m = voidState.matchedNodesCache[i], sx = m.track.screenX, sy = m.track.screenY;
+          if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) continue;
+          if (buckets[m.primaryColor]) buckets[m.primaryColor].push(m);
+        }
+        Object.entries(buckets).forEach(([col, arr]) => {
+          if (!arr.length) return;
+          ctx.beginPath(); ctx.fillStyle = col;
+          for (let i = 0; i < arr.length; i++) { ctx.moveTo(arr[i].track.screenX + litR, arr[i].track.screenY); ctx.arc(arr[i].track.screenX, arr[i].track.screenY, litR, 0, Math.PI * 2); }
+          ctx.fill();
+        });
+      }
+
+      if (setlistIds.length > 0) {
+        if (setlistIds.length > 1) {
+          ctx.beginPath();
+          let started = false;
+          setlistIds.forEach((id) => { const n = voidState.trackMap.get(id); if (!n) return; if (!started) { ctx.moveTo(n.screenX, n.screenY); started = true; } else ctx.lineTo(n.screenX, n.screenY); });
+          ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2.5; ctx.setLineDash([7, 5]); ctx.lineDashOffset = -tSec * 24; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+        }
+        setlistIds.forEach((id, idx) => {
+          const n = voidState.trackMap.get(id);
+          if (!n) return;
+          ctx.beginPath(); ctx.arc(n.screenX, n.screenY, litR + 2.5, 0, Math.PI * 2); ctx.fillStyle = '#f43f5e'; ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = '800 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+          ctx.fillText(`#${idx + 1}`, n.screenX, n.screenY - litR - 7);
+        });
+      }
+
+      if (anchor) {
+        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 12 + Math.sin(tSec * 4.5) * 2.5, 0, Math.PI * 2); ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 6.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
+        ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
+        ctx.fillText(`${anchor.title} • ${anchor.bpm} BPM • ${anchor.missingData ? '?' : anchor.camelot}`, anchor.screenX + 15, anchor.screenY + 4);
+      }
+      ctx.restore();
+    }
+
+    function refreshAllCustomTagOptions() {
+      const tagSet = new Set();
+      voidState.tracks.forEach((t) => (t.tags || []).forEach((tg) => tagSet.add(tg)));
+      const sel = document.getElementById('activeCustomTagFilterSelect');
+      const cur = voidState.activeTagFilter;
+      sel.innerHTML = `<option value="">All Custom Tags (${tagSet.size})</option>` +
+        Array.from(tagSet).map((tg) => `<option value="${tg}" ${tg === cur ? 'selected' : ''}>🏷️ ${tg}</option>`).join('');
+    }
+
+    function refreshHudViews() {
+      recomputeAnchorMatches();
+      refreshAllCustomTagOptions();
+
+      document.getElementById('libraryTotalBadge').textContent = `${voidState.tracks.length.toLocaleString()} Tracks`;
+      const unkCount = voidState.tracks.filter((t) => t.missingData).length;
+      document.getElementById('scanUnknownLabel').textContent = unkCount > 0 ? `Scan All Unknown (${unkCount})` : 'All Scanned ✓';
+
+      let anchor = voidState.trackMap.get(voidState.anchorId);
+      if (!anchor && voidState.tracks.length > 0) { anchor = voidState.tracks[0]; voidState.anchorId = anchor.id; }
+
+      if (anchor) {
+        document.getElementById('anchorTitle').textContent = anchor.title;
+        document.getElementById('anchorArtist').textContent = anchor.artist;
+        document.getElementById('anchorBpmVal').textContent = anchor.missingData ? '?' : String(anchor.bpm);
+        document.getElementById('anchorKeyVal').textContent = anchor.missingData ? '?' : (voidState.keyMode === 'camelot' ? anchor.camelot : anchor.standard);
+        document.getElementById('anchorEnergyVal').textContent = anchor.missingData ? '?' : `${anchor.energy}/10`;
+        document.getElementById('anchorGenreVal').textContent = anchor.missingData ? 'Unscanned' : (anchor.genre || 'Electronic');
+        const delta = computeAllowedBpmDelta(anchor.bpm || 126);
+        document.getElementById('anchorBpmWindowHint').textContent = anchor.missingData ? '' : `(${(anchor.bpm - delta).toFixed(1)}–${(anchor.bpm + delta).toFixed(1)})`;
+
+        const tagsEl = document.getElementById('anchorCustomTagsList');
+        tagsEl.innerHTML = (anchor.tags || []).map((tg, idx) => `
+          <span class="px-2 py-0.5 rounded-full bg-pink-500/15 border border-pink-500/40 text-pink-300 font-mono-tech text-[9px] flex items-center gap-1">
+            <span>#${tg}</span><button type="button" data-del-tag="${idx}" class="hover:text-white">×</button>
+          </span>
+        `).join('');
+        tagsEl.querySelectorAll('[data-del-tag]').forEach((b) => {
+          b.onclick = () => { anchor.tags.splice(Number(b.getAttribute('data-del-tag')), 1); VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews(); };
+        });
+      }
+
+      const plSelect = document.getElementById('cloudPlaylistSelect');
+      plSelect.innerHTML = Object.values(voidState.playlists).map((pl) => `
+        <option value="${pl.id}" class="bg-[#08080c] text-white" ${pl.id === voidState.activePlaylistId ? 'selected' : ''}>📁 ${pl.name} (${pl.trackIds.length})</option>
+      `).join('');
+
+      const matches = voidState.matchedNodesCache;
+      document.getElementById('matchStatsLabel').textContent = `${matches.length.toLocaleString()} (${voidState.filterLogic}) lit`;
+      document.getElementById('drawerMatchesCount').textContent = String(matches.length);
+
+      document.getElementById('drawerMatchesPane').innerHTML = matches.slice(0, 75).map((m) => {
+        const t = m.track;
+        const dots = m.matchedColors.map((c) => `<span class="w-2 h-2 rounded-full" style="background:${c}"></span>`).join('');
+        return `
+          <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 hover:border-[var(--accent-primary)]">
+            <div class="min-w-0 flex-1 cursor-pointer" data-focus-id="${t.id}">
+              <div class="font-bold text-[11px] text-white truncate flex items-center gap-1.5"><span>${t.title}</span><span class="flex gap-0.5">${dots}</span></div>
+              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] truncate">${t.artist} • ${t.bpm} BPM • ${t.camelot}</div>
+            </div>
+            <button type="button" data-add-set="${t.id}" class="hud-well px-2 py-1 rounded-lg font-mono-tech text-[10px] text-rose-400 hover:border-rose-400">+ Connect</button>
+          </div>
+        `;
+      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No tracks fit criteria.</div>`;
+
+      const setIds = getActiveSetlistIds();
+      document.getElementById('drawerSetCount').textContent = String(setIds.length);
+      document.getElementById('drawerSetlistPane').innerHTML = setIds.map((id, idx) => {
+        const t = voidState.trackMap.get(id);
+        if (!t) return '';
+        return `
+          <div class="hud-well px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1 cursor-pointer" data-focus-id="${t.id}">
+              <div class="font-bold text-[11px] text-white truncate"><span class="text-rose-400 font-mono-tech mr-1">${idx + 1}.</span>${t.title}</div>
+              <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">${t.bpm} BPM • ${t.camelot}</div>
+            </div>
+            <button type="button" data-rem-set="${idx}" class="text-rose-400 text-xs px-1">×</button>
+          </div>
+        `;
+      }).join('') || `<div class="hud-well p-3 rounded-xl text-center text-[11px] text-[var(--text-muted)]">No connected setlist tracks.</div>`;
+
+      document.querySelectorAll('[data-focus-id]').forEach((el) => {
+        el.onclick = () => {
+          const t = voidState.trackMap.get(el.getAttribute('data-focus-id'));
+          if (t) { voidState.anchorId = t.id; voidState.camX = -t.baseX * voidState.zoom; voidState.camY = -t.baseY * voidState.zoom; refreshHudViews(); }
+        };
+      });
+      document.querySelectorAll('[data-add-set]').forEach((el) => {
+        el.onclick = () => {
+          const id = el.getAttribute('data-add-set'), list = getActiveSetlistIds();
+          if (voidState.anchorId && !list.includes(voidState.anchorId) && !list.length) list.push(voidState.anchorId);
+          if (!list.includes(id)) list.push(id);
+          voidState.anchorId = id;
+          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+          refreshHudViews();
+        };
+      });
+      document.querySelectorAll('[data-rem-set]').forEach((el) => {
+        el.onclick = () => {
+          getActiveSetlistIds().splice(Number(el.getAttribute('data-rem-set')), 1);
+          VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+          refreshHudViews();
+        };
+      });
+    }
+
+    function renderSetlistManagerModal() {
+      const side = document.getElementById('mgrPlaylistsSidebar');
+      side.innerHTML = Object.values(voidState.playlists).map((pl) => `
+        <button type="button" data-mgr-pick="${pl.id}" class="w-full text-left px-3 py-2 rounded-xl font-mono-tech text-xs flex items-center justify-between ${pl.id === voidState.activePlaylistId ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'hud-well text-[var(--text-secondary)]'}">
+          <span class="truncate">${pl.name}</span><span>${pl.trackIds.length}</span>
+        </button>
+      `).join('');
+      side.querySelectorAll('[data-mgr-pick]').forEach((b) => {
+        b.onclick = () => { voidState.activePlaylistId = b.getAttribute('data-mgr-pick'); renderSetlistManagerModal(); refreshHudViews(); };
+      });
+      const activePl = voidState.playlists[voidState.activePlaylistId];
+      document.getElementById('mgrActiveListNameInput').value = activePl ? activePl.name : '';
+      const tbl = document.getElementById('mgrTracksTableContainer');
+      const ids = activePl ? activePl.trackIds : [];
+      tbl.innerHTML = ids.map((id, i) => {
+        const t = voidState.trackMap.get(id);
+        if (!t) return '';
+        return `
+          <div class="hud-well px-3 py-2 rounded-xl flex items-center justify-between gap-2 font-mono-tech text-xs">
+            <span class="truncate"><strong class="text-rose-400 mr-2">${i + 1}.</strong>${t.artist} — ${t.title} <span class="text-[var(--accent-primary)]">(${t.bpm} BPM)</span></span>
+            <div class="flex items-center gap-1 shrink-0"><button type="button" data-mgr-up="${i}" class="hud-well px-2 py-0.5 rounded">↑</button><button type="button" data-mgr-dn="${i}" class="hud-well px-2 py-0.5 rounded">↓</button><button type="button" data-mgr-rm="${i}" class="hud-well px-2 py-0.5 rounded text-rose-400">✕</button></div>
+          </div>
+        `;
+      }).join('') || `<div class="hud-well p-6 rounded-xl text-center text-[var(--text-muted)]">Empty setlist.</div>`;
+
+      tbl.querySelectorAll('[data-mgr-up]').forEach((b) => {
+        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-up')); if (i > 0) { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
+      });
+      tbl.querySelectorAll('[data-mgr-dn]').forEach((b) => {
+        b.onclick = () => { const i = Number(b.getAttribute('data-mgr-dn')); if (i < ids.length - 1) { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); } };
+      });
+      tbl.querySelectorAll('[data-mgr-rm]').forEach((b) => {
+        b.onclick = () => { ids.splice(Number(b.getAttribute('data-mgr-rm')), 1); VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId); renderSetlistManagerModal(); refreshHudViews(); };
+      });
+    }
+
+    function renderAccountHubModal() {
+      const u = voidState.user;
+      document.getElementById('hubProfileName').textContent = u ? u.displayName : 'Guest Producer';
+      document.getElementById('hubProfileEmail').textContent = u ? u.email : 'Not signed in';
+      document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
+      const perms = u?.permissions || { tier: 'paid', automation: true, palettes: true, rig: true, isAdmin: false };
+      document.getElementById('hubPermissionsGrid').innerHTML = [
+        { label: 'Tier', val: (perms.tier || 'paid').toUpperCase(), ok: true },
+        { label: 'Admin', val: perms.isAdmin ? 'ADMIN ✓' : 'USER', ok: perms.isAdmin }
+      ].map((p) => `<div class="hud-well p-2.5 rounded-lg"><div class="text-[9px] text-[var(--text-secondary)]">${p.label}</div><div class="font-bold mt-0.5 ${p.ok ? 'text-emerald-400' : 'text-gray-400'}">${p.val}</div></div>`).join('');
+      document.getElementById('hubLibraryCount').textContent = voidState.tracks.length.toLocaleString();
+      document.getElementById('hubSetlistsCount').textContent = `${Object.keys(voidState.playlists).length} Sets`;
+      document.getElementById('hubCloudLibraryPreview').innerHTML = voidState.tracks.slice(0, 30).map((t) => `
+        <div class="flex justify-between py-1 border-b border-[var(--border-hairline)]"><span class="truncate text-white">${t.artist} — ${t.title}</span><span class="text-[var(--accent-primary)] shrink-0 ml-2">${t.missingData ? 'Unscanned' : t.bpm + ' BPM'}</span></div>
+      `).join('');
+    }
+
+    function renderSupportChatMessages() {
+      const box = document.getElementById('supportChatMessages');
+      box.innerHTML = `<div class="hud-well p-2.5 rounded-xl text-[var(--text-secondary)]"><strong class="text-[var(--accent-primary)]">VNTEX AI Support:</strong> Ask me anything about Argon5 constellation navigation, custom tags, or Rekordbox XML exports!</div>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await VNTEXCloudPersistence.init();
+      const savedPal = JSON.parse(localStorage.getItem(CORE_KEYS.ACTIVE_PALETTE) || 'null');
+      if (savedPal) applyGlobalSuitePalette(savedPal);
+
+      if (voidState.user && voidState.user.email) {
+        document.getElementById('userStatusName').textContent = voidState.user.displayName || voidState.user.email;
+        document.getElementById('userStatusIcon').className = 'fa-solid fa-circle-check text-emerald-400 text-[10px]';
+        document.getElementById('userVerifiedBadge').classList.toggle('hidden', !voidState.user.verifiedBadge);
+        document.getElementById('headerAdminDashLink').classList.toggle('hidden', !voidState.user.permissions?.isAdmin);
+      }
+
+      const plData = await VNTEXCloudPersistence.loadPlaylists(voidState.user);
+      voidState.playlists = plData.playlists; voidState.activePlaylistId = plData.activePlaylistId;
+
+      const loaded = await VNTEXCloudPersistence.loadLibrary(voidState.user);
+      voidState.tracks = loaded.length ? loaded : generateTracks(75, true);
+      indexAndPositionTracks(voidState.tracks);
+      voidState.anchorId = voidState.tracks[0]?.id || null;
+      refreshHudViews();
+
+      const loop = (t) => { renderConstellationVoid(t); requestAnimationFrame(loop); };
+      requestAnimationFrame(loop);
+
+      // Draggable HUD Handlers
+      document.querySelectorAll('.drag-handle').forEach((handle) => {
+        const cardId = handle.getAttribute('data-drag-parent'), card = document.getElementById(cardId);
+        if (!card) return;
+        let dragging = false, ox = 0, oy = 0;
+        handle.addEventListener('mousedown', (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          dragging = true; const r = card.getBoundingClientRect();
+          ox = e.clientX - r.left; oy = e.clientY - r.top;
+          card.style.bottom = 'auto'; card.style.right = 'auto';
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!dragging) return;
+          card.style.left = `${Math.max(8, Math.min(window.innerWidth - 200, e.clientX - ox))}px`;
+          card.style.top = `${Math.max(52, Math.min(window.innerHeight - 100, e.clientY - oy))}px`;
+        });
+        window.addEventListener('mouseup', () => { dragging = false; });
+      });
+
+      // Mouse Navigation D-Pad & Zoom
+      document.querySelectorAll('[data-nav-pan]').forEach((btn) => {
+        btn.onclick = () => {
+          const dir = btn.getAttribute('data-nav-pan');
+          if (dir === 'left') voidState.camX += 90; if (dir === 'right') voidState.camX -= 90;
+          if (dir === 'up') voidState.camY += 90; if (dir === 'down') voidState.camY -= 90;
+        };
+      });
+      document.getElementById('zoomInBtn').onclick = () => { voidState.zoom = Math.min(4.5, voidState.zoom * 1.22); };
+      document.getElementById('zoomOutBtn').onclick = () => { voidState.zoom = Math.max(0.25, voidState.zoom * 0.82); };
+      document.getElementById('recenterVoidBtn').onclick = () => { voidState.camX = 0; voidState.camY = 0; voidState.zoom = 1.0; };
+
+      // Scan All Unknown Button
+      document.getElementById('scanAllUnknownBtn').onclick = async () => {
+        const unknowns = voidState.tracks.filter((t) => t.missingData);
+        if (!unknowns.length) {
+          const extra = generateTracks(6, true).map((x) => ({ ...x, missingData: true, bpm: 0, camelot: '', energy: 0 }));
+          voidState.tracks.push(...extra); indexAndPositionTracks(voidState.tracks); refreshHudViews(); return;
+        }
+        const icon = document.getElementById('scanUnknownIcon'), lbl = document.getElementById('scanUnknownLabel');
+        icon.className = 'fa-solid fa-circle-notch fa-spin text-amber-400';
+        for (let i = 0; i < unknowns.length; i++) {
+          lbl.textContent = `Scanning ${i + 1}/${unknowns.length}...`;
+          await new Promise((r) => setTimeout(r, 45));
+          const t = unknowns[i], k = CAMELOT_MAP[(i * 5) % 24];
+          t.bpm = 120 + (i % 14); t.camelot = k.camelot; t.standard = k.standard;
+          t.energy = 6 + (i % 4); t.genre = GENRE_POOL[i % GENRE_POOL.length]; t.missingData = false;
+        }
+        icon.className = 'fa-solid fa-wave-square text-amber-400';
+        indexAndPositionTracks(voidState.tracks);
+        await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
+        refreshHudViews();
+      };
+
+      // Custom Tags
+      document.getElementById('addTagToAnchorBtn').onclick = () => {
+        const val = document.getElementById('customTagInput').value.trim(), a = voidState.trackMap.get(voidState.anchorId);
+        if (!val || !a) return; if (!a.tags.includes(val)) a.tags.push(val);
+        document.getElementById('customTagInput').value = '';
+        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
+      };
+      document.getElementById('addTagToSetlistBtn').onclick = () => {
+        const val = document.getElementById('customTagInput').value.trim(); if (!val) return;
+        getActiveSetlistIds().forEach((id) => { const t = voidState.trackMap.get(id); if (t && !t.tags.includes(val)) t.tags.push(val); });
+        document.getElementById('customTagInput').value = '';
+        VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews();
+      };
+      document.getElementById('activeCustomTagFilterSelect').onchange = (e) => {
+        voidState.activeTagFilter = e.target.value;
+        if (e.target.value) { voidState.activeParams.tag = true; document.querySelector('[data-toggle-param="tag"]').classList.add('active-tag'); }
+        refreshHudViews();
+      };
+
+      document.getElementById('highlightActiveSetBtn').onclick = (e) => {
+        voidState.isolateSetlistMode = !voidState.isolateSetlistMode;
+        e.currentTarget.textContent = voidState.isolateSetlistMode ? '★ Showing Set Only' : '★ Isolate';
+      };
+
+      // Modals
+      const mgrModal = document.getElementById('setlistManagerModal');
+      document.getElementById('openSetlistManagerBtn').onclick = () => { renderSetlistManagerModal(); mgrModal.classList.remove('hidden'); };
+      document.getElementById('closeSetlistManagerBtn').onclick = () => mgrModal.classList.add('hidden');
+      document.getElementById('mgrCreateListBtn').onclick = () => {
+        const id = 'pl_' + Math.random().toString(36).slice(2, 8);
+        voidState.playlists[id] = { id, name: `Setlist #${Object.keys(voidState.playlists).length + 1}`, trackIds: [] };
+        voidState.activePlaylistId = id; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, id);
+        renderSetlistManagerModal(); refreshHudViews();
+      };
+      document.getElementById('mgrSaveNameBtn').onclick = () => {
+        const pl = voidState.playlists[voidState.activePlaylistId];
+        if (pl) { pl.name = document.getElementById('mgrActiveListNameInput').value.trim() || pl.name; VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, pl.id); renderSetlistManagerModal(); refreshHudViews(); }
+      };
+      document.getElementById('mgrHighlightOnVoidBtn').onclick = () => { voidState.isolateSetlistMode = true; document.getElementById('highlightActiveSetBtn').textContent = '★ Showing Set Only'; mgrModal.classList.add('hidden'); };
+      document.getElementById('mgrDeleteListBtn').onclick = () => {
+        if (Object.keys(voidState.playlists).length <= 1) return;
+        delete voidState.playlists[voidState.activePlaylistId]; voidState.activePlaylistId = Object.keys(voidState.playlists)[0];
+        VNTEXCloudPersistence.savePlaylists(voidState.user, voidState.playlists, voidState.activePlaylistId);
+        renderSetlistManagerModal(); refreshHudViews();
+      };
+
+      const setModal = document.getElementById('suiteSettingsModal');
+      document.getElementById('openSuiteSettingsBtn').onclick = () => setModal.classList.remove('hidden');
+      document.getElementById('closeSuiteSettingsBtn').onclick = () => setModal.classList.add('hidden');
+
+      const accModal = document.getElementById('accountHubModal');
+      document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
+      document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
+
+      const supModal = document.getElementById('supportAgentModal');
+      document.getElementById('openSupportChatBtn').onclick = () => { renderSupportChatMessages(); supModal.classList.remove('hidden'); };
+      document.getElementById('closeSupportChatBtn').onclick = () => supModal.classList.add('hidden');
+
+      const impModal = document.getElementById('libraryImportModal');
+      document.getElementById('openLibraryImportModalBtn').onclick = () => impModal.classList.remove('hidden');
+      document.getElementById('closeLibraryImportModalBtn').onclick = () => impModal.classList.add('hidden');
+
+      document.getElementById('generate10kTestBtn').onclick = async () => {
+        const t0 = performance.now();
+        voidState.tracks = MassiveLibraryImporter.generate10kPreAnalyzedTracks(10000);
+        indexAndPositionTracks(voidState.tracks); voidState.anchorId = voidState.tracks[0].id;
+        await VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks);
+        refreshHudViews(); impModal.classList.add('hidden');
+        alert(`✓ Generated 10,000 tracks in ${((performance.now() - t0) / 1000).toFixed(2)}s!`);
+      };
+
+      // Toggles
+      document.getElementById('toggleFilterLogicBtn').onclick = (e) => {
+        voidState.filterLogic = voidState.filterLogic === 'AND' ? 'OR' : 'AND';
+        e.currentTarget.textContent = voidState.filterLogic === 'AND' ? 'MATCH: ALL (AND)' : 'MATCH: ANY (OR)';
+        refreshHudViews();
+      };
+      document.querySelectorAll('[data-toggle-param]').forEach((b) => {
+        b.onclick = () => { const p = b.getAttribute('data-toggle-param'); voidState.activeParams[p] = !voidState.activeParams[p]; b.classList.toggle(`active-${p}`, voidState.activeParams[p]); refreshHudViews(); };
+      });
+
+      const canvas = document.getElementById('constellationCanvas');
+      canvas.addEventListener('mousedown', (e) => { voidState.isDragging = true; voidState.dragMoved = false; voidState.dragStartX = e.clientX - voidState.camX; voidState.dragStartY = e.clientY - voidState.camY; });
+      window.addEventListener('mousemove', (e) => {
+        const r = canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+        if (voidState.isDragging) {
+          const nx = e.clientX - voidState.dragStartX, ny = e.clientY - voidState.dragStartY;
+          if (Math.hypot(nx - voidState.camX, ny - voidState.camY) > 4) voidState.dragMoved = true;
+          voidState.camX = nx; voidState.camY = ny; return;
+        }
+        let closest = null, minDist = 14;
+        for (let i = 0; i < voidState.tracks.length; i++) {
+          const t = voidState.tracks[i], d = Math.hypot((t.screenX || 0) - mx, (t.screenY || 0) - my);
+          if (d < minDist) { minDist = d; closest = t; }
+        }
+        voidState.hoveredId = closest ? closest.id : null;
+      });
+      window.addEventListener('mouseup', () => {
+        if (!voidState.isDragging) return; voidState.isDragging = false;
+        if (!voidState.dragMoved && voidState.hoveredId) { voidState.anchorId = voidState.hoveredId; refreshHudViews(); }
+      });
+      canvas.addEventListener('wheel', (e) => { e.preventDefault(); voidState.zoom = Math.max(0.25, Math.min(4.5, voidState.zoom * (e.deltaY < 0 ? 1.12 : 0.89))); }, { passive: false });
+    });
+  </script>
+</body>
+</html>
