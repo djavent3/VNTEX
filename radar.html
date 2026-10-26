@@ -118,7 +118,7 @@
 <body class="antialiased flex flex-col">
 
   <!-- ==========================================================================
-       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL 3 TOOLS)
+       UNIVERSAL VNTEX SUITE HEADER (CLEAN: NO ADMIN OR OWNER BUTTONS IN HEADER)
        ========================================================================== -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
@@ -151,11 +151,6 @@
         <i class="fa-regular fa-comment-dots"></i>
         <span id="unreadNotifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-mono-tech text-[9px] flex items-center justify-center font-bold">1</span>
       </button>
-
-      <!-- Admin Dashboard Link: Strictly Gated to Designated Admins Only -->
-      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400">
-        <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
-      </a>
 
       <!-- Privacy-Safe Account Button: Shows Only Avatar + @username -->
       <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
@@ -354,7 +349,8 @@
   </div>
 
   <!-- ==========================================================================
-       UNIVERSAL 5-TAB ACCOUNT HUB MODAL (IDENTICAL ACROSS ALL 3 TOOLS, NO LOG BLOAT)
+       UNIVERSAL 5-TAB ACCOUNT HUB MODAL
+       (ADMIN DASHBOARD ACCESS RELOCATED EXCLUSIVELY TO PROFILE TAB FOR ADMINS)
        ========================================================================== -->
   <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[var(--border-highlight)] flex flex-col max-h-[88vh]">
@@ -375,7 +371,7 @@
       </div>
 
       <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
-        <!-- TAB 1: ACCOUNT INFO, 5 STUDIO AVATARS & GLOBAL UI CUSTOMIZATION -->
+        <!-- TAB 1: ACCOUNT INFO, ADMIN DASHBOARD GATE (ADMIN-ONLY) & UI CUSTOMIZER -->
         <div id="acctPane-profile" class="acct-tab-pane space-y-4">
           <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
@@ -390,6 +386,12 @@
             </div>
             <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-bold text-[11px]">Auth / Sign In →</a>
           </div>
+
+          <!-- Admin Dashboard Access: Strictly Hidden Unless user.permissions.isAdmin === true -->
+          <a id="profileAdminDashLink" href="index.html#admin" class="hidden w-full py-2.5 px-4 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 transition">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Open Admin Dashboard</span>
+          </a>
 
           <form id="profileCustomizeForm" class="hud-well p-4 rounded-xl space-y-3.5">
             <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Profile Identity &amp; Studio Avatar</div>
@@ -423,7 +425,7 @@
           </form>
         </div>
 
-        <!-- TAB 2: CONVERTER SUMMARY (NO HISTORY BLOAT) -->
+        <!-- TAB 2: CONVERTER SUMMARY -->
         <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3 font-mono-tech">
           <div class="grid grid-cols-3 gap-3">
             <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-[var(--accent-primary)] mt-1">Pioneer CDJ</div></div>
@@ -433,7 +435,7 @@
           <a href="index.html" class="block text-center py-2.5 rounded-xl bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase">Open Converter Studio →</a>
         </div>
 
-        <!-- TAB 3: RADAR SUMMARY (NO HISTORY BLOAT) -->
+        <!-- TAB 3: RADAR SUMMARY -->
         <div id="acctPane-radar" class="acct-tab-pane hidden space-y-3 font-mono-tech">
           <div class="grid grid-cols-3 gap-3">
             <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">CLOUD CRATE</div><div id="hubLibraryCount" class="text-sm font-bold text-[var(--accent-primary)] mt-1">0 Tracks</div></div>
@@ -445,7 +447,7 @@
           </div>
         </div>
 
-        <!-- TAB 4: BLOODSTREAM SUMMARY (NO HISTORY BLOAT) -->
+        <!-- TAB 4: BLOODSTREAM SUMMARY -->
         <div id="acctPane-bloodstream" class="acct-tab-pane hidden space-y-3 font-mono-tech">
           <div class="grid grid-cols-3 gap-3">
             <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-[var(--text-secondary)]">COMPILED STREAMS</div><div id="hubBloodCount" class="text-sm font-bold text-rose-500 mt-1">0 Tracks</div></div>
@@ -893,7 +895,6 @@
       const activePl = getActivePlaylist(), setlistIds = activePl ? activePl.trackIds : [], setlistSet = new Set(setlistIds);
       const tSec = timeMs * 0.001, drift = voidState.floatDriftEnabled;
 
-      // 1. Background / Unselected Stars (When no anchor is selected, stars glow slightly brighter so users can easily click any star)
       ctx.beginPath();
       ctx.fillStyle = anchor ? '#1c1d2b' : 'rgba(148, 150, 168, 0.55)';
       const baseStarSize = anchor ? 2.2 : 3.2;
@@ -909,7 +910,6 @@
       }
       ctx.fill();
 
-      // 2. Missing Metadata Hollow Amber Rings
       ctx.beginPath(); ctx.strokeStyle = 'rgba(245,158,11,0.55)'; ctx.lineWidth = 1.3;
       for (let i = 0; i < tracks.length; i++) {
         const t = tracks[i];
@@ -918,7 +918,6 @@
       }
       ctx.stroke();
 
-      // 3. Lit Matching Stars
       const litR = Math.max(3.5, Math.min(7, 4.5 * Math.pow(zoom, 0.35)));
       if (anchor && !voidState.isolateSetlistMode) {
         const buckets = { '#00f2fe': [], '#10b981': [], '#f59e0b': [], '#a855f7': [], '#ec4899': [] };
@@ -943,7 +942,6 @@
         }
       }
 
-      // 4. Persistent Multi-Branch Setlist Vectors
       if (activePl && Array.isArray(activePl.branches)) {
         const branches = activePl.branches.filter((b) => b.length > 0), totalBranches = branches.length;
         branches.forEach((branch, bIdx) => {
@@ -977,7 +975,6 @@
         });
       }
 
-      // 5. Active Anchor Halo & Hovered Star
       if (anchor) {
         ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 12 + Math.sin(tSec * 4.5) * 2.5, 0, Math.PI * 2); ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
         ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 6.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
@@ -1106,7 +1103,6 @@
           b.onclick = () => { anchor.tags.splice(Number(b.getAttribute('data-del-tag')), 1); VNTEXCloudPersistence.saveLibrary(voidState.user, voidState.tracks); refreshHudViews(); };
         });
       } else {
-        // Unselected state when user clicks empty background
         document.getElementById('anchorTitle').textContent = 'No Anchor Selected';
         document.getElementById('anchorArtist').textContent = 'Click any star on the void to inspect & rank matches';
         document.getElementById('anchorBpmVal').textContent = '—';
@@ -1203,10 +1199,6 @@
       document.getElementById('userStatusName').textContent = handle;
       document.getElementById('headerUserAvatarImg').src = getAvatarSvgById(avatarId);
       document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u?.verifiedBadge);
-
-      // Admin Dash Link strictly gated to users designated as admin
-      const isAdm = !!(u && u.permissions && u.permissions.isAdmin === true);
-      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
     }
 
     function renderAccountHubModal() {
@@ -1219,6 +1211,11 @@
       document.getElementById('hubProfileBadge').classList.toggle('hidden', !u?.verifiedBadge);
       document.getElementById('custFullNameInput').value = u.fullName || u.displayName || '';
       document.getElementById('custUsernameInput').value = handle;
+
+      // Relocated Admin Dashboard Button inside Profile Section (Strictly Admin-Only)
+      const isAdm = Boolean(u && u.permissions && u.permissions.isAdmin === true);
+      const profAdmLink = document.getElementById('profileAdminDashLink');
+      if (profAdmLink) profAdmLink.classList.toggle('hidden', !isAdm);
 
       const grid = document.getElementById('avatarPickerGrid');
       grid.innerHTML = DEFAULT_AVATARS.map((av) => `
@@ -1278,7 +1275,6 @@
       const loop = (t) => { renderRadarVoid(t); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
 
-      // Canvas Interaction & Background Click Unselection
       const canvas = document.getElementById('radarVoidCanvas');
       canvas.addEventListener('mousedown', (e) => {
         voidState.isDragging = true;
@@ -1309,7 +1305,6 @@
             if (e.shiftKey) connectTrackToSetlistTree(voidState.hoveredId);
             else { voidState.anchorId = voidState.hoveredId; refreshHudViews(); }
           } else if (e.target === canvas) {
-            // Clicked on empty background space -> Unselect active anchor node!
             voidState.anchorId = null;
             refreshHudViews();
           }
@@ -1317,7 +1312,6 @@
       });
       canvas.addEventListener('wheel', (e) => { e.preventDefault(); voidState.zoom = Math.max(0.25, Math.min(4.5, voidState.zoom * (e.deltaY < 0 ? 1.12 : 0.89))); }, { passive: false });
 
-      // Profile & UI Save
       document.getElementById('profileCustomizeForm').onsubmit = (e) => {
         e.preventDefault();
         const fullName = document.getElementById('custFullNameInput').value.trim();
@@ -1345,7 +1339,6 @@
         b.onclick = () => applyGlobalSuitePalette(THEME_PRESETS[b.getAttribute('data-theme-preset')]);
       });
 
-      // Header Modals
       const accModal = document.getElementById('accountHubModal');
       document.getElementById('openAccountHubBtn').onclick = () => { renderAccountHubModal(); accModal.classList.remove('hidden'); };
       document.getElementById('closeAccountHubBtn').onclick = () => accModal.classList.add('hidden');
@@ -1372,7 +1365,6 @@
         renderTopLeftMapNodeTree();
       };
 
-      // Mouse D-Pad
       document.querySelectorAll('[data-nav-pan]').forEach((btn) => {
         btn.onclick = () => {
           const dir = btn.getAttribute('data-nav-pan');
@@ -1384,7 +1376,6 @@
       document.getElementById('zoomOutBtn').onclick = () => { voidState.zoom = Math.max(0.25, voidState.zoom * 0.82); };
       document.getElementById('recenterVoidBtn').onclick = () => { voidState.camX = 0; voidState.camY = 0; voidState.zoom = 1.0; };
 
-      // Draggable HUDs
       document.querySelectorAll('.drag-handle').forEach((handle) => {
         const card = document.getElementById(handle.getAttribute('data-drag-parent'));
         if (!card) return;

@@ -124,7 +124,7 @@
 <body class="antialiased flex flex-col blood-skin-1">
 
   <!-- ==========================================================================
-       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL ACROSS ALL 3 TOOLS)
+       UNIVERSAL VNTEX SUITE HEADER (CLEAN: NO ADMIN OR OWNER BUTTONS IN HEADER)
        ========================================================================== -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
@@ -156,11 +156,6 @@
       <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] relative" title="AI Support Agent & Notifications">
         <i class="fa-regular fa-comment-dots"></i>
       </button>
-
-      <!-- Admin Dashboard Link: Strictly Gated to Designated Admins Only -->
-      <a id="headerAdminDashLink" href="index.html#admin" class="hidden hud-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40">
-        <i class="fa-solid fa-shield-halved mr-1"></i>Admin Dash
-      </a>
 
       <!-- Privacy-Safe Account Button: Shows Only Avatar + @username -->
       <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 hover:border-[var(--accent-primary)]">
@@ -284,7 +279,8 @@
   </main>
 
   <!-- ==========================================================================
-       UNIVERSAL 5-TAB ACCOUNT HUB MODAL (IDENTICAL ACROSS ALL 3 TOOLS)
+       UNIVERSAL 5-TAB ACCOUNT HUB MODAL
+       (ADMIN DASHBOARD ACCESS RELOCATED EXCLUSIVELY TO PROFILE TAB FOR ADMINS)
        ========================================================================== -->
   <div id="accountHubModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[#FF000D]/60 flex flex-col max-h-[88vh]">
@@ -320,6 +316,12 @@
             <a href="index.html" class="px-3 py-1.5 rounded-lg bg-[#FF000D] text-black font-mono-tech font-bold text-[11px]">Auth / Sign In →</a>
           </div>
 
+          <!-- Admin Dashboard Access: Strictly Hidden Unless user.permissions.isAdmin === true -->
+          <a id="profileAdminDashLink" href="index.html#admin" class="hidden w-full py-2.5 px-4 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 transition">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Open Admin Dashboard</span>
+          </a>
+
           <form id="profileCustomizeForm" class="hud-well p-4 rounded-xl space-y-3.5">
             <div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Profile Identity &amp; Studio Avatar</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -352,7 +354,6 @@
           </form>
         </div>
 
-        <!-- STREAMLINED TOOL TABS (NO HISTORY LOG BLOAT) -->
         <div id="acctPane-converter" class="acct-tab-pane hidden space-y-3 font-mono-tech">
           <div class="grid grid-cols-3 gap-3">
             <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">HARDWARE RIG</div><div id="hubConvRig" class="text-xs font-bold text-cyan-400 mt-1">Pioneer CDJ</div></div>
@@ -464,8 +465,7 @@
       queue: [],
       isDownloading: false,
       stopRequested: false,
-      activeSkin: 1,
-      idb: null
+      activeSkin: 1
     };
 
     function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
@@ -714,8 +714,6 @@
       document.getElementById('userStatusName').textContent = handle;
       document.getElementById('headerUserAvatarImg').src = getAvatarSvgById(avatarId);
       document.getElementById('userVerifiedBadge').classList.toggle('hidden', !u?.verifiedBadge);
-      const isAdm = !!(u && u.permissions && u.permissions.isAdmin === true);
-      document.getElementById('headerAdminDashLink').classList.toggle('hidden', !isAdm);
     }
 
     function renderAccountHubModal() {
@@ -726,6 +724,11 @@
       document.getElementById('hubProfileAvatarImg').src = getAvatarSvgById(avatarId);
       document.getElementById('custFullNameInput').value = u.fullName || '';
       document.getElementById('custUsernameInput').value = handle;
+
+      // Relocated Admin Dashboard Button inside Profile Section (Strictly Admin-Only)
+      const isAdm = Boolean(u && u.permissions && u.permissions.isAdmin === true);
+      const profAdmLink = document.getElementById('profileAdminDashLink');
+      if (profAdmLink) profAdmLink.classList.toggle('hidden', !isAdm);
 
       const grid = document.getElementById('avatarPickerGrid');
       grid.innerHTML = DEFAULT_AVATARS.map((av) => `
@@ -758,7 +761,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // 15-Block Segmented Loader
       const overlay = document.getElementById('bloodSplashOverlay'), canvas = document.getElementById('segmentedSplashCanvas');
       if (overlay && canvas) {
         const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, blocks = 15, bw = (W / blocks) - 3;

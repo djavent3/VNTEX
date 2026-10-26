@@ -115,7 +115,7 @@
        VIEW 1: PUBLIC USER CONVERTER APP
        ========================================================================== -->
   <div id="userAppWrapper">
-            <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30 sticky top-0">
+                <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30 sticky top-0">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/50 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
@@ -132,20 +132,12 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <!-- Standardized Sliders Icon for Converter Settings -->
         <button id="openStudioHubBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Converter Options & Studio Settings">
           <i id="studioHubLockIcon" class="fa-solid fa-sliders"></i>
         </button>
 
-        <!-- AI Support Chat Assistance Button -->
         <button id="openIndexSupportChatBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="AI Support Agent & Notifications">
           <i class="fa-regular fa-comment-dots"></i>
-        </button>
-
-        <!-- Admin Dashboard Link: Strictly Gated to Designated Admins Only -->
-        <button id="headerAdminSwitchBtn" type="button" class="hidden hardware-well px-2.5 py-1 rounded-md text-[11px] font-mono-tech font-bold text-amber-400 border border-amber-400/40 hover:border-amber-400 flex items-center gap-1.5">
-          <i class="fa-solid fa-shield-halved text-[10px]"></i>
-          <span>Admin Dash</span>
         </button>
 
         <button id="openAccountBtn" type="button" class="hardware-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-[var(--accent-primary)]/40 hover:border-[var(--accent-primary)]">
@@ -1639,27 +1631,23 @@
           saveState();
           updateAccountAndGatingUI();
 
+      const profAdminBtn = document.getElementById("goToAdminFromAccountBtn");
+      if (profAdminBtn) {
+        const isUserAdmin = Boolean(state.user && state.user.permissions && state.user.permissions.isAdmin === true);
+        profAdminBtn.classList.toggle("hidden", !isUserAdmin);
+        profAdminBtn.onclick = () => {
+          document.getElementById("accountModal")?.classList.add("hidden");
+          window.location.hash = "#admin";
+          checkRouteMode();
+        };
+      }
+
+
       if (localStorage.getItem("vntex_core_owner_elevated") === "true") {
         state.directOwnerUnlocked = true;
         state.adminActingRole = "owner";
       }
-      const hdrElev = document.getElementById("headerElevateOwnerBtn");
-      if (hdrElev) {
-        hdrElev.classList.toggle("hidden", !isSignedInUserAdmin() && !state.directOwnerUnlocked);
-        hdrElev.onclick = async () => {
-          const code = prompt("Enter Master Owner Access Code (Ownr$88!Vntx#Plains92Z):");
-          if (!code) return;
-          if (await verifyDirectMasterCode(code)) {
-            state.directOwnerUnlocked = true;
-            state.adminActingRole = "owner";
-            localStorage.setItem("vntex_core_owner_elevated", "true");
-            window.location.hash = "#admin";
-            checkRouteMode();
-          } else {
-            alert("Invalid Master Access Code.");
-          }
-        };
-      }
+      
 
           renderAdminDashboard();
         };
