@@ -3,183 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Production Toolbox &amp; Converter Studio</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>VNTEX // Production Toolbox Menu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
-  <script src="vntex-core.js?v=1793070475"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="vntex-core.js?v=1793073189"></script>
   <style>
-    :root { --bg-void: #020204; --bg-panel: #0a0a10; --bg-well: #040407; --border-hairline: #181824; --border-highlight: #2a2b3d; --text-primary: #f3f4f8; --text-secondary: #9496a8; --accent-primary: #00f2fe; --accent-glow: rgba(0, 242, 254, 0.25); }
+    :root {
+      --bg-void: #020204;
+      --bg-panel: #0a0a10;
+      --bg-well: #040407;
+      --border-hairline: #181824;
+      --border-highlight: #2a2b3d;
+      --text-primary: #f3f4f8;
+      --text-secondary: #9496a8;
+      --accent-primary: #00f2fe;
+      --accent-glow: rgba(0, 242, 254, 0.25);
+    }
     * { box-sizing: border-box; user-select: none; }
-    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(0, 242, 254, 0.08), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(255, 0, 13, 0.07), transparent 45%),
+        var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+    }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 90%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); }
-    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); }
-    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; cursor: pointer; }
-    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(0, 242, 254, 0.14); border-color: var(--accent-primary); }
-    .tool-card:hover { transform: translateY(-4px); transition: all 0.2s ease; }
+    .hud-glass {
+      background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.92);
+    }
+    .hud-well {
+      background: var(--bg-well);
+      border: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+    .suite-nav-pill {
+      padding: 0.3rem 0.7rem;
+      border-radius: 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-highlight); }
+    .tool-launcher-card { transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    .tool-launcher-card:hover { transform: translateY(-4px); }
   </style>
 </head>
-<body class="antialiased flex flex-col">
+<body class="antialiased flex flex-col justify-between min-h-screen">
 
+  <!-- UNIVERSAL VNTEX SUITE HEADER -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
-      <a href="#menu" class="flex items-center gap-2 no-underline" title="Main Toolbox Menu">
+      <a href="index.html" class="flex items-center gap-2 no-underline">
         <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/60 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
         <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
-        <span id="headerContextBadge" class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30">TOOLBOX MENU</span>
+        <span class="hidden sm:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">TOOLBOX MENU</span>
       </a>
+
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
-        <a href="#converter" id="navPillConverter" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
-        <a href="radar.html" class="suite-nav-pill"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
-        <a href="bloodstream.html" class="suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span></a>
+        <a href="converter.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[#00f2fe] text-[10px]"></i><span>Converter</span></a>
+        <a href="radar.html" class="suite-nav-pill"><i class="fa-solid fa-compass text-[#00ff41] text-[10px]"></i><span>Radar</span></a>
+        <a href="bloodstream.html" class="suite-nav-pill"><i class="fa-solid fa-droplet text-[#FF000D] text-[10px]"></i><span>Bloodstream</span></a>
       </nav>
     </div>
+
     <div class="flex items-center gap-2">
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer"><i class="fa-solid fa-sliders"></i></button>
-      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer"><i class="fa-regular fa-comment-dots"></i></button>
-      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 cursor-pointer"><span class="font-mono-tech font-bold">Log In</span></button>
+      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer" title="AI Studio Assistant">
+        <i class="fa-regular fa-comment-dots"></i>
+      </button>
+
+      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 hover:border-[var(--accent-primary)] cursor-pointer">
+        <i class="fa-solid fa-right-to-bracket text-[var(--accent-primary)] text-[11px]"></i>
+        <span id="userStatusName" class="font-mono-tech font-bold">Log In</span>
+      </button>
     </div>
   </header>
 
-  <!-- VIEW 1: MAIN TOOLBOX MENU (DEFAULT AT index.html) -->
-  <section id="viewToolboxMenu" class="flex-1 overflow-y-auto px-4 sm:px-8 py-10 flex flex-col justify-center">
-    <div class="max-w-5xl w-full mx-auto space-y-10">
-      <div class="text-center space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono-tech text-[10px] uppercase tracking-widest text-[#00f2fe]">Unified Single-Account Production Suite</div>
-        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">Select a VNTEX Tool</h1>
-        <p class="text-xs sm:text-sm text-[var(--text-secondary)] max-w-xl mx-auto">Click any tool card below to launch its workspace, or bookmark its direct link.</p>
+  <!-- DEDICATED ROOT TOOLBOX MENU -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-12 flex flex-col justify-center space-y-10">
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono-tech text-[10px] uppercase tracking-widest text-[#00f2fe]">
+        <span>Unified Single-Account Audio Suite</span>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="#converter" class="tool-card hud-glass p-7 rounded-2xl border border-[#181824] hover:border-[#00f2fe] flex flex-col justify-between space-y-6 no-underline">
-          <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#00f2fe]/15 border border-[#00f2fe]/50 flex items-center justify-center text-[#00f2fe] text-2xl"><i class="fa-solid fa-bolt"></i></div>
-            <div><div class="font-mono-tech text-[10px] uppercase text-[#00f2fe] font-bold">Module 01 // Transcoder</div><h2 class="text-xl font-extrabold text-white mt-0.5">Converter Studio</h2></div>
-            <p class="text-xs text-[var(--text-secondary)]">Fast Web default preset (192kbps MP3 / 44.1kHz), dynamic BPM range bounds, and batch metadata prep.</p>
-          </div>
-          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#00f2fe]"><span>index.html#converter</span><span>Launch →</span></div>
-        </a>
-        <a href="radar.html" class="tool-card hud-glass p-7 rounded-2xl border border-[#0d2612] hover:border-[#00ff41] flex flex-col justify-between space-y-6 no-underline">
-          <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#00ff41]/15 border border-[#00ff41]/50 flex items-center justify-center text-[#00ff41] text-2xl"><i class="fa-solid fa-compass"></i></div>
-            <div><div class="font-mono-tech text-[10px] uppercase text-[#00ff41] font-bold">Module 02 // Harmonic Void</div><h2 class="text-xl font-extrabold text-white mt-0.5">Harmonic Radar</h2></div>
-            <p class="text-xs text-[var(--text-secondary)]">Pitch-black neon green constellation void, Brain % scoring, and Suite Song import button.</p>
-          </div>
-          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#00ff41]"><span>radar.html</span><span>Launch →</span></div>
-        </a>
-        <a href="bloodstream.html" class="tool-card hud-glass p-7 rounded-2xl border border-[#330000] hover:border-[#FF000D] flex flex-col justify-between space-y-6 no-underline">
-          <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D]/50 flex items-center justify-center text-[#FF000D] text-2xl"><i class="fa-solid fa-droplet"></i></div>
-            <div><div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Module 03 // Stream Compiler</div><h2 class="text-xl font-extrabold text-white mt-0.5">Bloodstream Engine</h2></div>
-            <p class="text-xs text-[var(--text-secondary)]">Full-length 3:12 client-side audio synthesis, single-song mix isolation, and ID3v2.3 cover art.</p>
-          </div>
-          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#FF000D]"><span>bloodstream.html</span><span>Launch →</span></div>
-        </a>
-      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">Select a VNTEX Tool</h1>
+      <p class="text-xs sm:text-sm text-[var(--text-secondary)] max-w-xl mx-auto">
+        Choose a studio workspace below. Each tool runs on its own dedicated page for clean bookmarking while sharing your single VNTEX account.
+      </p>
     </div>
-  </section>
 
-  <!-- VIEW 2: CONVERTER STUDIO (AT index.html#converter) -->
-  <main id="viewConverterStudio" class="hidden flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
-    <section class="lg:col-span-5 flex flex-col gap-3.5 overflow-y-auto pr-1">
-      <div class="hud-glass rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Output Preset Profile</span>
-          <span id="activePresetBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-bold">FAST WEB (DEFAULT)</span>
-        </div>
-        <select id="converterPresetSelect" class="hud-well w-full px-3 py-2.5 rounded-xl font-mono-tech text-xs text-white cursor-pointer">
-          <option value="fast_web" selected>⚡ Fast Web (Default — MP3 192kbps / 44.1kHz Stream)</option>
-          <option value="cdj_3000">🎛️ Pioneer CDJ-3000 / Rekordbox (WAV 24-Bit / 48kHz)</option>
-          <option value="club_mp3">🔊 Club Master 320 (MP3 320kbps CBR / 44.1kHz)</option>
-        </select>
-      </div>
-
-      <div class="hud-glass rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">BPM Detection Bounds</span>
-          <span id="bpmRangeDynamicText" class="font-mono-tech text-xs font-extrabold px-2.5 py-0.5 rounded bg-emerald-400/15 text-emerald-400 border border-emerald-400/40">75 – 160 BPM</span>
-        </div>
-        <div class="grid grid-cols-2 gap-3 font-mono-tech text-xs">
-          <div class="hud-well p-3 rounded-xl space-y-1.5">
-            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]"><span>Min BPM</span><strong id="bpmMinValLabel" class="text-white">75</strong></div>
-            <input id="bpmMinInput" type="range" min="50" max="140" value="75" class="w-full accent-[#00f2fe] cursor-pointer" />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 1. CONVERTER STUDIO -->
+      <a href="converter.html" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#181824] hover:border-[#00f2fe] hover:shadow-[0_0_30px_rgba(0,242,254,0.18)] flex flex-col justify-between space-y-6 no-underline">
+        <div class="space-y-4">
+          <div class="w-14 h-14 rounded-2xl bg-[#00f2fe]/15 border border-[#00f2fe]/50 flex items-center justify-center text-[#00f2fe] text-2xl shadow-[0_0_20px_rgba(0,242,254,0.25)]">
+            <i class="fa-solid fa-bolt"></i>
           </div>
-          <div class="hud-well p-3 rounded-xl space-y-1.5">
-            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]"><span>Max BPM</span><strong id="bpmMaxValLabel" class="text-white">160</strong></div>
-            <input id="bpmMaxInput" type="range" min="100" max="220" value="160" class="w-full accent-[#00f2fe] cursor-pointer" />
+          <div>
+            <div class="font-mono-tech text-[10px] uppercase text-[#00f2fe] font-bold">Module 01 // Transcoder</div>
+            <h2 class="text-xl font-extrabold text-white mt-0.5">Converter Studio</h2>
           </div>
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Fast Web default preset (192kbps MP3 / 44.1kHz), hardware CDJ rigs, live dynamic BPM range bounds, and batch metadata prep.
+          </p>
         </div>
-      </div>
+        <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#00f2fe]">
+          <span>converter.html</span>
+          <span>Open Tool →</span>
+        </div>
+      </a>
 
-      <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] text-center space-y-3 cursor-pointer">
-        <input id="convFileInput" type="file" multiple accept="audio/*" class="hidden" />
-        <div class="font-bold text-xs text-white">Drop Audio Files Here or Click to Browse</div>
-        <button id="loadSampleTracksBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)] cursor-pointer">+ Load Sample Studio Tracks</button>
-      </div>
-    </section>
+      <!-- 2. HARMONIC RADAR -->
+      <a href="radar.html" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#0d2612] hover:border-[#00ff41] hover:shadow-[0_0_30px_rgba(0,255,65,0.18)] flex flex-col justify-between space-y-6 no-underline">
+        <div class="space-y-4">
+          <div class="w-14 h-14 rounded-2xl bg-[#00ff41]/15 border border-[#00ff41]/50 flex items-center justify-center text-[#00ff41] text-2xl shadow-[0_0_20px_rgba(0,255,65,0.25)]">
+            <i class="fa-solid fa-compass"></i>
+          </div>
+          <div>
+            <div class="font-mono-tech text-[10px] uppercase text-[#00ff41] font-bold">Module 02 // Harmonic Void</div>
+            <h2 class="text-xl font-extrabold text-white mt-0.5">Harmonic Radar</h2>
+          </div>
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Pitch-black neon green constellation void, Brain % compatibility ranking, map-layer DSP progress log, and multi-branch setlists.
+          </p>
+        </div>
+        <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#00ff41]">
+          <span>radar.html</span>
+          <span>Open Tool →</span>
+        </div>
+      </a>
 
-    <section class="lg:col-span-7 hud-glass rounded-2xl flex flex-col overflow-hidden">
-      <div class="px-4 py-3 border-b border-[var(--border-hairline)] bg-[#06060b] flex items-center justify-between font-mono-tech text-xs">
-        <span class="font-bold text-[var(--accent-primary)] uppercase">Conversion Queue (<span id="convQueueCount">0</span>)</span>
-        <button id="convertAllBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase cursor-pointer">⚡ Convert All</button>
-      </div>
-      <div id="convQueueList" class="flex-1 overflow-y-auto p-3.5 space-y-2.5"></div>
-    </section>
+      <!-- 3. BLOODSTREAM ENGINE -->
+      <a href="bloodstream.html" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#330000] hover:border-[#FF000D] hover:shadow-[0_0_30px_rgba(255,0,13,0.2)] flex flex-col justify-between space-y-6 no-underline">
+        <div class="space-y-4">
+          <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D]/50 flex items-center justify-center text-[#FF000D] text-2xl shadow-[0_0_20px_rgba(255,0,13,0.25)]">
+            <i class="fa-solid fa-droplet"></i>
+          </div>
+          <div>
+            <div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Module 03 // Stream Compiler</div>
+            <h2 class="text-xl font-extrabold text-white mt-0.5">Bloodstream Engine</h2>
+          </div>
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+            100% client-side full-length 3:12 audio synthesis, single-song mix isolation, individual queue downloads, and ID3v2.3 cover art.
+          </p>
+        </div>
+        <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#FF000D]">
+          <span>bloodstream.html</span>
+          <span>Open Tool →</span>
+        </div>
+      </a>
+    </div>
   </main>
 
+  <footer class="border-t border-[var(--border-hairline)] px-6 py-3 flex items-center justify-between font-mono-tech text-[11px] text-gray-500">
+    <span>VNTEX Suite // Argon4 Architecture</span>
+    <span>Converter • Radar • Bloodstream</span>
+  </footer>
+
   <script>
-    const convQueue = [];
-    function syncRoute() {
-      const h = window.location.hash.toLowerCase();
-      if (h === '#admin') { window.location.replace('admin.html'); return; }
-      if (h === '#owner') { window.location.replace('owner.html'); return; }
-      const isConv = h === '#converter';
-      document.getElementById('viewToolboxMenu').classList.toggle('hidden', isConv);
-      document.getElementById('viewConverterStudio').classList.toggle('hidden', !isConv);
-      document.getElementById('navPillConverter').classList.toggle('active', isConv);
-      document.getElementById('headerContextBadge').textContent = isConv ? 'CONVERTER' : 'TOOLBOX MENU';
-    }
-    function syncBpm() {
-      const minEl = document.getElementById('bpmMinInput'), maxEl = document.getElementById('bpmMaxInput');
-      let mn = Number(minEl.value), mx = Number(maxEl.value);
-      if (mn > mx - 5) { mn = mx - 5; minEl.value = String(mn); }
-      document.getElementById('bpmMinValLabel').textContent = String(mn);
-      document.getElementById('bpmMaxValLabel').textContent = String(mx);
-      document.getElementById('bpmRangeDynamicText').textContent = mn + ' – ' + mx + ' BPM';
-    }
-    function renderQueue() {
-      document.getElementById('convQueueCount').textContent = String(convQueue.length);
-      const box = document.getElementById('convQueueList');
-      box.innerHTML = convQueue.map((item, i) => `
-        <div class="hud-well p-3 rounded-xl flex items-center justify-between font-mono-tech text-xs">
-          <div><div class="font-bold text-white">${item.title}</div><div class="text-[11px] text-emerald-400">${item.status}</div></div>
-          <button type="button" data-c-one="${i}" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-[11px] cursor-pointer">Convert</button>
-        </div>
-      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty.</div>';
-      box.querySelectorAll('[data-c-one]').forEach((b) => {
-        b.onclick = () => {
-          const idx = Number(b.getAttribute('data-c-one'));
-          const mn = Number(document.getElementById('bpmMinInput').value), mx = Number(document.getElementById('bpmMaxInput').value);
-          const bpm = mn + ((idx * 13) % Math.max(1, mx - mn));
-          convQueue[idx].status = 'Converted (' + bpm + ' BPM • 8A) ✓';
-          VNTEXCore.recordSuiteSong({ title: convQueue[idx].title, artist: 'Studio Artist', bpm, camelot: '8A', sourceTool: 'converter' });
-          renderQueue();
-        };
-      });
-    }
     document.addEventListener('DOMContentLoaded', async () => {
-      await VNTEXCore.boot('converter');
-      syncRoute(); window.addEventListener('hashchange', syncRoute);
-      document.getElementById('bpmMinInput').oninput = syncBpm;
-      document.getElementById('bpmMaxInput').oninput = syncBpm;
-      document.getElementById('loadSampleTracksBtn').onclick = (e) => {
-        e.stopPropagation();
-        convQueue.push({ title: 'Obsidian Warehouse Master', status: 'Queued' }, { title: 'Kinetic SubZero Dub', status: 'Queued' });
-        renderQueue();
-      };
-      document.getElementById('convertAllBtn').onclick = () => convQueue.forEach((_, i) => document.querySelector('[data-c-one="' + i + '"]')?.click());
-      renderQueue();
+      await VNTEXCore.boot('menu');
     });
   </script>
 </body>

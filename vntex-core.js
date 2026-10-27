@@ -1,3 +1,11 @@
+/**
+ * VNTEX SUITE CORE ENGINE (Argon4 — Dedicated Multi-Page Architecture)
+ * - index.html: Root Toolbox Menu
+ * - converter.html: Standalone Converter Studio
+ * - radar.html: Harmonic Radar Void
+ * - bloodstream.html: Bloodstream Engine
+ */
+
 const VNTEX_FIREBASE_CONFIG = {
   apiKey: "AIzaSyAN5Om2FeKB8wraQMNKcPho42Yvq60nH8A",
   authDomain: "vntex-e24a5.firebaseapp.com",
@@ -20,17 +28,18 @@ const VNTEX_AVATARS = [
 ];
 
 const VNTEX_KEYS = {
-  AUTH_USER: 'vntex_core_authenticated_user_v6',
-  USERS_DB: 'vntex_core_users_database_v6',
-  PENDING_APPROVALS: 'vntex_core_pending_approvals_v6',
+  AUTH_USER: 'vntex_core_authenticated_user_v7',
+  USERS_DB: 'vntex_core_users_database_v7',
+  PENDING_APPROVALS: 'vntex_core_pending_approvals_v7',
   SUITE_SONGS_PREFIX: 'vntex_suite_songs_',
   SUPPORT_TICKETS: 'vntex_core_support_tickets'
 };
 
 const TOOL_DEFAULT_PALETTES = {
-  converter: { name: 'Converter Blue', void: '#020204', panel: '#0a0a10', well: '#040407', border: '#181824', accent1: '#00f2fe', glow: 'rgba(0, 242, 254, 0.25)' },
-  radar: { name: 'Radar Neon Green', void: '#000000', panel: '#040804', well: '#020402', border: '#0d2612', accent1: '#00ff41', glow: 'rgba(0, 255, 65, 0.28)' },
-  bloodstream: { name: 'Bloodstream Red', void: '#000000', panel: '#050505', well: '#000000', border: '#330000', accent1: '#FF000D', glow: 'rgba(255, 0, 13, 0.28)' }
+  menu:        { name: 'Toolbox Menu Blue', void: '#020204', panel: '#0a0a10', well: '#040407', border: '#181824', accent1: '#00f2fe', glow: 'rgba(0, 242, 254, 0.25)' },
+  converter:   { name: 'Converter Blue',    void: '#020204', panel: '#0a0a10', well: '#040407', border: '#181824', accent1: '#00f2fe', glow: 'rgba(0, 242, 254, 0.25)' },
+  radar:       { name: 'Radar Neon Green',  void: '#000000', panel: '#040804', well: '#020402', border: '#0d2612', accent1: '#00ff41', glow: 'rgba(0, 255, 65, 0.28)' },
+  bloodstream: { name: 'Bloodstream Red',   void: '#000000', panel: '#050505', well: '#000000', border: '#330000', accent1: '#FF000D', glow: 'rgba(255, 0, 13, 0.28)' }
 };
 
 const CUSTOM_PALETTES = {
@@ -42,17 +51,18 @@ const CUSTOM_PALETTES = {
 
 window.VNTEXCore = {
   currentUser: null,
-  activeTool: 'converter',
+  activeTool: 'menu',
   firebaseAuth: null,
 
   async boot(activeToolName) {
-    this.activeTool = activeToolName || 'converter';
+    this.activeTool = activeToolName || 'menu';
     this.initFirebaseIfAvailable();
     this.seedNeutralAdminIfEmpty();
     this.loadSession();
     this.applyActiveToolTheme();
     this.mountUniversalModals();
     this.installGlobalCaptureListeners();
+    this.normalizeHeaderLinks();
     this.syncHeaderProfileUI();
   },
 
@@ -66,7 +76,7 @@ window.VNTEXCore = {
   },
 
   seedNeutralAdminIfEmpty() {
-    ['vntex_core_session_user','vntex_core_authenticated_user','vntex_core_authenticated_user_v2','vntex_core_authenticated_user_v3','vntex_core_authenticated_user_v4','vntex_core_authenticated_user_v5'].forEach((k) => localStorage.removeItem(k));
+    ['vntex_core_session_user','vntex_core_authenticated_user','vntex_core_authenticated_user_v2','vntex_core_authenticated_user_v3','vntex_core_authenticated_user_v4','vntex_core_authenticated_user_v5','vntex_core_authenticated_user_v6'].forEach((k) => localStorage.removeItem(k));
     const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
     if (!db.length) {
       db.push(
@@ -219,6 +229,15 @@ window.VNTEXCore = {
     window.dispatchEvent(new CustomEvent('vntex:auth-changed', { detail: { user: null } }));
   },
 
+  // Ensures every navbar across all tools links Converter -> converter.html and VX Logo -> index.html
+  normalizeHeaderLinks() {
+    document.querySelectorAll('header nav a').forEach((a) => {
+      if (a.textContent.toLowerCase().includes('converter')) {
+        a.setAttribute('href', 'converter.html');
+      }
+    });
+  },
+
   installGlobalCaptureListeners() {
     document.addEventListener('click', (e) => {
       const acctBtn = e.target.closest('#openAccountHubBtn, #openAccountBtn, [data-vntex-login-trigger]');
@@ -292,7 +311,7 @@ window.VNTEXCore = {
           </div>
           <div id="univChatMessagesBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
             <div class="hud-well p-3 rounded-xl text-gray-300 leading-relaxed">
-              <strong class="text-[var(--accent-primary)]">VNTEX AI Assistant:</strong> Ask me anything about <strong>Converter</strong>, <strong>Harmonic Radar</strong>, or <strong>Bloodstream</strong>!
+              <strong class="text-[var(--accent-primary)]">VNTEX AI Assistant:</strong> Ask me anything about <strong>Converter</strong> (<code>converter.html</code>), <strong>Harmonic Radar</strong> (<code>radar.html</code>), or <strong>Bloodstream</strong> (<code>bloodstream.html</code>)!
             </div>
           </div>
           <div class="p-3 border-t border-[#181824] bg-[#050509] space-y-2">
@@ -334,7 +353,7 @@ window.VNTEXCore = {
       setTimeout(() => {
         const bDiv = document.createElement('div');
         bDiv.className = 'hud-well p-3 rounded-xl text-gray-300 mr-8';
-        bDiv.innerHTML = '<strong class="text-[var(--accent-primary)]">VNTEX AI:</strong> Your single profile syncs across Converter, Radar, and Bloodstream. Converted or downloaded tracks can be loaded into Radar via the "Load Suite Songs" button near the Node Tree!';
+        bDiv.innerHTML = '<strong class="text-[var(--accent-primary)]">VNTEX AI:</strong> Your single profile syncs across index.html (Main Menu), converter.html, radar.html, and bloodstream.html. Converted or downloaded tracks can be loaded into Radar via the "Load Suite Songs" button near the Node Tree!';
         chatBox.appendChild(bDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       }, 160);
@@ -431,6 +450,12 @@ window.VNTEXCore = {
             ${VNTEX_AVATARS.map((av) => `<button type="button" data-univ-avatar="${av.id}" class="rounded-xl p-1 border-2 cursor-pointer ${u.avatarId === av.id ? 'border-[var(--accent-primary)] scale-105' : 'border-transparent opacity-70'}"><img src="${av.svg}" class="w-11 h-11 rounded-lg block pointer-events-none" /></button>`).join('')}
           </div>
         </div>
+        <div class="space-y-2 pt-2 border-t border-[#181824]">
+          <label class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">UI Theme Preference</label>
+          <div class="grid grid-cols-4 gap-2">
+            ${Object.entries(CUSTOM_PALETTES).map(([k, p]) => `<button type="button" data-univ-pal="${k}" class="hud-well p-2 rounded-xl text-left hover:border-white cursor-pointer"><div class="font-bold text-[11px] text-white">${p.name}</div></button>`).join('')}
+          </div>
+        </div>
         <div class="flex items-center justify-between pt-1">
           <span id="univProfileSaveNotice" class="font-mono-tech text-[11px] text-emerald-400"></span>
           <button type="submit" class="px-4 py-2 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase cursor-pointer">Save Profile</button>
@@ -442,6 +467,9 @@ window.VNTEXCore = {
     profilePane.querySelectorAll('[data-univ-avatar]').forEach((b) => {
       b.onclick = () => { this.currentUser.avatarId = b.getAttribute('data-univ-avatar'); this.persistAuthenticatedUser(); this.syncHeaderProfileUI(); this.renderUniversalAccountModal(); };
     });
+    profilePane.querySelectorAll('[data-univ-pal]').forEach((b) => {
+      b.onclick = () => this.setUserPalette(b.getAttribute('data-univ-pal'));
+    });
     document.getElementById('univProfileCustForm').onsubmit = (e) => {
       e.preventDefault();
       this.currentUser.fullName = document.getElementById('univCustFullName').value.trim();
@@ -452,14 +480,36 @@ window.VNTEXCore = {
       document.getElementById('univProfileSaveNotice').textContent = '✓ Saved!';
     };
 
-    document.getElementById('uacctPane-converter').innerHTML = '<div class="hud-well p-4 rounded-xl">Default Preset: <strong class="text-[#00f2fe]">FAST WEB (192kbps MP3)</strong></div>';
-    document.getElementById('uacctPane-radar').innerHTML = '<div class="hud-well p-4 rounded-xl">Default Void: <strong class="text-[#00ff41]">Pitch-Black + Neon Green</strong></div>';
-    document.getElementById('uacctPane-bloodstream').innerHTML = '<div class="hud-well p-4 rounded-xl">Audio Engine: <strong class="text-[#FF000D]">3:12 Full Master + ID3v2.3 Cover Art</strong></div>';
+    document.getElementById('uacctPane-converter').innerHTML = `
+      <div class="grid grid-cols-3 gap-3">
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT PRESET</div><div class="text-xs font-bold text-[#00f2fe] mt-1">FAST WEB</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-white mt-1">Dark + Blue</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">RADAR SYNC</div><div class="text-xs font-bold text-emerald-400 mt-1">Active</div></div>
+      </div>
+      <a href="converter.html" class="block text-center py-2.5 rounded-xl bg-[#00f2fe] text-black font-extrabold text-xs uppercase no-underline">Open Converter Studio →</a>
+    `;
+    document.getElementById('uacctPane-radar').innerHTML = `
+      <div class="grid grid-cols-3 gap-3">
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT LIBRARY</div><div class="text-xs font-bold text-[#00ff41] mt-1">Blank Void</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-[#00ff41] mt-1">Black + Neon Green</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">SUITE SONG IMPORT</div><div class="text-xs font-bold text-white mt-1">Active Near Tree</div></div>
+      </div>
+      <a href="radar.html" class="block text-center py-2.5 rounded-xl bg-[#00ff41] text-black font-extrabold text-xs uppercase no-underline">Open Harmonic Radar →</a>
+    `;
+    document.getElementById('uacctPane-bloodstream').innerHTML = `
+      <div class="grid grid-cols-3 gap-3">
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">AUDIO DURATION</div><div class="text-xs font-bold text-[#FF000D] mt-1">Full 3:12 Master</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-[#FF000D] mt-1">Blood Red OLED</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">COVER ART</div><div class="text-xs font-bold text-emerald-400 mt-1">ID3v2.3 APIC ✓</div></div>
+      </div>
+      <a href="bloodstream.html" class="block text-center py-2.5 rounded-xl bg-[#FF000D] text-black font-extrabold text-xs uppercase no-underline">Open Bloodstream →</a>
+    `;
     const perms = u.permissions || {};
     document.getElementById('uacctPane-permissions').innerHTML = `
-      <div class="grid grid-cols-2 gap-2.5">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">TIER</div><div class="font-bold text-emerald-400 mt-1">${(perms.tier || 'PRO').toUpperCase()}</div></div>
         <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">CLOUD SYNC</div><div class="font-bold text-emerald-400 mt-1">ENABLED</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">ROLE</div><div class="font-bold text-white mt-1">${perms.isAdmin ? 'ADMIN' : 'PRODUCER'}</div></div>
       </div>
     `;
   }
