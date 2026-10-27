@@ -1,10 +1,12 @@
 /**
  * VNTEX SUITE CORE ENGINE (Argon4)
- * - No Guest Profiles: Unauthenticated users are "not logged in" and see a clean Login button/prompt.
- * - Capture-Phase Account Button Handler: Guarantees identical Profile / Login modal across Converter, Radar, and Bloodstream.
- * - Toolbox Landing Menu on base URL (index.html) + Direct Tool Bookmarking (index.html#converter, radar.html, bloodstream.html).
- * - Protected Admin Route (#admin): Prompts login first -> Grants access if isAdmin, otherwise redirects to Toolbox Hub.
- * - Dedicated Owner Route (#owner & owner.html) protected by Master Passcode.
+ * - Unified Single Profile across index.html (Menu + #converter), radar.html, and bloodstream.html
+ * - Base64-Encoded Studio Avatars (Guarantees crisp image rendering, never raw SVG text)
+ * - Tool-Specific Default UIs for Non-Logged-In Users:
+ *     * Converter: Dark Studio (#020204 / #0a0a10) + Blue (#00f2fe)
+ *     * Radar: Pitch-Black Void (#000000) + Neon Green (#00ff41)
+ *     * Bloodstream: Blood-Red OLED (#000000 / #050505 / #FF000D)
+ * - Universal Interactive AI Studio Assistant across all tabs
  */
 
 const VNTEX_FIREBASE_CONFIG = {
@@ -16,21 +18,44 @@ const VNTEX_FIREBASE_CONFIG = {
   appId: "1:977209087831:web:ab22e81f799442164b5012"
 };
 
+function makeBase64SvgAvatar(rawSvg) {
+  return 'data:image/svg+xml;base64,' + btoa(rawSvg.trim());
+}
+
 const VNTEX_AVATARS = [
-  { id: 'av_1', name: 'Blue Pulse', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%2306101e"/><circle cx="40" cy="40" r="24" fill="none" stroke="%2300f2fe" stroke-width="4"/><circle cx="40" cy="40" r="8" fill="%2300f2fe"/></svg>` },
-  { id: 'av_2', name: 'Crimson Drop', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140003"/><path d="M40 16 C40 16 60 38 60 52 C60 63 51 68 40 68 C29 68 20 63 20 52 C20 38 40 16 40 16 Z" fill="%23FF000D"/></svg>` },
-  { id: 'av_3', name: 'Neon Radar', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23021206"/><polygon points="40,14 47,32 66,32 51,44 57,63 40,51 23,63 29,44 14,32 33,32" fill="%2300ff41"/></svg>` },
-  { id: 'av_4', name: 'Amber Gold', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%23140e02"/><circle cx="40" cy="40" r="26" fill="%231f2937" stroke="%23f59e0b" stroke-width="3"/><circle cx="40" cy="40" r="10" fill="%23f59e0b"/><circle cx="40" cy="40" r="3" fill="%23000"/></svg>` },
-  { id: 'av_5', name: 'Violet Wave', svg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="%230b0414"/><path d="M14 42 Q26 20 40 42 T66 42" fill="none" stroke="%23a855f7" stroke-width="6" stroke-linecap="round"/></svg>` }
+  {
+    id: 'av_1',
+    name: 'Blue Pulse',
+    svg: makeBase64SvgAvatar(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#06101e"/><circle cx="40" cy="40" r="24" fill="none" stroke="#00f2fe" stroke-width="5"/><circle cx="40" cy="40" r="9" fill="#00f2fe"/></svg>`)
+  },
+  {
+    id: 'av_2',
+    name: 'Crimson Drop',
+    svg: makeBase64SvgAvatar(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#140003"/><path d="M40 15 C40 15 60 38 60 52 C60 63 51 68 40 68 C29 68 20 63 20 52 C20 38 40 15 40 15 Z" fill="#FF000D"/></svg>`)
+  },
+  {
+    id: 'av_3',
+    name: 'Neon Radar',
+    svg: makeBase64SvgAvatar(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#021206"/><polygon points="40,14 47,32 66,32 51,44 57,63 40,51 23,63 29,44 14,32 33,32" fill="#00ff41"/></svg>`)
+  },
+  {
+    id: 'av_4',
+    name: 'Vinyl Gold',
+    svg: makeBase64SvgAvatar(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#140e02"/><circle cx="40" cy="40" r="26" fill="#1f2937" stroke="#f59e0b" stroke-width="4"/><circle cx="40" cy="40" r="10" fill="#f59e0b"/><circle cx="40" cy="40" r="3" fill="#000000"/></svg>`)
+  },
+  {
+    id: 'av_5',
+    name: 'Violet Wave',
+    svg: makeBase64SvgAvatar(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="18" fill="#0b0414"/><path d="M14 42 Q26 18 40 42 T66 42" fill="none" stroke="#a855f7" stroke-width="6" stroke-linecap="round"/></svg>`)
+  }
 ];
 
 const VNTEX_KEYS = {
-  AUTH_USER: 'vntex_core_authenticated_user_v3',
-  USERS_DB: 'vntex_core_users_database_v3',
-  PENDING_APPROVALS: 'vntex_core_pending_approvals_v3',
-  OWNER_UNLOCKED: 'vntex_core_owner_session_unlocked',
+  AUTH_USER: 'vntex_core_authenticated_user_v5',
+  USERS_DB: 'vntex_core_users_database_v5',
+  PENDING_APPROVALS: 'vntex_core_pending_approvals_v5',
   SUITE_SONGS_PREFIX: 'vntex_suite_songs_',
-  UNAUTH_ACTIVITY: 'vntex_core_unauth_sessions_count'
+  SUPPORT_TICKETS: 'vntex_core_support_tickets'
 };
 
 const TOOL_DEFAULT_PALETTES = {
@@ -59,10 +84,8 @@ const CUSTOM_PALETTES = {
 };
 
 window.VNTEXCore = {
-  currentUser: null, // null when "not logged in"
+  currentUser: null,
   activeTool: 'converter',
-  pendingAdminRedirect: false,
-  ownerUnlocked: sessionStorage.getItem(VNTEX_KEYS.OWNER_UNLOCKED) === 'true',
   firebaseAuth: null,
 
   async boot(activeToolName) {
@@ -72,10 +95,8 @@ window.VNTEXCore = {
     this.loadSession();
     this.applyActiveToolTheme();
     this.mountUniversalModals();
-    this.installCapturePhaseAccountListener();
-    this.wireDynamicBpmRangeFix();
+    this.installGlobalCaptureListeners();
     this.syncHeaderProfileUI();
-    this.evaluateRoutingAndLandingMenu();
   },
 
   initFirebaseIfAvailable() {
@@ -88,23 +109,41 @@ window.VNTEXCore = {
   },
 
   seedNeutralAdminIfEmpty() {
-    // Clean up any old guest session keys
-    sessionStorage.removeItem('vntex_core_guest_session');
-    sessionStorage.removeItem('vntex_core_guest_session_v2');
+    // Purge any legacy pseudo-profile keys
+    [
+      'vntex_core_session_user',
+      'vntex_core_authenticated_user',
+      'vntex_core_authenticated_user_v2',
+      'vntex_core_authenticated_user_v3',
+      'vntex_core_authenticated_user_v4'
+    ].forEach((k) => localStorage.removeItem(k));
 
     const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
     if (!db.length) {
-      db.push({
-        uid: 'usr_vntex_admin',
-        email: 'admin@vntex.io',
-        password: 'admin',
-        fullName: 'Platform Administrator',
-        username: '@vntex_admin',
-        avatarId: 'av_1',
-        verifiedBadge: true,
-        palette: 'default',
-        permissions: { tier: 'enterprise', rig: true, automation: true, palettes: true, isAdmin: true }
-      });
+      db.push(
+        {
+          uid: 'usr_vntex_admin',
+          email: 'admin@vntex.io',
+          password: 'admin',
+          fullName: 'Platform Administrator',
+          username: '@vntex_admin',
+          avatarId: 'av_1',
+          verifiedBadge: true,
+          palette: 'default',
+          permissions: { tier: 'enterprise', rig: true, automation: true, palettes: true, isAdmin: true }
+        },
+        {
+          uid: 'usr_sample_pro',
+          email: 'producer@vntex.io',
+          password: 'vntex',
+          fullName: 'Studio Producer',
+          username: '@studio_producer',
+          avatarId: 'av_3',
+          verifiedBadge: false,
+          palette: 'default',
+          permissions: { tier: 'pro', rig: true, automation: true, palettes: true, isAdmin: false }
+        }
+      );
       localStorage.setItem(VNTEX_KEYS.USERS_DB, JSON.stringify(db));
     }
   },
@@ -115,17 +154,22 @@ window.VNTEXCore = {
       try {
         const u = JSON.parse(savedAuth);
         if (u && u.uid && u.email) {
+          if (!VNTEX_AVATARS.some((a) => a.id === u.avatarId)) u.avatarId = 'av_1';
           this.currentUser = u;
           return;
         }
       } catch {}
     }
-    // Generic "not logged in" state (no guest accounts)
     this.currentUser = null;
   },
 
   isLoggedIn() {
     return Boolean(this.currentUser && this.currentUser.uid && this.currentUser.email);
+  },
+
+  getAvatarSvg(avatarId) {
+    const found = VNTEX_AVATARS.find((a) => a.id === avatarId) || VNTEX_AVATARS[0];
+    return found.svg;
   },
 
   applyActiveToolTheme() {
@@ -149,10 +193,6 @@ window.VNTEXCore = {
     this.currentUser.palette = palKey;
     this.persistAuthenticatedUser();
     this.applyActiveToolTheme();
-  },
-
-  getAvatarSvg(avatarId) {
-    return (VNTEX_AVATARS.find((a) => a.id === avatarId) || VNTEX_AVATARS[0]).svg;
   },
 
   getIsolatedUserKey() {
@@ -212,7 +252,7 @@ window.VNTEXCore = {
     let existing = db.find((u) => u.email.toLowerCase() === cleanEmail);
 
     if (isSignUp) {
-      if (existing) return { ok: false, msg: 'Account already exists. Switch to Sign In.' };
+      if (existing) return { ok: false, msg: 'Account already exists. Uncheck "Create a New Account" to Sign In.' };
       let handle = String(customHandle || `@${cleanEmail.split('@')[0]}`).trim();
       if (!handle.startsWith('@')) handle = `@${handle.replace(/\s+/g, '_')}`;
       existing = {
@@ -300,140 +340,68 @@ window.VNTEXCore = {
   },
 
   completeLoginTransition(account) {
+    if (!VNTEX_AVATARS.some((a) => a.id === account.avatarId)) account.avatarId = 'av_1';
     this.currentUser = account;
     localStorage.setItem(VNTEX_KEYS.AUTH_USER, JSON.stringify(account));
     this.applyActiveToolTheme();
     this.syncHeaderProfileUI();
-    window.dispatchEvent(new CustomEvent('vntex:auth-changed', { detail: { user: account } }));
-
-    // If user was trying to access #admin directly, validate admin permissions now!
-    if (this.pendingAdminRedirect || window.location.hash === '#admin') {
-      this.pendingAdminRedirect = false;
-      document.getElementById('vntexUniversalAccountModal')?.classList.add('hidden');
-      if (account.permissions && account.permissions.isAdmin === true) {
-        this.openAdminPortalModal();
-      } else {
-        alert('Access Denied: Your account does not have Admin permissions. Redirecting to the VNTEX Toolbox.');
-        window.location.hash = '';
-        this.showToolboxLandingMenu();
-      }
-      return;
-    }
-
     this.renderUniversalAccountModal();
+    window.dispatchEvent(new CustomEvent('vntex:auth-changed', { detail: { user: account } }));
   },
 
   signOut() {
     try { if (this.firebaseAuth) this.firebaseAuth.signOut(); } catch {}
     localStorage.removeItem(VNTEX_KEYS.AUTH_USER);
-    sessionStorage.removeItem(VNTEX_KEYS.OWNER_UNLOCKED);
-    this.ownerUnlocked = false;
     this.currentUser = null;
     this.applyActiveToolTheme();
     this.syncHeaderProfileUI();
-    document.getElementById('vntexAdminPortalModal')?.classList.add('hidden');
-    if (window.location.hash === '#admin' || window.location.hash === '#owner') {
-      history.replaceState(null, '', window.location.pathname);
-    }
     this.renderUniversalAccountModal();
     window.dispatchEvent(new CustomEvent('vntex:auth-changed', { detail: { user: null } }));
   },
 
-  // Capture-Phase Click Listener: Fixes Converter Profile button not opening by intercepting before any legacy script
-  installCapturePhaseAccountListener() {
+  installGlobalCaptureListeners() {
     document.addEventListener('click', (e) => {
-      const LegacyModal = document.getElementById('accountModal');
-      if (LegacyModal) LegacyModal.remove();
-
-      const btn = e.target.closest('#openAccountBtn, #openAccountHubBtn, [data-vntex-login-trigger]');
-      if (btn) {
+      const acctBtn = e.target.closest('#openAccountHubBtn, #openAccountBtn, [data-vntex-login-trigger]');
+      if (acctBtn) {
         e.preventDefault();
         e.stopPropagation();
-        this.openAccountOrLoginModal();
+        this.renderUniversalAccountModal();
+        document.getElementById('vntexUniversalAccountModal').classList.remove('hidden');
+        return;
+      }
+
+      const chatBtn = e.target.closest('#openSupportChatBtn, [data-vntex-chat-trigger]');
+      if (chatBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('vntexUniversalChatModal').classList.remove('hidden');
+        return;
       }
     }, true);
   },
 
-  openAccountOrLoginModal(adminGateNotice = '') {
-    this.renderUniversalAccountModal(adminGateNotice);
-    document.getElementById('vntexUniversalAccountModal').classList.remove('hidden');
-  },
-
-  // Syncs the header button: Shows "Log In" when not logged in; shows Avatar + @username when signed in
   syncHeaderProfileUI() {
-    // Also ensure Converter nav links point to index.html#converter so clicking Converter opens Converter directly
-    document.querySelectorAll('a[href="index.html"]').forEach((a) => {
-      if (a.textContent.toLowerCase().includes('converter')) {
-        a.setAttribute('href', 'index.html#converter');
+    const buttons = [
+      document.getElementById('openAccountHubBtn'),
+      document.getElementById('openAccountBtn')
+    ].filter(Boolean);
+
+    buttons.forEach((btn) => {
+      if (!this.isLoggedIn()) {
+        btn.innerHTML = `
+          <i class="fa-solid fa-right-to-bracket text-[var(--accent-primary)] text-[11px]"></i>
+          <span class="font-mono-tech font-bold">Log In</span>
+        `;
+      } else {
+        const u = this.currentUser;
+        const avSrc = this.getAvatarSvg(u.avatarId);
+        btn.innerHTML = `
+          <img src="${avSrc}" alt="Avatar" class="w-5 h-5 rounded-full object-cover border border-[var(--accent-primary)] shrink-0" />
+          <span class="font-mono-tech font-bold text-white">${u.username}</span>
+          ${u.verifiedBadge ? `<i class="fa-solid fa-certificate text-[#00f2fe] text-[10px]"></i>` : ''}
+        `;
       }
     });
-
-    const btn = document.getElementById('openAccountHubBtn') || document.getElementById('openAccountBtn');
-    if (!btn) return;
-
-    if (!this.isLoggedIn()) {
-      btn.innerHTML = `
-        <i class="fa-solid fa-right-to-bracket text-[var(--accent-primary)] text-[11px]"></i>
-        <span class="font-mono-tech font-bold">Log In</span>
-      `;
-    } else {
-      const u = this.currentUser;
-      btn.innerHTML = `
-        <img src="${this.getAvatarSvg(u.avatarId)}" alt="" class="w-4 h-4 rounded-full object-cover border border-[var(--accent-primary)]" />
-        <span class="font-mono-tech font-bold">${u.username}</span>
-        ${u.verifiedBadge ? `<i class="fa-solid fa-certificate text-[#00f2fe] text-[10px]"></i>` : ''}
-      `;
-    }
-  },
-
-  // Fix #2: Dynamic BPM Range Display in Converter (updates any 75-160 range badge dynamically when min/max BPM inputs change)
-  wireDynamicBpmRangeFix() {
-    const syncBpmBounds = () => {
-      const minEl = document.getElementById('bpmMinInput') || document.getElementById('minBpmInput') || document.querySelector('input[placeholder*="Min" i], input[data-bpm-min]');
-      const maxEl = document.getElementById('bpmMaxInput') || document.getElementById('maxBpmInput') || document.querySelector('input[placeholder*="Max" i], input[data-bpm-max]');
-
-      // Also scan pairs of number/range inputs inside any BPM container
-      let minVal = minEl ? minEl.value : null;
-      let maxVal = maxEl ? maxEl.value : null;
-
-      if (!minVal || !maxVal) {
-        const bpmInputs = Array.from(document.querySelectorAll('input[type="number"], input[type="range"]')).filter((inp) => {
-          const v = Number(inp.value);
-          const parentTxt = (inp.closest('div')?.textContent || '').toUpperCase();
-          return parentTxt.includes('BPM') && v >= 40 && v <= 250;
-        });
-        if (bpmInputs.length >= 2) {
-          minVal = bpmInputs[0].value;
-          maxVal = bpmInputs[1].value;
-        }
-      }
-
-      if (minVal && maxVal) {
-        const formatted = `${minVal}-${maxVal}`;
-        const formattedEnDash = `${minVal}–${maxVal}`;
-        // Update dedicated badge IDs if present
-        ['bpmRangeDisplay', 'bpmRangeLabel', 'bpmBoundsLabel', 'bpmRangeValue'].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.textContent = `${formatted} BPM`;
-        });
-        // Also find any span/div near the BPM controls that was stuck at "75-160" or similar range pattern
-        document.querySelectorAll('span, div, label, strong').forEach((el) => {
-          if (el.children.length === 0 && /^\s*\d{2,3}\s*[-–]\s*\d{2,3}(\s*BPM)?\s*$/i.test(el.textContent)) {
-            const hasBpmSuffix = /BPM/i.test(el.textContent);
-            const usesEnDash = el.textContent.includes('–');
-            el.textContent = (usesEnDash ? formattedEnDash : formatted) + (hasBpmSuffix ? ' BPM' : '');
-          }
-        });
-      }
-    };
-
-    document.addEventListener('input', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) syncBpmBounds();
-    });
-    document.addEventListener('change', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) syncBpmBounds();
-    });
-    setTimeout(syncBpmBounds, 300);
   },
 
   mountUniversalModals() {
@@ -441,87 +409,7 @@ window.VNTEXCore = {
 
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-      <!-- 1. TOOLBOX LANDING MENU HUB (SHOWN WHEN ACCESSING ROOT LINK WITHOUT A TOOL SPECIFIED) -->
-      <div id="vntexToolboxLandingHub" class="fixed inset-0 z-40 hidden bg-[#020205] flex flex-col justify-between p-6 sm:p-10 overflow-y-auto">
-        <div class="max-w-5xl w-full mx-auto flex items-center justify-between border-b border-[#181824] pb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-mono-tech font-extrabold text-sm border border-[#00f2fe]/60 bg-[#06101e] text-[#00f2fe]">VX</div>
-            <div>
-              <div class="font-extrabold tracking-tight text-base text-white">VNTEX SUITE</div>
-              <div class="font-mono-tech text-[10px] text-gray-400">UNIFIED AUDIO DSP &amp; HARMONIC TOOLBOX</div>
-            </div>
-          </div>
-          <button type="button" data-vntex-login-trigger="true" id="landingHubLoginBtn" class="hud-well px-4 py-2 rounded-xl font-mono-tech text-xs font-bold text-white border border-[#00f2fe]/50 hover:border-[#00f2fe] flex items-center gap-2">
-            <i class="fa-solid fa-right-to-bracket text-[#00f2fe]"></i>
-            <span id="landingHubLoginLabel">Log In</span>
-          </button>
-        </div>
-
-        <div class="max-w-5xl w-full mx-auto my-auto py-8 space-y-8">
-          <div class="text-center space-y-2">
-            <div class="font-mono-tech text-xs uppercase tracking-widest text-[#00f2fe]">Select a Studio Module</div>
-            <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">VNTEX Production Toolbox</h1>
-            <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">Bookmark any individual tool link below to launch directly into that workspace, or use your single VNTEX account across all three engines.</p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <!-- Tool 1: Converter -->
-            <a href="index.html#converter" id="launchConverterCardBtn" class="hud-glass p-6 rounded-2xl border border-[#181824] hover:border-[#00f2fe] transition group flex flex-col justify-between space-y-5 text-left no-underline">
-              <div class="space-y-3">
-                <div class="w-12 h-12 rounded-2xl bg-[#00f2fe]/15 border border-[#00f2fe]/50 flex items-center justify-center text-[#00f2fe] text-xl">
-                  <i class="fa-solid fa-bolt"></i>
-                </div>
-                <h2 class="text-lg font-extrabold text-white">Converter Studio</h2>
-                <p class="text-xs text-gray-400 leading-relaxed">Fast Web &amp; CDJ hardware audio transcoding, dynamic BPM range bounds, and batch metadata prep.</p>
-              </div>
-              <div class="font-mono-tech text-[11px] font-bold text-[#00f2fe] flex items-center justify-between pt-3 border-t border-[#181824]">
-                <span>index.html#converter</span>
-                <span>Launch →</span>
-              </div>
-            </a>
-
-            <!-- Tool 2: Harmonic Radar -->
-            <a href="radar.html" class="hud-glass p-6 rounded-2xl border border-[#0d2612] hover:border-[#00ff41] transition group flex flex-col justify-between space-y-5 text-left no-underline">
-              <div class="space-y-3">
-                <div class="w-12 h-12 rounded-2xl bg-[#00ff41]/15 border border-[#00ff41]/50 flex items-center justify-center text-[#00ff41] text-xl">
-                  <i class="fa-solid fa-compass"></i>
-                </div>
-                <h2 class="text-lg font-extrabold text-white">Harmonic Radar</h2>
-                <p class="text-xs text-gray-400 leading-relaxed">Pitch-black neon green constellation void, Brain % affinity scoring, and persistent multi-branch setlist trees.</p>
-              </div>
-              <div class="font-mono-tech text-[11px] font-bold text-[#00ff41] flex items-center justify-between pt-3 border-t border-[#181824]">
-                <span>radar.html</span>
-                <span>Launch →</span>
-              </div>
-            </a>
-
-            <!-- Tool 3: Bloodstream -->
-            <a href="bloodstream.html" class="hud-glass p-6 rounded-2xl border border-[#330000] hover:border-[#FF000D] transition group flex flex-col justify-between space-y-5 text-left no-underline">
-              <div class="space-y-3">
-                <div class="w-12 h-12 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D]/50 flex items-center justify-center text-[#FF000D] text-xl">
-                  <i class="fa-solid fa-droplet"></i>
-                </div>
-                <h2 class="text-lg font-extrabold text-white">Bloodstream Engine</h2>
-                <p class="text-xs text-gray-400 leading-relaxed">100% client-side stream compiler, single-song mix isolation, and binary ID3v2.3 APIC cover art embedding.</p>
-              </div>
-              <div class="font-mono-tech text-[11px] font-bold text-[#FF000D] flex items-center justify-between pt-3 border-t border-[#181824]">
-                <span>bloodstream.html</span>
-                <span>Launch →</span>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <div class="max-w-5xl w-full mx-auto flex flex-wrap items-center justify-between gap-3 border-t border-[#181824] pt-4 font-mono-tech text-[11px] text-gray-500">
-          <span>VNTEX Suite // Argon4 Architecture</span>
-          <div class="flex items-center gap-4">
-            <a href="index.html#admin" class="hover:text-amber-400 transition">Admin Portal (#admin)</a>
-            <a href="owner.html" class="hover:text-rose-400 transition">Owner Passcode Link (owner.html)</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. UNIVERSAL LOGIN PROMPT / 5-TAB ACCOUNT HUB MODAL -->
+      <!-- 1. UNIVERSAL LOGIN PROMPT / 5-TAB ACCOUNT HUB MODAL -->
       <div id="vntexUniversalAccountModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
         <div class="hud-glass w-full max-w-2xl rounded-2xl overflow-hidden border border-[#2a2b3d] bg-[#08080e] text-white flex flex-col max-h-[88vh]">
           <div class="px-5 py-3.5 border-b border-[#181824] flex items-center justify-between bg-[#050509]">
@@ -538,7 +426,6 @@ window.VNTEXCore = {
             </div>
           </div>
 
-          <!-- 5-Tab Bar (Hidden when Not Logged In so user sees a clean Login Prompt instead of a fake profile) -->
           <div id="univAccountTabsBar" class="hidden px-5 pt-3 border-b border-[#181824] bg-[#06060b] flex flex-wrap items-center gap-1.5 pb-2.5 font-mono-tech text-[11px]">
             <button type="button" data-uacct-tab="profile" class="uacct-tab-btn suite-nav-pill active"><i class="fa-regular fa-user"></i><span>Profile</span></button>
             <button type="button" data-uacct-tab="converter" class="uacct-tab-btn suite-nav-pill"><i class="fa-solid fa-bolt"></i><span>Converter</span></button>
@@ -557,56 +444,40 @@ window.VNTEXCore = {
         </div>
       </div>
 
-      <!-- 3. ADMIN PORTAL MODAL (#admin) -->
-      <div id="vntexAdminPortalModal" class="fixed inset-0 z-50 hidden bg-[#020205]/95 backdrop-blur-xl flex flex-col p-4 sm:p-6 overflow-y-auto">
-        <div class="max-w-6xl w-full mx-auto space-y-4">
-          <div class="hud-glass p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 border border-amber-400/40 bg-[#08080e]">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-amber-400/15 border border-amber-400/50 flex items-center justify-center text-amber-400"><i class="fa-solid fa-shield-halved"></i></div>
-              <div>
-                <h2 class="text-sm font-extrabold text-white uppercase tracking-wider font-mono-tech">VNTEX Admin Portal — Daily Operations &amp; Conversion Monitor</h2>
-                <p class="text-[11px] text-gray-400 font-mono-tech">Unauthenticated sessions display as "not logged in" • Sensitive changes are queued for approval</p>
-              </div>
+      <!-- 2. UNIVERSAL INTERACTIVE AI SUPPORT CHATBOT MODAL -->
+      <div id="vntexUniversalChatModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
+        <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#2a2b3d] bg-[#08080e] text-white flex flex-col h-[470px]">
+          <div class="px-4 py-3 border-b border-[#181824] flex items-center justify-between bg-[#050509]">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-headset text-[var(--accent-primary)]"></i>
+              <h3 class="text-xs font-mono-tech font-bold text-white">VNTEX AI Studio Assistant</h3>
             </div>
-            <button id="closeAdminPortalModalBtn" type="button" class="hud-well px-3.5 py-1.5 rounded-xl font-mono-tech text-xs text-white">← Back to Toolbox</button>
+            <button id="closeUnivChatModalBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <div id="adminPortalBodyContent" class="space-y-4"></div>
-        </div>
-      </div>
 
-      <!-- 4. DEDICATED OWNER PORTAL MODAL (#owner) -->
-      <div id="vntexOwnerPortalModal" class="fixed inset-0 z-50 hidden bg-black/95 backdrop-blur-2xl flex flex-col p-4 sm:p-6 overflow-y-auto">
-        <div class="max-w-6xl w-full mx-auto space-y-4">
-          <div class="hud-glass p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 border border-rose-500/60 bg-[#0b0205]">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500 flex items-center justify-center text-rose-400"><i class="fa-solid fa-crown"></i></div>
-              <div>
-                <h2 class="text-sm font-extrabold text-white uppercase tracking-wider font-mono-tech">VNTEX Owner Command Portal</h2>
-                <p class="text-[11px] text-rose-300 font-mono-tech">Direct Passcode Route (owner.html / #owner) • Root Approval Queue</p>
-              </div>
+          <div id="univChatMessagesBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
+            <div class="hud-well p-3 rounded-xl text-gray-300 leading-relaxed">
+              <strong class="text-[var(--accent-primary)]">VNTEX AI Assistant:</strong> Welcome! Ask me anything about <strong>Converter</strong> (`index.html#converter`), <strong>Harmonic Radar</strong> (`radar.html`), or <strong>Bloodstream</strong> (`bloodstream.html`).
             </div>
-            <button id="closeOwnerPortalModalBtn" type="button" class="hud-well px-3.5 py-1.5 rounded-xl font-mono-tech text-xs text-white">Exit Owner Portal</button>
           </div>
-          <div id="ownerPortalBodyContent" class="space-y-4"></div>
+
+          <div class="p-3 border-t border-[#181824] bg-[#050509] space-y-2">
+            <form id="univChatForm" class="flex gap-1.5">
+              <input id="univChatInput" type="text" required placeholder="Ask a question about Converter, Radar, or Bloodstream..." class="hud-well flex-1 px-3 py-2 rounded-xl text-xs text-white" />
+              <button type="submit" class="px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs">Send</button>
+            </form>
+            <button id="univEscalateTicketBtn" type="button" class="w-full py-1.5 rounded-lg hud-well font-mono-tech text-[10px] text-amber-400 hover:border-amber-400">
+              Submit Support Ticket to Platform Support Inbox
+            </button>
+          </div>
         </div>
       </div>
     `;
     document.body.appendChild(wrapper);
 
-    document.getElementById('closeUnivAccountModalBtn').onclick = () => {
-      document.getElementById('vntexUniversalAccountModal').classList.add('hidden');
-      if (this.pendingAdminRedirect && !this.isLoggedIn()) {
-        this.pendingAdminRedirect = false;
-        window.location.hash = '';
-        this.showToolboxLandingMenu();
-      }
-    };
+    document.getElementById('closeUnivAccountModalBtn').onclick = () => document.getElementById('vntexUniversalAccountModal').classList.add('hidden');
     document.getElementById('univSignOutTopBtn').onclick = () => this.signOut();
-
-    document.getElementById('launchConverterCardBtn')?.addEventListener('click', () => {
-      window.location.hash = '#converter';
-      document.getElementById('vntexToolboxLandingHub').classList.add('hidden');
-    });
+    document.getElementById('closeUnivChatModalBtn').onclick = () => document.getElementById('vntexUniversalChatModal').classList.add('hidden');
 
     document.querySelectorAll('.uacct-tab-btn').forEach((btn) => {
       btn.onclick = () => {
@@ -617,17 +488,59 @@ window.VNTEXCore = {
       };
     });
 
-    document.getElementById('closeAdminPortalModalBtn').onclick = () => {
-      document.getElementById('vntexAdminPortalModal').classList.add('hidden');
-      if (window.location.hash === '#admin') history.replaceState(null, '', window.location.pathname + '#converter');
+    const chatBox = document.getElementById('univChatMessagesBox');
+    document.getElementById('univChatForm').onsubmit = (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('univChatInput');
+      const q = inp.value.trim();
+      if (!q) return;
+      inp.value = '';
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'p-2.5 rounded-xl bg-[var(--accent-primary)]/15 border border-[var(--accent-primary)]/40 text-white text-right ml-8';
+      userBubble.textContent = q;
+      chatBox.appendChild(userBubble);
+
+      const lower = q.toLowerCase();
+      let reply = 'Your single VNTEX account syncs seamlessly across index.html, index.html#converter, radar.html, and bloodstream.html.';
+      if (lower.includes('bloodstream') || lower.includes('download') || lower.includes('cover')) {
+        reply = 'Bloodstream compiles single-song streams and synthesizes a full-length 3:12 stereo master track with binary ID3v2.3 APIC JPEG cover art embedded directly into the file.';
+      } else if (lower.includes('radar') || lower.includes('star') || lower.includes('void')) {
+        reply = 'In Harmonic Radar, click any star to rank compatible tracks by %, click empty background space to unselect, or click "⚡ Load Suite Songs" near the top-left Node Tree.';
+      } else if (lower.includes('bpm') || lower.includes('converter') || lower.includes('preset')) {
+        reply = 'Converter (index.html#converter) defaults to the Fast Web preset (192kbps MP3 / 44.1kHz) and dynamically updates the BPM range bounds as you adjust the min/max sliders.';
+      }
+
+      setTimeout(() => {
+        const botBubble = document.createElement('div');
+        botBubble.className = 'hud-well p-3 rounded-xl text-gray-300 mr-8';
+        botBubble.innerHTML = `<strong class="text-[var(--accent-primary)]">VNTEX AI:</strong> ${reply}`;
+        chatBox.appendChild(botBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 180);
     };
-    document.getElementById('closeOwnerPortalModalBtn').onclick = () => {
-      document.getElementById('vntexOwnerPortalModal').classList.add('hidden');
-      if (window.location.hash === '#owner') history.replaceState(null, '', window.location.pathname + '#converter');
+
+    document.getElementById('univEscalateTicketBtn').onclick = () => {
+      const issue = prompt('Briefly describe your support issue for the platform team:');
+      if (!issue || !issue.trim()) return;
+      const tickets = JSON.parse(localStorage.getItem(VNTEX_KEYS.SUPPORT_TICKETS) || '[]');
+      tickets.unshift({
+        id: 'tkt_' + Date.now(),
+        user: this.isLoggedIn() ? this.currentUser.username : 'not logged in',
+        tool: this.activeTool,
+        message: issue.trim(),
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      });
+      localStorage.setItem(VNTEX_KEYS.SUPPORT_TICKETS, JSON.stringify(tickets));
+      const botBubble = document.createElement('div');
+      botBubble.className = 'p-2.5 rounded-xl bg-emerald-400/15 border border-emerald-400/40 text-emerald-300 font-mono-tech text-[11px]';
+      botBubble.textContent = '✓ Support ticket logged to the Admin & Owner Portals.';
+      chatBox.appendChild(botBubble);
+      chatBox.scrollTop = chatBox.scrollHeight;
     };
   },
 
-  renderUniversalAccountModal(adminGateNotice = '') {
+  renderUniversalAccountModal() {
     const loggedIn = this.isLoggedIn();
     const u = this.currentUser;
     const tabsBar = document.getElementById('univAccountTabsBar');
@@ -635,14 +548,14 @@ window.VNTEXCore = {
     const modePill = document.getElementById('univAcctModePill');
     const titleText = document.getElementById('univModalTitleText');
 
-    // Reset to first pane
     document.querySelectorAll('.uacct-pane').forEach((p) => p.classList.add('hidden'));
     document.getElementById('uacctPane-profile').classList.remove('hidden');
+    document.querySelectorAll('.uacct-tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelector('[data-uacct-tab="profile"]')?.classList.add('active');
 
     const profilePane = document.getElementById('uacctPane-profile');
 
     if (!loggedIn) {
-      // NOT LOGGED IN: Show clean Login / Create Account Prompt (NO guest profile)
       tabsBar.classList.add('hidden');
       signOutBtn.classList.add('hidden');
       titleText.textContent = 'Sign In or Create VNTEX Account';
@@ -650,20 +563,13 @@ window.VNTEXCore = {
       modePill.className = 'font-mono-tech text-[10px] px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30';
 
       profilePane.innerHTML = `
-        ${adminGateNotice ? `
-          <div class="p-3 rounded-xl bg-amber-400/15 border border-amber-400/50 font-mono-tech text-xs text-amber-300 flex items-center gap-2">
-            <i class="fa-solid fa-lock"></i>
-            <span>${adminGateNotice}</span>
-          </div>
-        ` : ''}
-
         <div class="hud-well p-5 rounded-xl space-y-4 border border-[#2a2b3d]">
           <div class="flex items-center justify-between">
             <span class="font-mono-tech text-xs uppercase font-bold text-[var(--accent-primary)]">Unified VNTEX Toolbox Authentication</span>
-            <span class="font-mono-tech text-[10px] text-gray-400">Admin Demo: admin@vntex.io / admin</span>
+            <span class="font-mono-tech text-[10px] text-gray-400">One Profile Across All 3 Tools</span>
           </div>
 
-          <button id="univGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white text-black font-mono-tech font-extrabold text-xs flex items-center justify-center gap-2 hover:brightness-95 transition">
+          <button id="univGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white text-black font-mono-tech font-extrabold text-xs flex items-center justify-center gap-2 hover:brightness-95 transition cursor-pointer">
             <i class="fa-brands fa-google text-red-500"></i>
             <span>Continue with Google</span>
           </button>
@@ -672,12 +578,12 @@ window.VNTEXCore = {
 
           <form id="univAuthForm" class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input id="univAuthEmail" type="email" required placeholder="Email address..." class="hud-well px-3 py-2.5 rounded-lg text-xs font-mono-tech w-full" />
-              <input id="univAuthPass" type="password" required placeholder="Password..." class="hud-well px-3 py-2.5 rounded-lg text-xs font-mono-tech w-full" />
+              <input id="univAuthEmail" type="email" required placeholder="Email address..." class="hud-well px-3 py-2.5 rounded-lg text-xs font-mono-tech w-full text-white" />
+              <input id="univAuthPass" type="password" required placeholder="Password..." class="hud-well px-3 py-2.5 rounded-lg text-xs font-mono-tech w-full text-white" />
             </div>
             <div id="univSignUpExtraFields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input id="univAuthFullName" type="text" placeholder="Full Name (Admin Backend Only)" class="hud-well px-3 py-2 rounded-lg text-xs w-full" />
-              <input id="univAuthHandle" type="text" placeholder="Public @username" class="hud-well px-3 py-2 rounded-lg text-xs font-mono-tech w-full" />
+              <input id="univAuthFullName" type="text" placeholder="Full Name (Private)" class="hud-well px-3 py-2 rounded-lg text-xs w-full text-white" />
+              <input id="univAuthHandle" type="text" placeholder="Public @username" class="hud-well px-3 py-2 rounded-lg text-xs font-mono-tech w-full text-white" />
             </div>
             <div id="univAuthErrorMsg" class="hidden font-mono-tech text-[11px] text-rose-400"></div>
             <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -685,7 +591,7 @@ window.VNTEXCore = {
                 <input id="univAuthIsSignUp" type="checkbox" class="accent-cyan-400" />
                 <span>Create a New Account</span>
               </label>
-              <button type="submit" class="px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase">
+              <button type="submit" class="px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase cursor-pointer">
                 Sign In
               </button>
             </div>
@@ -714,18 +620,18 @@ window.VNTEXCore = {
       return;
     }
 
-    // LOGGED IN: Show full 5-Tab Account Hub
     tabsBar.classList.remove('hidden');
     signOutBtn.classList.remove('hidden');
     titleText.textContent = 'VNTEX Toolbox Account Hub';
     modePill.textContent = `${(u.permissions?.tier || 'pro').toUpperCase()} ACCOUNT`;
     modePill.className = 'font-mono-tech text-[10px] px-2 py-0.5 rounded bg-emerald-400/15 text-emerald-300 border border-emerald-400/30';
 
-    const isAdm = Boolean(u.permissions && u.permissions.isAdmin === true);
+    const currentAvatarSrc = this.getAvatarSvg(u.avatarId);
+
     profilePane.innerHTML = `
       <div class="hud-well p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3.5">
-          <img src="${this.getAvatarSvg(u.avatarId)}" class="w-14 h-14 rounded-2xl object-cover border-2 border-[var(--accent-primary)]" />
+          <img src="${currentAvatarSrc}" alt="Profile Avatar" class="w-14 h-14 rounded-2xl object-cover border-2 border-[var(--accent-primary)] block shrink-0" />
           <div>
             <div class="flex items-center gap-2">
               <span class="font-mono-tech font-extrabold text-base text-white">${u.username}</span>
@@ -734,37 +640,30 @@ window.VNTEXCore = {
             <div class="font-mono-tech text-[11px] text-gray-400 mt-0.5">Public Handle • Email &amp; Legal Name Hidden from Public UI</div>
           </div>
         </div>
-        <button id="univProfileSignOutBtn" type="button" class="px-3.5 py-2 rounded-xl bg-rose-500 text-white font-mono-tech font-extrabold text-xs uppercase">
+        <button id="univProfileSignOutBtn" type="button" class="px-3.5 py-2 rounded-xl bg-rose-500 text-white font-mono-tech font-extrabold text-xs uppercase cursor-pointer">
           Sign Out
         </button>
       </div>
-
-      ${isAdm ? `
-        <button id="openAdminPortalFromProfileBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-amber-400 text-black font-mono-tech font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 transition">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Open Admin Dashboard</span>
-        </button>
-      ` : ''}
 
       <form id="univProfileCustForm" class="hud-well p-4 rounded-xl space-y-3.5">
         <div class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Customize Profile Identity &amp; Studio Avatar</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="space-y-1">
-            <label class="font-mono-tech text-[10px] text-gray-400">Full Name (Admin Backend Only)</label>
-            <input id="univCustFullName" type="text" value="${u.fullName || ''}" class="hud-well w-full px-3 py-2 rounded-lg text-xs" />
+            <label class="font-mono-tech text-[10px] text-gray-400">Full Name (Private)</label>
+            <input id="univCustFullName" type="text" value="${u.fullName || ''}" class="hud-well w-full px-3 py-2 rounded-lg text-xs text-white" />
           </div>
           <div class="space-y-1">
             <label class="font-mono-tech text-[10px] text-gray-400">@username (Public Display)</label>
-            <input id="univCustHandle" type="text" value="${u.username || ''}" class="hud-well w-full px-3 py-2 rounded-lg font-mono-tech text-xs" />
+            <input id="univCustHandle" type="text" value="${u.username || ''}" class="hud-well w-full px-3 py-2 rounded-lg font-mono-tech text-xs text-white" />
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <label class="font-mono-tech text-[10px] text-gray-400">Choose Profile Picture (5 Default Options)</label>
+          <label class="font-mono-tech text-[10px] text-gray-400">Choose Profile Picture (5 Default Studio Avatars)</label>
           <div class="flex items-center gap-3 pt-1">
             ${VNTEX_AVATARS.map((av) => `
-              <button type="button" data-univ-avatar="${av.id}" class="avatar-option rounded-xl p-0.5 ${u.avatarId === av.id ? 'selected' : ''}" title="${av.name}">
-                <img src="${av.svg}" class="w-11 h-11 rounded-lg block" />
+              <button type="button" data-univ-avatar="${av.id}" class="rounded-xl p-1 border-2 transition cursor-pointer ${u.avatarId === av.id ? 'border-[var(--accent-primary)] scale-105' : 'border-transparent opacity-75 hover:opacity-100'}" title="${av.name}">
+                <img src="${av.svg}" alt="${av.name}" class="w-12 h-12 rounded-lg block object-cover pointer-events-none" />
               </button>
             `).join('')}
           </div>
@@ -774,7 +673,7 @@ window.VNTEXCore = {
           <label class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">UI Theme Preference</label>
           <div class="grid grid-cols-4 gap-2">
             ${Object.entries(CUSTOM_PALETTES).map(([k, p]) => `
-              <button type="button" data-univ-pal="${k}" class="hud-well p-2 rounded-xl text-left hover:border-white">
+              <button type="button" data-univ-pal="${k}" class="hud-well p-2 rounded-xl text-left hover:border-white cursor-pointer">
                 <div class="font-bold text-[11px] text-white">${p.name}</div>
               </button>
             `).join('')}
@@ -783,16 +682,12 @@ window.VNTEXCore = {
 
         <div class="flex items-center justify-between pt-1">
           <span id="univProfileSaveNotice" class="font-mono-tech text-[11px] text-emerald-400"></span>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase">Save Profile</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-xs uppercase cursor-pointer">Save Profile</button>
         </div>
       </form>
     `;
 
     document.getElementById('univProfileSignOutBtn').onclick = () => this.signOut();
-    document.getElementById('openAdminPortalFromProfileBtn')?.addEventListener('click', () => {
-      document.getElementById('vntexUniversalAccountModal').classList.add('hidden');
-      this.openAdminPortalModal();
-    });
 
     profilePane.querySelectorAll('[data-univ-avatar]').forEach((b) => {
       b.onclick = () => {
@@ -823,7 +718,7 @@ window.VNTEXCore = {
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-white mt-1">Dark + Blue</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">RADAR SYNC</div><div class="text-xs font-bold text-emerald-400 mt-1">Active</div></div>
       </div>
-      <a href="index.html#converter" class="block text-center py-2.5 rounded-xl bg-[#00f2fe] text-black font-extrabold text-xs uppercase">Open Converter →</a>
+      <a href="index.html#converter" onclick="document.getElementById('vntexUniversalAccountModal').classList.add('hidden')" class="block text-center py-2.5 rounded-xl bg-[#00f2fe] text-black font-extrabold text-xs uppercase no-underline">Open Converter →</a>
     `;
 
     document.getElementById('uacctPane-radar').innerHTML = `
@@ -832,213 +727,28 @@ window.VNTEXCore = {
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-[#00ff41] mt-1">Black + Neon Green</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">SUITE SONG IMPORT</div><div class="text-xs font-bold text-white mt-1">Active Near Tree</div></div>
       </div>
-      <a href="radar.html" class="block text-center py-2.5 rounded-xl bg-[#00ff41] text-black font-extrabold text-xs uppercase">Open Harmonic Radar →</a>
+      <a href="radar.html" class="block text-center py-2.5 rounded-xl bg-[#00ff41] text-black font-extrabold text-xs uppercase no-underline">Open Harmonic Radar →</a>
     `;
 
     document.getElementById('uacctPane-bloodstream').innerHTML = `
       <div class="grid grid-cols-3 gap-3">
-        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DSP ENGINE</div><div class="text-xs font-bold text-[#FF000D] mt-1">100% Web Native</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">AUDIO DURATION</div><div class="text-xs font-bold text-[#FF000D] mt-1">Full 3:12 Master</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-[#FF000D] mt-1">Blood Red OLED</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">COVER ART</div><div class="text-xs font-bold text-emerald-400 mt-1">ID3v2.3 APIC ✓</div></div>
       </div>
-      <a href="bloodstream.html" class="block text-center py-2.5 rounded-xl bg-[#FF000D] text-black font-extrabold text-xs uppercase">Open Bloodstream →</a>
+      <a href="bloodstream.html" class="block text-center py-2.5 rounded-xl bg-[#FF000D] text-black font-extrabold text-xs uppercase no-underline">Open Bloodstream →</a>
     `;
 
     const perms = u.permissions || {};
     document.getElementById('uacctPane-permissions').innerHTML = `
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">ACCOUNT TIER</div><div class="font-bold mt-1 text-emerald-400">${(perms.tier || 'PRO').toUpperCase()}</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">MEMBERSHIP TIER</div><div class="font-bold mt-1 text-emerald-400">${(perms.tier || 'PRO').toUpperCase()}</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">HARDWARE RIG PRESETS</div><div class="font-bold mt-1 ${perms.rig !== false ? 'text-emerald-400' : 'text-gray-500'}">${perms.rig !== false ? 'ENABLED' : 'LOCKED'}</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">BATCH AUTOMATION</div><div class="font-bold mt-1 ${perms.automation !== false ? 'text-emerald-400' : 'text-gray-500'}">${perms.automation !== false ? 'ENABLED' : 'LOCKED'}</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">CUSTOM UI PALETTES</div><div class="font-bold mt-1 ${perms.palettes !== false ? 'text-emerald-400' : 'text-gray-500'}">${perms.palettes !== false ? 'ENABLED' : 'LOCKED'}</div></div>
         <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">CLOUD CRATE SYNC</div><div class="font-bold mt-1 text-emerald-400">ENABLED</div></div>
-        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">ROLE</div><div class="font-bold mt-1 ${perms.isAdmin ? 'text-amber-400' : 'text-gray-300'}">${perms.isAdmin ? 'ADMIN' : 'STANDARD'}</div></div>
+        <div class="hud-well p-3 rounded-xl"><div class="text-[9px] text-gray-400">ACCOUNT ROLE</div><div class="font-bold mt-1 ${perms.isAdmin ? 'text-amber-400' : 'text-gray-300'}">${perms.isAdmin ? 'ADMIN DESIGNATED' : 'STANDARD PRODUCER'}</div></div>
       </div>
     `;
-  },
-
-  // Protected Admin Portal Handler (#admin)
-  handleProtectedAdminRoute() {
-    if (!this.isLoggedIn()) {
-      this.pendingAdminRedirect = true;
-      this.openAccountOrLoginModal('Admin Dashboard requires authentication. Please sign in with an Admin account.');
-      return;
-    }
-    if (this.currentUser.permissions && this.currentUser.permissions.isAdmin === true) {
-      this.openAdminPortalModal();
-    } else {
-      alert('Access Denied: You do not have Admin permissions. Redirecting to the VNTEX Toolbox.');
-      window.location.hash = '';
-      this.showToolboxLandingMenu();
-    }
-  },
-
-  openAdminPortalModal() {
-    this.renderAdminPortalModal();
-    document.getElementById('vntexAdminPortalModal').classList.remove('hidden');
-  },
-
-  renderAdminPortalModal() {
-    const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
-    const pending = JSON.parse(localStorage.getItem(VNTEX_KEYS.PENDING_APPROVALS) || '[]').filter((r) => r.status === 'pending');
-    const container = document.getElementById('adminPortalBodyContent');
-
-    container.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono-tech">
-        <div class="hud-glass p-4 rounded-xl border border-[#181824]">
-          <div class="text-[10px] text-gray-400">REGISTERED ACCOUNTS</div>
-          <div class="text-xl font-extrabold text-white mt-1">${db.length} Signed-In Users</div>
-        </div>
-        <div class="hud-glass p-4 rounded-xl border border-[#181824]">
-          <div class="text-[10px] text-gray-400">UNAUTHENTICATED VISITORS</div>
-          <div class="text-xl font-extrabold text-rose-400 mt-1">Status: "not logged in"</div>
-        </div>
-        <div class="hud-glass p-4 rounded-xl border border-[#181824]">
-          <div class="text-[10px] text-gray-400">PENDING APPROVALS</div>
-          <div class="text-xl font-extrabold text-amber-400 mt-1">${pending.length} Queued</div>
-        </div>
-      </div>
-
-      <div class="hud-glass p-4 rounded-2xl border border-[#181824] space-y-3">
-        <div class="flex items-center justify-between font-mono-tech">
-          <span class="text-xs font-bold uppercase text-amber-400">Active Sessions &amp; User Directory</span>
-          <span class="text-[11px] text-gray-400">Unauthenticated users appear as "not logged in"</span>
-        </div>
-        <div id="adminApprovalFeedbackBanner" class="hidden p-2.5 rounded-xl bg-amber-400/15 border border-amber-400/40 font-mono-tech text-xs text-amber-300"></div>
-
-        <!-- Generic Unauthenticated Visitor Row -->
-        <div class="hud-well p-3 rounded-xl flex items-center justify-between font-mono-tech text-xs border border-rose-500/30">
-          <div>
-            <div class="font-bold text-rose-300">not logged in <span class="text-gray-500 font-normal">(Default Unauthenticated State)</span></div>
-            <div class="text-[11px] text-gray-400">No profile assigned • Ephemeral local tool access only</div>
-          </div>
-          <span class="px-2.5 py-1 rounded bg-rose-500/15 text-rose-300 text-[10px]">NOT LOGGED IN</span>
-        </div>
-
-        <div class="space-y-2">
-          ${db.map((u) => `
-            <div class="hud-well p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
-              <div>
-                <div class="font-bold text-white">${u.username} <span class="text-gray-400 font-normal">(${u.fullName})</span></div>
-                <div class="text-[11px] text-cyan-400">${u.email} • Tier: <strong class="uppercase text-emerald-400">${u.permissions?.tier || 'pro'}</strong></div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button type="button" data-req-tier="${u.email}" data-next-tier="${u.permissions?.tier === 'pro' ? 'free' : 'pro'}" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-amber-300 border border-amber-400/40">
-                  Submit Tier Change → ${u.permissions?.tier === 'pro' ? 'FREE' : 'PRO'}
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-
-    container.querySelectorAll('[data-req-tier]').forEach((btn) => {
-      btn.onclick = () => {
-        const email = btn.getAttribute('data-req-tier');
-        const nextTier = btn.getAttribute('data-next-tier');
-        this.submitAdminActionForOwnerApproval('TIER_CHANGE', email, `Set ${email} tier to ${nextTier.toUpperCase()}`, { tier: nextTier });
-        const b = document.getElementById('adminApprovalFeedbackBanner');
-        b.textContent = `✓ Submitted for approval: Change ${email} tier to ${nextTier.toUpperCase()}.`;
-        b.classList.remove('hidden');
-      };
-    });
-  },
-
-  openOwnerPortalModal() {
-    document.getElementById('vntexOwnerPortalModal').classList.remove('hidden');
-    this.renderOwnerPortalModal();
-  },
-
-  renderOwnerPortalModal() {
-    const container = document.getElementById('ownerPortalBodyContent');
-    if (!this.ownerUnlocked) {
-      container.innerHTML = `
-        <form id="ownerMasterAuthForm" class="hud-glass max-w-md mx-auto p-6 rounded-2xl border border-rose-500/50 space-y-4 text-center mt-12">
-          <i class="fa-solid fa-key text-3xl text-rose-500"></i>
-          <h3 class="font-mono-tech font-extrabold text-sm uppercase text-white">Enter Master Owner Passcode</h3>
-          <input id="ownerMasterPassInput" type="password" required placeholder="Master Passcode..." class="hud-well w-full px-4 py-2.5 rounded-xl font-mono-tech text-xs text-center text-white" />
-          <div id="ownerAuthErr" class="hidden font-mono-tech text-xs text-rose-400">Invalid Master Passcode.</div>
-          <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-500 text-white font-mono-tech font-extrabold text-xs uppercase">Unlock Owner Portal</button>
-        </form>
-      `;
-      document.getElementById('ownerMasterAuthForm').onsubmit = (e) => {
-        e.preventDefault();
-        if (document.getElementById('ownerMasterPassInput').value.trim() === 'Ownr$88!Vntx#Plains92Z') {
-          this.ownerUnlocked = true;
-          sessionStorage.setItem(VNTEX_KEYS.OWNER_UNLOCKED, 'true');
-          this.renderOwnerPortalModal();
-        } else {
-          document.getElementById('ownerAuthErr').classList.remove('hidden');
-        }
-      };
-      return;
-    }
-
-    const approvals = JSON.parse(localStorage.getItem(VNTEX_KEYS.PENDING_APPROVALS) || '[]').filter((a) => a.status === 'pending');
-    container.innerHTML = `
-      <div class="hud-glass p-5 rounded-2xl border border-rose-500/40 space-y-3">
-        <div class="font-mono-tech text-xs font-extrabold uppercase text-rose-400">Pending Admin Requests (${approvals.length})</div>
-        <div class="space-y-2">
-          ${approvals.map((req) => `
-            <div class="hud-well p-3.5 rounded-xl flex items-center justify-between gap-3 font-mono-tech text-xs">
-              <div><div class="font-bold text-white">${req.summaryText}</div><div class="text-[11px] text-gray-400">By ${req.adminActor} • ${req.createdAt}</div></div>
-              <div class="flex gap-2">
-                <button type="button" data-own-approve="${req.id}" class="px-3 py-1 rounded bg-emerald-400 text-black font-bold">Approve</button>
-                <button type="button" data-own-deny="${req.id}" class="px-3 py-1 rounded bg-rose-500 text-white font-bold">Deny</button>
-              </div>
-            </div>
-          `).join('') || `<div class="hud-well p-4 rounded-xl text-center font-mono-tech text-xs text-gray-500">No pending requests awaiting approval.</div>`}
-        </div>
-      </div>
-    `;
-    container.querySelectorAll('[data-own-approve]').forEach((b) => { b.onclick = () => this.executeOwnerApprovalDecision(b.getAttribute('data-own-approve'), true); });
-    container.querySelectorAll('[data-own-deny]').forEach((b) => { b.onclick = () => this.executeOwnerApprovalDecision(b.getAttribute('data-own-deny'), false); });
-  },
-
-  showToolboxLandingMenu() {
-    const hub = document.getElementById('vntexToolboxLandingHub');
-    if (!hub) return;
-    const lbl = document.getElementById('landingHubLoginLabel');
-    if (lbl) lbl.textContent = this.isLoggedIn() ? this.currentUser.username : 'Log In';
-    hub.classList.remove('hidden');
-  },
-
-  evaluateRoutingAndLandingMenu() {
-    const applyRoute = () => {
-      const hash = window.location.hash.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      const toolParam = (params.get('tool') || '').toLowerCase();
-      const portalParam = (params.get('portal') || '').toLowerCase();
-      const passParam = params.get('passcode') || params.get('key') || '';
-
-      if (passParam === 'Ownr$88!Vntx#Plains92Z') {
-        this.ownerUnlocked = true;
-        sessionStorage.setItem(VNTEX_KEYS.OWNER_UNLOCKED, 'true');
-      }
-
-      // 1. Direct Owner Portal Link (#owner or ?portal=owner)
-      if (hash === '#owner' || portalParam === 'owner') {
-        document.getElementById('vntexToolboxLandingHub')?.classList.add('hidden');
-        this.openOwnerPortalModal();
-        return;
-      }
-
-      // 2. Direct Protected Admin Link (#admin or ?portal=admin)
-      if (hash === '#admin' || portalParam === 'admin') {
-        document.getElementById('vntexToolboxLandingHub')?.classList.add('hidden');
-        this.handleProtectedAdminRoute();
-        return;
-      }
-
-      // 3. On index.html (Converter host page): Only open Converter if #converter or ?tool=converter is in the link!
-      if (this.activeTool === 'converter') {
-        if (hash === '#converter' || toolParam === 'converter') {
-          document.getElementById('vntexToolboxLandingHub')?.classList.add('hidden');
-        } else {
-          this.showToolboxLandingMenu();
-        }
-      }
-    };
-
-    window.addEventListener('hashchange', applyRoute);
-    applyRoute();
   }
 };
