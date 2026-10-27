@@ -1,9 +1,5 @@
 /**
- * VNTEX SUITE CORE ENGINE (Argon4 — Dedicated Multi-Page Architecture)
- * - index.html: Root Toolbox Menu
- * - converter.html: Standalone Converter Studio
- * - radar.html: Harmonic Radar Void
- * - bloodstream.html: Bloodstream Engine
+ * VNTEX SUITE CORE ENGINE (Argon4 — Real Firebase Google OAuth & Unified Profile)
  */
 
 const VNTEX_FIREBASE_CONFIG = {
@@ -56,7 +52,7 @@ window.VNTEXCore = {
 
   async boot(activeToolName) {
     this.activeTool = activeToolName || 'menu';
-    this.initFirebaseIfAvailable();
+    await this.ensureFirebaseLoaded();
     this.seedNeutralAdminIfEmpty();
     this.loadSession();
     this.applyActiveToolTheme();
@@ -66,17 +62,32 @@ window.VNTEXCore = {
     this.syncHeaderProfileUI();
   },
 
-  initFirebaseIfAvailable() {
+  async ensureFirebaseLoaded() {
+    const loadScript = (src) => new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = res;
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+
     try {
+      if (!window.firebase) {
+        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+      }
+      if (window.firebase && !window.firebase.auth) {
+        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
+      }
       if (window.firebase) {
         if (!firebase.apps.length) firebase.initializeApp(VNTEX_FIREBASE_CONFIG);
         if (firebase.auth) this.firebaseAuth = firebase.auth();
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Firebase SDK load warning:', e);
+    }
   },
 
   seedNeutralAdminIfEmpty() {
-    ['vntex_core_session_user','vntex_core_authenticated_user','vntex_core_authenticated_user_v2','vntex_core_authenticated_user_v3','vntex_core_authenticated_user_v4','vntex_core_authenticated_user_v5','vntex_core_authenticated_user_v6'].forEach((k) => localStorage.removeItem(k));
     const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
     if (!db.length) {
       db.push(
@@ -191,23 +202,63 @@ window.VNTEXCore = {
     return { ok: true };
   },
 
+  // True Firebase Google OAuth Popup (Zero prompt() fallback!)
   async signInWithGoogle() {
-    const gEmail = prompt('Enter Google Account Email (e.g. yourname@gmail.com):');
-    if (!gEmail || !gEmail.includes('@')) return;
-    const clean = gEmail.trim().toLowerCase();
-    const handle = '@' + clean.split('@')[0].replace(/[^a-z0-9]/g, '_');
-    const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
-    let account = db.find((u) => u.email.toLowerCase() === clean);
-    if (!account) {
-      account = {
-        uid: 'usr_ggl_' + Date.now(), email: clean, fullName: clean.split('@')[0], username: handle,
-        avatarId: 'av_1', verifiedBadge: true, palette: 'default',
-        permissions: { tier: 'pro', rig: true, automation: true, palettes: true, isAdmin: clean === 'admin@vntex.io' }
-      };
-      db.push(account);
-      localStorage.setItem(VNTEX_KEYS.USERS_DB, JSON.stringify(db));
+    const errEl = document.getElementById('univAuthErrorMsg');
+    const gBtn = document.getElementById('univGoogleSignInBtn');
+    if (errEl) errEl.classList.add('hidden');
+
+    await this.ensureFirebaseLoaded();
+
+    if (!this.firebaseAuth || !window.firebase?.auth?.GoogleAuthProvider) {
+      if (errEl) {
+        errEl.textContent = 'Firebase Google Auth SDK could not be initialized. Check your network connection.';
+        errEl.classList.remove('hidden');
+      }
+      return;
     }
-    this.completeLoginTransition(account);
+
+    try {
+      if (gBtn) gBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-red-500"></i><span>Opening Google Sign-In...</span>';
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      const result = await this.firebaseAuth.signInWithPopup(provider);
+      if (result && result.user) {
+        const fbUser = result.user;
+        const email = (fbUser.email || 'google_user@vntex.io').toLowerCase();
+        const handle = '@' + (fbUser.displayName || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const db = JSON.parse(localStorage.getItem(VNTEX_KEYS.USERS_DB) || '[]');
+        let account = db.find((u) => u.email.toLowerCase() === email);
+        if (!account) {
+          account = {
+            uid: fbUser.uid || ('usr_ggl_' + Date.now()),
+            email,
+            fullName: fbUser.displayName || email.split('@')[0],
+            username: handle,
+            avatarId: 'av_1',
+            verifiedBadge: true,
+            palette: 'default',
+            permissions: { tier: 'pro', rig: true, automation: true, palettes: true, isAdmin: email === 'admin@vntex.io' }
+          };
+          db.push(account);
+          localStorage.setItem(VNTEX_KEYS.USERS_DB, JSON.stringify(db));
+        }
+        this.completeLoginTransition(account);
+      }
+    } catch (err) {
+      if (gBtn) gBtn.innerHTML = '<i class="fa-brands fa-google text-red-500"></i><span>Continue with Google</span>';
+      if (errEl) {
+        if (err.code === 'auth/unauthorized-domain') {
+          errEl.textContent = 'Domain not authorized in Firebase: Add "' + window.location.hostname + '" in Firebase Console -> Authentication -> Settings -> Authorized domains.';
+        } else if (err.code === 'auth/popup-closed-by-user') {
+          errEl.textContent = 'Google Sign-In popup was closed before completing login.';
+        } else {
+          errEl.textContent = 'Google Sign-In error: ' + (err.message || err.code || 'Popup blocked by browser.');
+        }
+        errEl.classList.remove('hidden');
+      }
+    }
   },
 
   completeLoginTransition(account) {
@@ -221,6 +272,7 @@ window.VNTEXCore = {
   },
 
   signOut() {
+    try { if (this.firebaseAuth) this.firebaseAuth.signOut(); } catch {}
     localStorage.removeItem(VNTEX_KEYS.AUTH_USER);
     this.currentUser = null;
     this.applyActiveToolTheme();
@@ -229,7 +281,6 @@ window.VNTEXCore = {
     window.dispatchEvent(new CustomEvent('vntex:auth-changed', { detail: { user: null } }));
   },
 
-  // Ensures every navbar across all tools links Converter -> converter.html and VX Logo -> index.html
   normalizeHeaderLinks() {
     document.querySelectorAll('header nav a').forEach((a) => {
       if (a.textContent.toLowerCase().includes('converter')) {
@@ -311,7 +362,7 @@ window.VNTEXCore = {
           </div>
           <div id="univChatMessagesBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs">
             <div class="hud-well p-3 rounded-xl text-gray-300 leading-relaxed">
-              <strong class="text-[var(--accent-primary)]">VNTEX AI Assistant:</strong> Ask me anything about <strong>Converter</strong> (<code>converter.html</code>), <strong>Harmonic Radar</strong> (<code>radar.html</code>), or <strong>Bloodstream</strong> (<code>bloodstream.html</code>)!
+              <strong class="text-[var(--accent-primary)]">VNTEX AI Assistant:</strong> Ask me anything about <strong>Converter</strong>, <strong>Harmonic Radar</strong>, or <strong>Bloodstream</strong>!
             </div>
           </div>
           <div class="p-3 border-t border-[#181824] bg-[#050509] space-y-2">
@@ -353,7 +404,7 @@ window.VNTEXCore = {
       setTimeout(() => {
         const bDiv = document.createElement('div');
         bDiv.className = 'hud-well p-3 rounded-xl text-gray-300 mr-8';
-        bDiv.innerHTML = '<strong class="text-[var(--accent-primary)]">VNTEX AI:</strong> Your single profile syncs across index.html (Main Menu), converter.html, radar.html, and bloodstream.html. Converted or downloaded tracks can be loaded into Radar via the "Load Suite Songs" button near the Node Tree!';
+        bDiv.innerHTML = '<strong class="text-[var(--accent-primary)]">VNTEX AI:</strong> Your single profile syncs across index.html, converter.html, radar.html, and bloodstream.html!';
         chatBox.appendChild(bDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       }, 160);
@@ -388,7 +439,7 @@ window.VNTEXCore = {
       modePill.textContent = 'NOT LOGGED IN';
       profilePane.innerHTML = `
         <div class="hud-well p-5 rounded-xl space-y-4 border border-[#2a2b3d]">
-          <button id="univGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white text-black font-mono-tech font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer">
+          <button id="univGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white text-black font-mono-tech font-extrabold text-xs flex items-center justify-center gap-2 hover:brightness-95 transition cursor-pointer">
             <i class="fa-brands fa-google text-red-500"></i><span>Continue with Google</span>
           </button>
           <div class="text-center font-mono-tech text-[10px] text-gray-500 uppercase">— OR SIGN IN WITH EMAIL —</div>
@@ -401,7 +452,7 @@ window.VNTEXCore = {
               <input id="univAuthFullName" type="text" placeholder="Full Name (Private)" class="hud-well px-3 py-2 rounded-lg text-xs w-full text-white" />
               <input id="univAuthHandle" type="text" placeholder="Public @username" class="hud-well px-3 py-2 rounded-lg text-xs font-mono-tech w-full text-white" />
             </div>
-            <div id="univAuthErrorMsg" class="hidden font-mono-tech text-[11px] text-rose-400"></div>
+            <div id="univAuthErrorMsg" class="hidden p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/40 font-mono-tech text-[11px] text-rose-300 leading-relaxed"></div>
             <div class="flex items-center justify-between pt-1">
               <label class="flex items-center gap-2 font-mono-tech text-[11px] text-gray-300 cursor-pointer">
                 <input id="univAuthIsSignUp" type="checkbox" class="accent-cyan-400" /><span>Create a New Account</span>
@@ -498,7 +549,7 @@ window.VNTEXCore = {
     `;
     document.getElementById('uacctPane-bloodstream').innerHTML = `
       <div class="grid grid-cols-3 gap-3">
-        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">AUDIO DURATION</div><div class="text-xs font-bold text-[#FF000D] mt-1">Full 3:12 Master</div></div>
+        <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">AUDIO ENGINE</div><div class="text-xs font-bold text-[#FF000D] mt-1">Clean 1152-Frame</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">DEFAULT THEME</div><div class="text-xs font-bold text-[#FF000D] mt-1">Blood Red OLED</div></div>
         <div class="hud-well p-3.5 rounded-xl"><div class="text-[10px] text-gray-400">COVER ART</div><div class="text-xs font-bold text-emerald-400 mt-1">ID3v2.3 APIC ✓</div></div>
       </div>
