@@ -8,577 +8,178 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="vntex-core.js"></script>
-
+  <script src="vntex-core.js?v=1793070475"></script>
   <style>
-    /* DEFAULT CONVERTER / MENU UI: DARK STUDIO WITH BLUE ACCENTS (#00f2fe) */
-    :root {
-      --bg-void: #020204;
-      --bg-panel: #0a0a10;
-      --bg-well: #040407;
-      --border-hairline: #181824;
-      --border-highlight: #2a2b3d;
-      --text-primary: #f3f4f8;
-      --text-secondary: #9496a8;
-      --text-muted: #505266;
-      --accent-primary: #00f2fe;
-      --accent-glow: rgba(0, 242, 254, 0.25);
-    }
+    :root { --bg-void: #020204; --bg-panel: #0a0a10; --bg-well: #040407; --border-hairline: #181824; --border-highlight: #2a2b3d; --text-primary: #f3f4f8; --text-secondary: #9496a8; --accent-primary: #00f2fe; --accent-glow: rgba(0, 242, 254, 0.25); }
     * { box-sizing: border-box; user-select: none; }
-    body {
-      background: var(--bg-void);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, sans-serif;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      margin: 0;
-    }
+    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .hud-glass {
-      background: color-mix(in srgb, var(--bg-panel) 90%, transparent);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-hairline);
-      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.92);
-    }
-    .hud-well {
-      background: var(--bg-well);
-      border: 1px solid var(--border-hairline);
-      color: var(--text-primary);
-      transition: all 0.15s ease;
-    }
-    .hud-well:focus-within, input.hud-well:focus, select.hud-well:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-    .suite-nav-pill {
-      padding: 0.3rem 0.7rem;
-      border-radius: 0.45rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      border: 1px solid transparent;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-highlight); }
-    .suite-nav-pill.active {
-      color: var(--accent-primary);
-      background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-    .tool-launcher-card {
-      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .tool-launcher-card:hover { transform: translateY(-4px); }
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: #26273a; border-radius: 999px; }
+    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 90%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); }
+    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); }
+    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; cursor: pointer; }
+    .suite-nav-pill.active { color: var(--accent-primary); background: rgba(0, 242, 254, 0.14); border-color: var(--accent-primary); }
+    .tool-card:hover { transform: translateY(-4px); transition: all 0.2s ease; }
   </style>
 </head>
 <body class="antialiased flex flex-col">
 
-  <!-- ==========================================================================
-       UNIVERSAL VNTEX SUITE HEADER (100% IDENTICAL TO RADAR & BLOODSTREAM)
-       ========================================================================== -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
-      <!-- Clicking VX Logo always returns to the Main Toolbox Menu (index.html) -->
-      <a href="#menu" id="brandMenuLink" class="flex items-center gap-2 no-underline" title="Open VNTEX Main Toolbox Menu">
+      <a href="#menu" class="flex items-center gap-2 no-underline" title="Main Toolbox Menu">
         <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/60 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
         <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
         <span id="headerContextBadge" class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30">TOOLBOX MENU</span>
       </a>
-
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
         <a href="#converter" id="navPillConverter" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
         <a href="radar.html" class="suite-nav-pill"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
         <a href="bloodstream.html" class="suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span></a>
       </nav>
     </div>
-
     <div class="flex items-center gap-2">
-      <!-- Standardized Sliders Icon (fa-solid fa-sliders) -->
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="Converter Options & Studio Settings">
-        <i class="fa-solid fa-sliders"></i>
-      </button>
-
-      <!-- Universal AI Support Chatbot Button -->
-      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]" title="AI Studio Assistant">
-        <i class="fa-regular fa-comment-dots"></i>
-      </button>
-
-      <!-- Unified Profile / Login Button -->
-      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 hover:border-[var(--accent-primary)]">
-        <i class="fa-solid fa-right-to-bracket text-[var(--accent-primary)] text-[11px]"></i>
-        <span id="userStatusName" class="font-mono-tech font-bold">Log In</span>
-      </button>
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer"><i class="fa-solid fa-sliders"></i></button>
+      <button id="openSupportChatBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer"><i class="fa-regular fa-comment-dots"></i></button>
+      <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 cursor-pointer"><span class="font-mono-tech font-bold">Log In</span></button>
     </div>
   </header>
 
-  <!-- ==========================================================================
-       VIEW 1: MAIN TOOLBOX LAUNCHER MENU (SHOWN WHEN AT ROOT index.html)
-       ========================================================================== -->
+  <!-- VIEW 1: MAIN TOOLBOX MENU (DEFAULT AT index.html) -->
   <section id="viewToolboxMenu" class="flex-1 overflow-y-auto px-4 sm:px-8 py-10 flex flex-col justify-center">
     <div class="max-w-5xl w-full mx-auto space-y-10">
       <div class="text-center space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono-tech text-[10px] uppercase tracking-widest text-[#00f2fe]">
-          <span>Unified Single-Account Production Suite</span>
-        </div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono-tech text-[10px] uppercase tracking-widest text-[#00f2fe]">Unified Single-Account Production Suite</div>
         <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">Select a VNTEX Tool</h1>
-        <p class="text-xs sm:text-sm text-[var(--text-secondary)] max-w-xl mx-auto">
-          Choose a module below or bookmark its direct link (`index.html#converter`, `radar.html`, or `bloodstream.html`) to jump straight into that workspace.
-        </p>
+        <p class="text-xs sm:text-sm text-[var(--text-secondary)] max-w-xl mx-auto">Click any tool card below to launch its workspace, or bookmark its direct link.</p>
       </div>
-
-      <!-- 3 SELECTABLE TOOL ICON CARDS -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Card 1: Converter Studio -->
-        <a href="#converter" id="menuCardConverter" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#181824] hover:border-[#00f2fe] hover:shadow-[0_0_30px_rgba(0,242,254,0.18)] flex flex-col justify-between space-y-6 no-underline">
+        <a href="#converter" class="tool-card hud-glass p-7 rounded-2xl border border-[#181824] hover:border-[#00f2fe] flex flex-col justify-between space-y-6 no-underline">
           <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#00f2fe]/15 border border-[#00f2fe]/50 flex items-center justify-center text-[#00f2fe] text-2xl shadow-[0_0_20px_rgba(0,242,254,0.25)]">
-              <i class="fa-solid fa-bolt"></i>
-            </div>
-            <div>
-              <div class="font-mono-tech text-[10px] uppercase text-[#00f2fe] font-bold">Module 01 // Transcoder</div>
-              <h2 class="text-xl font-extrabold text-white mt-0.5">Converter Studio</h2>
-            </div>
-            <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
-              Fast Web default preset (192kbps MP3 / 44.1kHz), hardware CDJ rigs, live dynamic BPM range bounds, and batch metadata prep.
-            </p>
+            <div class="w-14 h-14 rounded-2xl bg-[#00f2fe]/15 border border-[#00f2fe]/50 flex items-center justify-center text-[#00f2fe] text-2xl"><i class="fa-solid fa-bolt"></i></div>
+            <div><div class="font-mono-tech text-[10px] uppercase text-[#00f2fe] font-bold">Module 01 // Transcoder</div><h2 class="text-xl font-extrabold text-white mt-0.5">Converter Studio</h2></div>
+            <p class="text-xs text-[var(--text-secondary)]">Fast Web default preset (192kbps MP3 / 44.1kHz), dynamic BPM range bounds, and batch metadata prep.</p>
           </div>
-          <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#00f2fe]">
-            <span>index.html#converter</span>
-            <span>Launch →</span>
-          </div>
+          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#00f2fe]"><span>index.html#converter</span><span>Launch →</span></div>
         </a>
-
-        <!-- Card 2: Harmonic Radar -->
-        <a href="radar.html" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#0d2612] hover:border-[#00ff41] hover:shadow-[0_0_30px_rgba(0,255,65,0.18)] flex flex-col justify-between space-y-6 no-underline">
+        <a href="radar.html" class="tool-card hud-glass p-7 rounded-2xl border border-[#0d2612] hover:border-[#00ff41] flex flex-col justify-between space-y-6 no-underline">
           <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#00ff41]/15 border border-[#00ff41]/50 flex items-center justify-center text-[#00ff41] text-2xl shadow-[0_0_20px_rgba(0,255,65,0.25)]">
-              <i class="fa-solid fa-compass"></i>
-            </div>
-            <div>
-              <div class="font-mono-tech text-[10px] uppercase text-[#00ff41] font-bold">Module 02 // Harmonic Void</div>
-              <h2 class="text-xl font-extrabold text-white mt-0.5">Harmonic Radar</h2>
-            </div>
-            <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
-              Pitch-black neon green constellation void, Brain % compatibility ranking, map-layer DSP progress log, and multi-branch setlists.
-            </p>
+            <div class="w-14 h-14 rounded-2xl bg-[#00ff41]/15 border border-[#00ff41]/50 flex items-center justify-center text-[#00ff41] text-2xl"><i class="fa-solid fa-compass"></i></div>
+            <div><div class="font-mono-tech text-[10px] uppercase text-[#00ff41] font-bold">Module 02 // Harmonic Void</div><h2 class="text-xl font-extrabold text-white mt-0.5">Harmonic Radar</h2></div>
+            <p class="text-xs text-[var(--text-secondary)]">Pitch-black neon green constellation void, Brain % scoring, and Suite Song import button.</p>
           </div>
-          <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#00ff41]">
-            <span>radar.html</span>
-            <span>Launch →</span>
-          </div>
+          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#00ff41]"><span>radar.html</span><span>Launch →</span></div>
         </a>
-
-        <!-- Card 3: Bloodstream Engine -->
-        <a href="bloodstream.html" class="tool-launcher-card hud-glass p-7 rounded-2xl border border-[#330000] hover:border-[#FF000D] hover:shadow-[0_0_30px_rgba(255,0,13,0.2)] flex flex-col justify-between space-y-6 no-underline">
+        <a href="bloodstream.html" class="tool-card hud-glass p-7 rounded-2xl border border-[#330000] hover:border-[#FF000D] flex flex-col justify-between space-y-6 no-underline">
           <div class="space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D]/50 flex items-center justify-center text-[#FF000D] text-2xl shadow-[0_0_20px_rgba(255,0,13,0.25)]">
-              <i class="fa-solid fa-droplet"></i>
-            </div>
-            <div>
-              <div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Module 03 // Stream Compiler</div>
-              <h2 class="text-xl font-extrabold text-white mt-0.5">Bloodstream Engine</h2>
-            </div>
-            <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
-              100% client-side full-length 3:12 audio synthesis, single-song mix isolation, individual queue downloads, and ID3v2.3 cover art.
-            </p>
+            <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D]/50 flex items-center justify-center text-[#FF000D] text-2xl"><i class="fa-solid fa-droplet"></i></div>
+            <div><div class="font-mono-tech text-[10px] uppercase text-[#FF000D] font-bold">Module 03 // Stream Compiler</div><h2 class="text-xl font-extrabold text-white mt-0.5">Bloodstream Engine</h2></div>
+            <p class="text-xs text-[var(--text-secondary)]">Full-length 3:12 client-side audio synthesis, single-song mix isolation, and ID3v2.3 cover art.</p>
           </div>
-          <div class="pt-4 border-t border-[#181824] flex items-center justify-between font-mono-tech text-xs font-bold text-[#FF000D]">
-            <span>bloodstream.html</span>
-            <span>Launch →</span>
-          </div>
+          <div class="pt-4 border-t border-[#181824] flex justify-between font-mono-tech text-xs font-bold text-[#FF000D]"><span>bloodstream.html</span><span>Launch →</span></div>
         </a>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================================================
-       VIEW 2: CONVERTER STUDIO WORKSPACE (SHOWN WHEN AT index.html#converter)
-       ========================================================================== -->
+  <!-- VIEW 2: CONVERTER STUDIO (AT index.html#converter) -->
   <main id="viewConverterStudio" class="hidden flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
-
-    <!-- LEFT COLUMN (5 COLS): TRANSCODING CONTROLS, FAST WEB DEFAULT & DYNAMIC BPM RANGE -->
     <section class="lg:col-span-5 flex flex-col gap-3.5 overflow-y-auto pr-1">
       <div class="hud-glass rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="font-mono-tech text-[10px] uppercase tracking-wider text-[var(--accent-primary)] font-bold">
-            <i class="fa-solid fa-microchip mr-1"></i>Output Preset Profile
-          </span>
-          <span id="activePresetBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 font-bold">
-            FAST WEB (DEFAULT)
-          </span>
+          <span class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">Output Preset Profile</span>
+          <span id="activePresetBadge" class="font-mono-tech text-[10px] px-2 py-0.5 rounded bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-bold">FAST WEB (DEFAULT)</span>
         </div>
-
         <select id="converterPresetSelect" class="hud-well w-full px-3 py-2.5 rounded-xl font-mono-tech text-xs text-white cursor-pointer">
           <option value="fast_web" selected>⚡ Fast Web (Default — MP3 192kbps / 44.1kHz Stream)</option>
           <option value="cdj_3000">🎛️ Pioneer CDJ-3000 / Rekordbox (WAV 24-Bit / 48kHz)</option>
           <option value="club_mp3">🔊 Club Master 320 (MP3 320kbps CBR / 44.1kHz)</option>
-          <option value="lossless_flac">💎 Archival Lossless (FLAC 24-Bit / 48kHz)</option>
         </select>
-
-        <div class="grid grid-cols-3 gap-2.5 font-mono-tech text-xs pt-1">
-          <div class="space-y-1">
-            <label class="text-[10px] text-[var(--text-secondary)]">Format</label>
-            <select id="convFormatSelect" class="hud-well w-full px-2.5 py-2 rounded-lg text-xs font-bold">
-              <option value="mp3" selected>MP3</option>
-              <option value="wav">WAV</option>
-              <option value="flac">FLAC</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-[var(--text-secondary)]">Bitrate / Depth</label>
-            <select id="convBitrateSelect" class="hud-well w-full px-2.5 py-2 rounded-lg text-xs font-bold">
-              <option value="192" selected>192 kbps</option>
-              <option value="320">320 kbps</option>
-              <option value="128">128 kbps</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-[var(--text-secondary)]">Sample Rate</label>
-            <select id="convSampleRateSelect" class="hud-well w-full px-2.5 py-2 rounded-lg text-xs font-bold">
-              <option value="44100" selected>44.1 kHz</option>
-              <option value="48000">48.0 kHz</option>
-            </select>
-          </div>
-        </div>
       </div>
 
-      <!-- Dynamic BPM Detection Range Bounds -->
       <div class="hud-glass rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="font-mono-tech text-[10px] uppercase tracking-wider text-[var(--accent-primary)] font-bold">
-            <i class="fa-solid fa-gauge-high mr-1"></i>BPM Detection Bounds
-          </span>
-          <span id="bpmRangeDynamicText" class="font-mono-tech text-xs font-extrabold px-2.5 py-0.5 rounded bg-emerald-400/15 text-emerald-400 border border-emerald-400/40">
-            75 – 160 BPM
-          </span>
+          <span class="font-mono-tech text-[10px] uppercase text-[var(--accent-primary)] font-bold">BPM Detection Bounds</span>
+          <span id="bpmRangeDynamicText" class="font-mono-tech text-xs font-extrabold px-2.5 py-0.5 rounded bg-emerald-400/15 text-emerald-400 border border-emerald-400/40">75 – 160 BPM</span>
         </div>
-
         <div class="grid grid-cols-2 gap-3 font-mono-tech text-xs">
           <div class="hud-well p-3 rounded-xl space-y-1.5">
-            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]">
-              <span>Min BPM</span>
-              <strong id="bpmMinValLabel" class="text-white">75</strong>
-            </div>
+            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]"><span>Min BPM</span><strong id="bpmMinValLabel" class="text-white">75</strong></div>
             <input id="bpmMinInput" type="range" min="50" max="140" value="75" class="w-full accent-[#00f2fe] cursor-pointer" />
           </div>
-
           <div class="hud-well p-3 rounded-xl space-y-1.5">
-            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]">
-              <span>Max BPM</span>
-              <strong id="bpmMaxValLabel" class="text-white">160</strong>
-            </div>
+            <div class="flex justify-between text-[10px] text-[var(--text-secondary)]"><span>Max BPM</span><strong id="bpmMaxValLabel" class="text-white">160</strong></div>
             <input id="bpmMaxInput" type="range" min="100" max="220" value="160" class="w-full accent-[#00f2fe] cursor-pointer" />
           </div>
         </div>
       </div>
 
-      <!-- Drop Zone & Sample Loader -->
-      <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition text-center space-y-3 cursor-pointer">
-        <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.m4a" class="hidden" />
-        <div class="w-11 h-11 rounded-2xl bg-[var(--accent-primary)]/15 border border-[var(--accent-primary)]/40 mx-auto flex items-center justify-center text-[var(--accent-primary)] text-lg">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-        </div>
-        <div>
-          <div class="font-bold text-xs text-white">Drop Audio Files Here or Click to Browse</div>
-          <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] mt-0.5">Supports MP3, WAV, FLAC, AIFF, M4A • Auto-Syncs to Radar</div>
-        </div>
-        <div class="flex justify-center gap-2 pt-1">
-          <button id="loadSampleTracksBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)] cursor-pointer">
-            + Load Sample Studio Tracks
-          </button>
-        </div>
+      <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] text-center space-y-3 cursor-pointer">
+        <input id="convFileInput" type="file" multiple accept="audio/*" class="hidden" />
+        <div class="font-bold text-xs text-white">Drop Audio Files Here or Click to Browse</div>
+        <button id="loadSampleTracksBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[11px] text-[var(--accent-primary)] cursor-pointer">+ Load Sample Studio Tracks</button>
       </div>
     </section>
 
-    <!-- RIGHT COLUMN (7 COLS): BATCH CONVERSION QUEUE & EXECUTION -->
     <section class="lg:col-span-7 hud-glass rounded-2xl flex flex-col overflow-hidden">
       <div class="px-4 py-3 border-b border-[var(--border-hairline)] bg-[#06060b] flex items-center justify-between font-mono-tech text-xs">
-        <span class="font-bold text-[var(--accent-primary)] uppercase">
-          <i class="fa-solid fa-layer-group mr-1.5"></i>Conversion Queue (<span id="convQueueCount">0</span>)
-        </span>
-        <div class="flex items-center gap-2">
-          <button id="clearConvQueueBtn" type="button" class="hud-well px-2.5 py-1 rounded text-[11px] text-gray-400 hover:text-white cursor-pointer">Clear</button>
-          <button id="convertAllBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase hover:brightness-110 transition cursor-pointer">
-            ⚡ Convert All
-          </button>
-        </div>
+        <span class="font-bold text-[var(--accent-primary)] uppercase">Conversion Queue (<span id="convQueueCount">0</span>)</span>
+        <button id="convertAllBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase cursor-pointer">⚡ Convert All</button>
       </div>
-
       <div id="convQueueList" class="flex-1 overflow-y-auto p-3.5 space-y-2.5"></div>
-
-      <div class="px-4 py-2.5 border-t border-[var(--border-hairline)] bg-[#050509] flex items-center justify-between font-mono-tech text-[11px] text-[var(--text-secondary)]">
-        <span id="convStatusText">Ready — Preset: Fast Web (192kbps MP3)</span>
-        <a href="radar.html" class="text-[var(--accent-primary)] hover:underline">Open Converted Tracks in Radar →</a>
-      </div>
     </section>
-
   </main>
 
-  <!-- CONVERTER SLIDERS SETTINGS MODAL -->
-  <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--border-highlight)]">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#050509]">
-        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-sliders text-[var(--accent-primary)] mr-2"></i>Converter Studio Options</h3>
-        <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-5 space-y-3 text-xs font-mono-tech">
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Default Startup Preset</span><span class="text-[#00f2fe] font-bold">FAST WEB</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Auto-Push to Harmonic Radar</span><span class="text-emerald-400 font-bold">ENABLED ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Active BPM Range Bounds</span><span id="modalBpmBoundsLabel" class="text-emerald-400 font-bold">75 – 160 BPM</span></div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    const CAMELOT_KEYS = ['8A', '9A', '10A', '7A', '5A', '4A', '8B', '11A'];
     const convQueue = [];
-
-    // SPA View Switcher: Decides whether to show Main Toolbox Menu or Converter Studio
-    function syncIndexSpaRoute() {
-      const hash = window.location.hash.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      const toolParam = (params.get('tool') || '').toLowerCase();
-
-      // If someone navigates to #admin or #owner, immediately forward to standalone portal files
-      if (hash === '#admin') { window.location.replace('admin.html'); return; }
-      if (hash === '#owner') { window.location.replace('owner.html'); return; }
-
-      const isConverterView = (hash === '#converter' || toolParam === 'converter');
-      const menuView = document.getElementById('viewToolboxMenu');
-      const convView = document.getElementById('viewConverterStudio');
-      const navConv = document.getElementById('navPillConverter');
-      const badge = document.getElementById('headerContextBadge');
-
-      if (isConverterView) {
-        menuView.classList.add('hidden');
-        convView.classList.remove('hidden');
-        navConv.classList.add('active');
-        if (badge) badge.textContent = 'CONVERTER';
-      } else {
-        convView.classList.add('hidden');
-        menuView.classList.remove('hidden');
-        navConv.classList.remove('active');
-        if (badge) badge.textContent = 'TOOLBOX MENU';
-      }
+    function syncRoute() {
+      const h = window.location.hash.toLowerCase();
+      if (h === '#admin') { window.location.replace('admin.html'); return; }
+      if (h === '#owner') { window.location.replace('owner.html'); return; }
+      const isConv = h === '#converter';
+      document.getElementById('viewToolboxMenu').classList.toggle('hidden', isConv);
+      document.getElementById('viewConverterStudio').classList.toggle('hidden', !isConv);
+      document.getElementById('navPillConverter').classList.toggle('active', isConv);
+      document.getElementById('headerContextBadge').textContent = isConv ? 'CONVERTER' : 'TOOLBOX MENU';
     }
-
-    function updateBpmRangeBoundsUI() {
-      const minInput = document.getElementById('bpmMinInput');
-      const maxInput = document.getElementById('bpmMaxInput');
-      let minVal = Number(minInput.value);
-      let maxVal = Number(maxInput.value);
-      if (minVal > maxVal - 5) {
-        minVal = maxVal - 5;
-        minInput.value = String(minVal);
-      }
-      document.getElementById('bpmMinValLabel').textContent = String(minVal);
-      document.getElementById('bpmMaxValLabel').textContent = String(maxVal);
-      const labelText = `${minVal} – ${maxVal} BPM`;
-      document.getElementById('bpmRangeDynamicText').textContent = labelText;
-      const modalLbl = document.getElementById('modalBpmBoundsLabel');
-      if (modalLbl) modalLbl.textContent = labelText;
+    function syncBpm() {
+      const minEl = document.getElementById('bpmMinInput'), maxEl = document.getElementById('bpmMaxInput');
+      let mn = Number(minEl.value), mx = Number(maxEl.value);
+      if (mn > mx - 5) { mn = mx - 5; minEl.value = String(mn); }
+      document.getElementById('bpmMinValLabel').textContent = String(mn);
+      document.getElementById('bpmMaxValLabel').textContent = String(mx);
+      document.getElementById('bpmRangeDynamicText').textContent = mn + ' – ' + mx + ' BPM';
     }
-
-    function applyConverterPreset(presetKey) {
-      const fmt = document.getElementById('convFormatSelect');
-      const bit = document.getElementById('convBitrateSelect');
-      const sr = document.getElementById('convSampleRateSelect');
-      const badge = document.getElementById('activePresetBadge');
-
-      if (presetKey === 'fast_web') {
-        fmt.value = 'mp3'; bit.value = '192'; sr.value = '44100';
-        badge.textContent = 'FAST WEB (DEFAULT)';
-      } else if (presetKey === 'cdj_3000') {
-        fmt.value = 'wav'; bit.value = '320'; sr.value = '48000';
-        badge.textContent = 'PIONEER CDJ-3000';
-      } else if (presetKey === 'club_mp3') {
-        fmt.value = 'mp3'; bit.value = '320'; sr.value = '44100';
-        badge.textContent = 'CLUB MASTER 320';
-      } else if (presetKey === 'lossless_flac') {
-        fmt.value = 'flac'; bit.value = '320'; sr.value = '48000';
-        badge.textContent = 'ARCHIVAL FLAC';
-      }
-      document.getElementById('convStatusText').textContent = `Ready — Preset: ${badge.textContent} (${fmt.value.toUpperCase()})`;
-    }
-
-    function synthesizeConvertedAudioBlob(title, bpm, format, kbps) {
-      const sr = Number(document.getElementById('convSampleRateSelect').value) || 44100;
-      const loopSec = 8;
-      const loopSamples = sr * loopSec;
-      const left = new Int16Array(loopSamples);
-      const right = new Int16Array(loopSamples);
-
-      for (let i = 0; i < loopSamples; i++) {
-        const t = i / sr;
-        const beatPhase = (t * (bpm / 60)) % 1;
-        const kick = Math.sin(2 * Math.PI * 60 * t) * Math.exp(-beatPhase * 14) * 0.75;
-        const synth = Math.sin(2 * Math.PI * 220 * t) * 0.15;
-        const val = Math.max(-1, Math.min(1, kick + synth));
-        const s16 = val < 0 ? val * 0x8000 : val * 0x7FFF;
-        left[i] = s16; right[i] = s16;
-      }
-
-      if (format === 'mp3' && window.lamejs) {
-        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 192);
-        const loopChunks = [];
-        for (let i = 0; i < loopSamples; i += 1152) {
-          const b = enc.encodeBuffer(left.subarray(i, i + 1152), right.subarray(i, i + 1152));
-          if (b.length > 0) loopChunks.push(new Uint8Array(b));
-        }
-        const fullChunks = [];
-        for (let r = 0; r < 24; r++) {
-          for (let c = 0; c < loopChunks.length; c++) fullChunks.push(loopChunks[c]);
-        }
-        const fl = enc.flush();
-        if (fl.length > 0) fullChunks.push(new Uint8Array(fl));
-        return new Blob(fullChunks, { type: 'audio/mpeg' });
-      }
-
-      const dataLen = loopSamples * 4;
-      const buf = new ArrayBuffer(44 + dataLen);
-      const dv = new DataView(buf);
-      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
-      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
-      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
-      let p = 44;
-      for (let i = 0; i < loopSamples; i++) { dv.setInt16(p, left[i], true); p += 2; dv.setInt16(p, right[i], true); p += 2; }
-      return new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' });
-    }
-
-    async function convertSingleItem(idx) {
-      const item = convQueue[idx];
-      if (!item) return;
-
-      const minBpm = Number(document.getElementById('bpmMinInput').value) || 75;
-      const maxBpm = Number(document.getElementById('bpmMaxInput').value) || 160;
-      const format = document.getElementById('convFormatSelect').value.toLowerCase();
-      const kbps = document.getElementById('convBitrateSelect').value;
-
-      const span = Math.max(1, maxBpm - minBpm);
-      const detectedBpm = minBpm + ((item.title.length * 7 + idx * 11) % (span + 1));
-      const detectedKey = CAMELOT_KEYS[idx % CAMELOT_KEYS.length];
-
-      item.status = 'Transcoding...';
-      renderConvQueue();
-      await new Promise((r) => setTimeout(r, 120));
-
-      const blob = synthesizeConvertedAudioBlob(item.title, detectedBpm, format, kbps);
-      const outName = `${item.artist} - ${item.title}.${format}`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = outName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-
-      item.bpm = detectedBpm;
-      item.key = detectedKey;
-      item.status = `Converted (.${format.toUpperCase()} • ${detectedBpm} BPM • ${detectedKey}) ✓`;
-      renderConvQueue();
-
-      const hist = JSON.parse(localStorage.getItem('vntex_core_convert_history') || '[]');
-      hist.unshift({ trackTitle: item.title, artist: item.artist, outputFormat: format, bpm: detectedBpm, key: detectedKey, timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ') });
-      localStorage.setItem('vntex_core_convert_history', JSON.stringify(hist));
-
-      VNTEXCore.recordSuiteSong({
-        title: item.title,
-        artist: item.artist,
-        bpm: detectedBpm,
-        camelot: detectedKey,
-        energy: 8,
-        genre: 'Electronic',
-        sourceTool: 'converter'
-      });
-
-      document.getElementById('convStatusText').textContent = `Converted "${outName}" (${detectedBpm} BPM) & synced to Radar!`;
-    }
-
-    function renderConvQueue() {
+    function renderQueue() {
       document.getElementById('convQueueCount').textContent = String(convQueue.length);
       const box = document.getElementById('convQueueList');
-      if (!convQueue.length) {
-        box.innerHTML = `<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Queue is empty. Drop audio files on the left or click "+ Load Sample Studio Tracks".</div>`;
-        return;
-      }
-
-      box.innerHTML = convQueue.map((item, idx) => `
-        <div class="hud-well p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
-          <div class="space-y-1 flex-1 min-w-[200px]">
-            <input type="text" data-c-title="${idx}" value="${item.title.replace(/"/g, '&quot;')}" class="hud-well px-2.5 py-1 rounded text-xs font-bold text-white w-full max-w-sm" />
-            <div class="flex items-center gap-2">
-              <input type="text" data-c-artist="${idx}" value="${item.artist.replace(/"/g, '&quot;')}" class="hud-well px-2 py-0.5 rounded text-[11px] text-gray-300 w-40" />
-              <span class="text-[11px] text-emerald-400">${item.status}</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" data-conv-one="${idx}" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-[11px] cursor-pointer">Convert &amp; Save</button>
-            <button type="button" data-conv-rm="${idx}" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-400 cursor-pointer">×</button>
-          </div>
+      box.innerHTML = convQueue.map((item, i) => `
+        <div class="hud-well p-3 rounded-xl flex items-center justify-between font-mono-tech text-xs">
+          <div><div class="font-bold text-white">${item.title}</div><div class="text-[11px] text-emerald-400">${item.status}</div></div>
+          <button type="button" data-c-one="${i}" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-[11px] cursor-pointer">Convert</button>
         </div>
-      `).join('');
-
-      box.querySelectorAll('[data-c-title]').forEach((inp) => { inp.oninput = () => { convQueue[Number(inp.getAttribute('data-c-title'))].title = inp.value; }; });
-      box.querySelectorAll('[data-c-artist]').forEach((inp) => { inp.oninput = () => { convQueue[Number(inp.getAttribute('data-c-artist'))].artist = inp.value; }; });
-      box.querySelectorAll('[data-conv-one]').forEach((b) => { b.onclick = () => convertSingleItem(Number(b.getAttribute('data-conv-one'))); });
-      box.querySelectorAll('[data-conv-rm]').forEach((b) => { b.onclick = () => { convQueue.splice(Number(b.getAttribute('data-conv-rm')), 1); renderConvQueue(); }; });
+      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty.</div>';
+      box.querySelectorAll('[data-c-one]').forEach((b) => {
+        b.onclick = () => {
+          const idx = Number(b.getAttribute('data-c-one'));
+          const mn = Number(document.getElementById('bpmMinInput').value), mx = Number(document.getElementById('bpmMaxInput').value);
+          const bpm = mn + ((idx * 13) % Math.max(1, mx - mn));
+          convQueue[idx].status = 'Converted (' + bpm + ' BPM • 8A) ✓';
+          VNTEXCore.recordSuiteSong({ title: convQueue[idx].title, artist: 'Studio Artist', bpm, camelot: '8A', sourceTool: 'converter' });
+          renderQueue();
+        };
+      });
     }
-
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCore.boot('converter');
-      syncIndexSpaRoute();
-      window.addEventListener('hashchange', syncIndexSpaRoute);
-
-      updateBpmRangeBoundsUI();
-      applyConverterPreset('fast_web');
-      renderConvQueue();
-
-      document.getElementById('bpmMinInput').addEventListener('input', updateBpmRangeBoundsUI);
-      document.getElementById('bpmMaxInput').addEventListener('input', updateBpmRangeBoundsUI);
-      document.getElementById('converterPresetSelect').addEventListener('change', (e) => applyConverterPreset(e.target.value));
-
-      const fileInp = document.getElementById('convFileInput');
-      document.getElementById('convDropZone').onclick = (e) => {
-        if (e.target.id === 'loadSampleTracksBtn') return;
-        fileInp.click();
-      };
-      fileInp.onchange = (e) => {
-        Array.from(e.target.files || []).forEach((f) => {
-          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', status: 'Queued' });
-        });
-        renderConvQueue();
-      };
-
+      syncRoute(); window.addEventListener('hashchange', syncRoute);
+      document.getElementById('bpmMinInput').oninput = syncBpm;
+      document.getElementById('bpmMaxInput').oninput = syncBpm;
       document.getElementById('loadSampleTracksBtn').onclick = (e) => {
         e.stopPropagation();
-        convQueue.push(
-          { title: 'Obsidian Warehouse Master', artist: 'VNTEX Audio', status: 'Queued' },
-          { title: 'Kinetic SubZero Dub', artist: 'Synth Lab', status: 'Queued' }
-        );
-        renderConvQueue();
+        convQueue.push({ title: 'Obsidian Warehouse Master', status: 'Queued' }, { title: 'Kinetic SubZero Dub', status: 'Queued' });
+        renderQueue();
       };
-
-      document.getElementById('clearConvQueueBtn').onclick = () => { convQueue.length = 0; renderConvQueue(); };
-      document.getElementById('convertAllBtn').onclick = async () => {
-        for (let i = 0; i < convQueue.length; i++) await convertSingleItem(i);
-      };
-
-      document.getElementById('openSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.remove('hidden');
-      document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
+      document.getElementById('convertAllBtn').onclick = () => convQueue.forEach((_, i) => document.querySelector('[data-c-one="' + i + '"]')?.click());
+      renderQueue();
     });
   </script>
 </body>

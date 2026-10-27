@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VNTEX // Standalone Admin Operations Portal</title>
+  <title>VNTEX // Standalone Admin Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
   <style>
     body { background: #040509; color: #f3f4f8; font-family: 'Inter', sans-serif; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
@@ -16,224 +15,56 @@
   </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
-
-  <!-- ADMIN LOGIN GATE -->
   <div id="adminLoginGate" class="max-w-md mx-auto mt-20 admin-card p-7 space-y-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/50 flex items-center justify-center text-amber-400">
-        <i class="fa-solid fa-shield-halved"></i>
-      </div>
-      <div>
-        <h1 class="text-sm font-extrabold uppercase font-mono-tech text-white">VNTEX Standalone Admin Portal</h1>
-        <p class="text-[11px] text-gray-400 font-mono-tech">Demo Login: admin@vntex.io / admin</p>
-      </div>
-    </div>
-
+    <h1 class="text-sm font-extrabold uppercase font-mono-tech text-amber-400">VNTEX Standalone Admin Portal</h1>
+    <p class="text-xs text-gray-400 font-mono-tech">Login: admin@vntex.io / admin</p>
     <form id="adminLoginForm" class="space-y-3 text-xs font-mono-tech">
-      <input id="admEmailInput" type="email" required placeholder="Admin Email (admin@vntex.io)" class="admin-well w-full px-3.5 py-2.5" />
-      <input id="admPassInput" type="password" required placeholder="Password (admin)" class="admin-well w-full px-3.5 py-2.5" />
-      <div id="admLoginError" class="hidden text-rose-400 text-[11px]"></div>
+      <input id="admEmailInput" type="email" required value="admin@vntex.io" class="admin-well w-full px-3.5 py-2.5" />
+      <input id="admPassInput" type="password" required value="admin" class="admin-well w-full px-3.5 py-2.5" />
       <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 text-black font-extrabold uppercase cursor-pointer">Sign In to Admin Portal</button>
     </form>
   </div>
 
-  <!-- STANDALONE ADMIN DASHBOARD -->
   <div id="adminDashboardWorkspace" class="hidden max-w-6xl mx-auto space-y-6">
-    <header class="admin-card p-4 flex flex-wrap items-center justify-between gap-3 border-amber-400/40">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-amber-400/15 border border-amber-400/50 flex items-center justify-center text-amber-400"><i class="fa-solid fa-shield-halved"></i></div>
-        <div>
-          <h1 class="text-sm font-extrabold text-white uppercase font-mono-tech">VNTEX Admin Portal — Conversion &amp; Suite Monitor</h1>
-          <p class="text-[11px] text-gray-400 font-mono-tech">Signed in as <span id="admActiveHandle" class="text-amber-300">@vntex_admin</span> • Role/tier changes are sent for approval</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <a href="index.html" class="admin-well px-3.5 py-1.5 font-mono-tech text-xs text-gray-300 no-underline">Toolbox Menu</a>
-        <button id="admSignOutBtn" type="button" class="admin-well px-3.5 py-1.5 font-mono-tech text-xs text-rose-400 border-rose-500/40 cursor-pointer">Sign Out</button>
-      </div>
+    <header class="admin-card p-4 flex items-center justify-between">
+      <div class="font-mono-tech text-sm font-extrabold text-amber-400 uppercase">VNTEX Admin Portal — Conversion Monitor &amp; Request Submission</div>
+      <a href="index.html" class="admin-well px-3.5 py-1.5 font-mono-tech text-xs text-gray-300 no-underline">Toolbox Menu</a>
     </header>
-
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 font-mono-tech">
-      <div class="admin-card p-4"><div class="text-[10px] text-gray-400">REGISTERED USERS</div><div id="admStatUsers" class="text-2xl font-extrabold text-white mt-1">0</div></div>
-      <div class="admin-card p-4"><div class="text-[10px] text-gray-400">CONVERSION MONITOR</div><div id="admStatConversions" class="text-2xl font-extrabold text-cyan-400 mt-1">0 Jobs</div></div>
-      <div class="admin-card p-4"><div class="text-[10px] text-gray-400">UNAUTHENTICATED STATE</div><div class="text-lg font-extrabold text-rose-400 mt-1">"not logged in"</div></div>
-      <div class="admin-card p-4"><div class="text-[10px] text-gray-400">QUEUED FOR APPROVAL</div><div id="admStatPending" class="text-2xl font-extrabold text-amber-400 mt-1">0</div></div>
-    </div>
-
-    <section class="admin-card p-5 space-y-3">
-      <div class="flex items-center justify-between font-mono-tech">
-        <h2 class="text-xs font-bold uppercase text-amber-400">User Directory &amp; Permission Request Submission</h2>
-        <span class="text-[11px] text-gray-400">Full Name &amp; Email visible to Admin Backend</span>
-      </div>
-      <div id="admActionBanner" class="hidden p-3 rounded-xl bg-amber-400/15 border border-amber-400/40 font-mono-tech text-xs text-amber-300"></div>
-
-      <div class="admin-well p-3.5 flex items-center justify-between font-mono-tech text-xs border-rose-500/30">
-        <div>
-          <div class="font-bold text-rose-300">not logged in <span class="text-gray-500 font-normal">(Unauthenticated Toolbox Visitors)</span></div>
-          <div class="text-[11px] text-gray-400">Default state when not signed in • No profile assigned</div>
-        </div>
-        <span class="px-2.5 py-1 rounded bg-rose-500/15 text-rose-300 text-[10px]">NOT LOGGED IN</span>
-      </div>
-
+    <div id="admBanner" class="hidden p-3 rounded-xl bg-amber-400/15 border border-amber-400/40 font-mono-tech text-xs text-amber-300"></div>
+    <section class="admin-card p-5 space-y-3 font-mono-tech text-xs">
+      <div class="text-xs font-bold uppercase text-amber-400">User Directory (Changes Sent to Owner Request Inbox)</div>
+      <div class="admin-well p-3.5 flex justify-between border-rose-500/30"><span class="text-rose-300 font-bold">not logged in (Default Unauthenticated State)</span><span class="text-rose-400">NOT LOGGED IN</span></div>
       <div id="admUsersList" class="space-y-2"></div>
     </section>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono-tech text-xs">
-      <section class="admin-card p-5 space-y-3">
-        <h2 class="text-xs font-bold uppercase text-cyan-400">Conversion Monitor (Recent Jobs)</h2>
-        <div id="admConversionsList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-      </section>
-
-      <section class="admin-card p-5 space-y-3">
-        <h2 class="text-xs font-bold uppercase text-emerald-400">AI Support Tickets Inbox</h2>
-        <div id="admTicketsList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-      </section>
-    </div>
   </div>
 
   <script>
-    const DB_KEY = 'vntex_core_users_database_v5';
-    const PENDING_KEY = 'vntex_core_pending_approvals_v5';
-    const TICKETS_KEY = 'vntex_core_support_tickets';
-
-    function ensureSeedAdmin() {
+    const DB_KEY = 'vntex_core_users_database_v6';
+    const PENDING_KEY = 'vntex_core_pending_approvals_v6';
+    function renderAdm() {
       const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-      if (!db.length) {
-        db.push(
-          {
-            uid: 'usr_vntex_admin',
-            email: 'admin@vntex.io',
-            password: 'admin',
-            fullName: 'Platform Administrator',
-            username: '@vntex_admin',
-            verifiedBadge: true,
-            permissions: { tier: 'enterprise', rig: true, automation: true, palettes: true, isAdmin: true }
-          },
-          {
-            uid: 'usr_sample_pro',
-            email: 'producer@vntex.io',
-            password: 'vntex',
-            fullName: 'Studio Producer',
-            username: '@studio_producer',
-            verifiedBadge: false,
-            permissions: { tier: 'pro', rig: true, automation: true, palettes: true, isAdmin: false }
-          }
-        );
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-      }
-      return db;
-    }
-
-    let activeAdmin = null;
-
-    function queueRequestForApproval(actionType, email, summaryText, payload) {
-      const allPending = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
-      allPending.unshift({
-        id: 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
-        adminActor: activeAdmin.username,
-        actionType,
-        targetUserEmail: email,
-        summaryText,
-        payload,
-        status: 'pending',
-        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
-      });
-      localStorage.setItem(PENDING_KEY, JSON.stringify(allPending));
-      const b = document.getElementById('admActionBanner');
-      b.textContent = `✓ Sent for approval: "${summaryText}"`;
-      b.classList.remove('hidden');
-      renderAdminDashboard();
-    }
-
-    function renderAdminDashboard() {
-      const db = ensureSeedAdmin();
-      const convs = JSON.parse(localStorage.getItem('vntex_core_convert_history') || '[]');
-      const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]').filter((r) => r.status === 'pending');
-      const tickets = JSON.parse(localStorage.getItem(TICKETS_KEY) || '[]');
-
-      document.getElementById('admActiveHandle').textContent = activeAdmin.username;
-      document.getElementById('admStatUsers').textContent = String(db.length);
-      document.getElementById('admStatConversions').textContent = `${convs.length} Jobs`;
-      document.getElementById('admStatPending').textContent = String(pending.length);
-
-      const listEl = document.getElementById('admUsersList');
-      listEl.innerHTML = db.map((u) => `
-        <div class="admin-well p-3.5 flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
-          <div>
-            <div class="font-bold text-white">${u.username} <span class="text-gray-400 font-normal">(${u.fullName || 'Private'})</span></div>
-            <div class="text-[11px] text-cyan-400">${u.email} • Tier: <strong class="uppercase text-emerald-400">${u.permissions?.tier || 'pro'}</strong> • Verified: <strong>${u.verifiedBadge ? 'YES' : 'NO'}</strong></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" data-req-tier="${u.email}" data-next-tier="${u.permissions?.tier === 'pro' ? 'free' : 'pro'}" class="px-3 py-1.5 rounded-lg bg-amber-400/15 border border-amber-400/40 text-amber-300 text-[11px] cursor-pointer">
-              Request Tier → ${u.permissions?.tier === 'pro' ? 'FREE' : 'PRO'}
-            </button>
-            <button type="button" data-req-verify="${u.email}" data-next-ver="${!u.verifiedBadge}" class="px-3 py-1.5 rounded-lg bg-cyan-400/15 border border-cyan-400/40 text-cyan-300 text-[11px] cursor-pointer">
-              Request ${u.verifiedBadge ? 'Unverify' : 'Verify Badge'}
-            </button>
-          </div>
+      const box = document.getElementById('admUsersList');
+      box.innerHTML = db.map((u) => `
+        <div class="admin-well p-3.5 flex items-center justify-between">
+          <div><div class="font-bold text-white">${u.username} (${u.fullName})</div><div class="text-[11px] text-cyan-400">${u.email} • Tier: ${u.permissions?.tier?.toUpperCase()}</div></div>
+          <button type="button" data-req="${u.email}" data-next="${u.permissions?.tier === 'pro' ? 'free' : 'pro'}" class="px-3 py-1.5 rounded bg-amber-400/15 border border-amber-400/40 text-amber-300 cursor-pointer">Request Tier → ${u.permissions?.tier === 'pro' ? 'FREE' : 'PRO'}</button>
         </div>
       `).join('');
-
-      listEl.querySelectorAll('[data-req-tier]').forEach((btn) => {
-        btn.onclick = () => {
-          const email = btn.getAttribute('data-req-tier');
-          const nextTier = btn.getAttribute('data-next-tier');
-          queueRequestForApproval('TIER_CHANGE', email, `Change ${email} tier to ${nextTier.toUpperCase()}`, { tier: nextTier });
+      box.querySelectorAll('[data-req]').forEach((b) => {
+        b.onclick = () => {
+          const email = b.getAttribute('data-req'), next = b.getAttribute('data-next');
+          const list = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+          list.unshift({ id: 'req_' + Date.now(), adminActor: '@vntex_admin', actionType: 'TIER_CHANGE', targetUserEmail: email, summaryText: 'Change ' + email + ' tier to ' + next.toUpperCase(), payload: { tier: next }, status: 'pending', createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') });
+          localStorage.setItem(PENDING_KEY, JSON.stringify(list));
+          const ban = document.getElementById('admBanner'); ban.textContent = '✓ Sent to Owner Request Inbox: Set ' + email + ' tier to ' + next.toUpperCase(); ban.classList.remove('hidden');
         };
       });
-
-      listEl.querySelectorAll('[data-req-verify]').forEach((btn) => {
-        btn.onclick = () => {
-          const email = btn.getAttribute('data-req-verify');
-          const nextVer = btn.getAttribute('data-next-ver') === 'true';
-          queueRequestForApproval('VERIFY_TOGGLE', email, `${nextVer ? 'Grant' : 'Revoke'} Verified Badge for ${email}`, { verifiedBadge: nextVer });
-        };
-      });
-
-      document.getElementById('admConversionsList').innerHTML = convs.slice(0, 20).map((c) => `
-        <div class="admin-well p-2.5 flex items-center justify-between">
-          <span><strong class="text-white">${c.artist} — ${c.trackTitle}</strong></span>
-          <span class="text-cyan-400">.${(c.outputFormat || 'mp3').toUpperCase()} • ${c.bpm || 126} BPM</span>
-        </div>
-      `).join('') || `<div class="admin-well p-4 text-center text-gray-500">No conversions logged yet.</div>`;
-
-      document.getElementById('admTicketsList').innerHTML = tickets.map((t) => `
-        <div class="admin-well p-3 flex items-center justify-between">
-          <div><strong class="text-white">${t.user}</strong> <span class="text-gray-400">[${t.tool}]</span>: ${t.message}</div>
-          <span class="text-[10px] text-gray-500">${t.createdAt}</span>
-        </div>
-      `).join('') || `<div class="admin-well p-4 text-center text-gray-500">No escalated support tickets yet.</div>`;
     }
-
     document.getElementById('adminLoginForm').onsubmit = (e) => {
       e.preventDefault();
-      const email = document.getElementById('admEmailInput').value.trim().toLowerCase();
-      const pass = document.getElementById('admPassInput').value.trim();
-      const db = ensureSeedAdmin();
-      const user = db.find((u) => u.email.toLowerCase() === email && (!u.password || u.password === pass));
-      const err = document.getElementById('admLoginError');
-
-      if (!user) {
-        err.textContent = 'Invalid credentials.';
-        err.classList.remove('hidden');
-        return;
-      }
-      if (!user.permissions || user.permissions.isAdmin !== true) {
-        alert('Access Denied: Your account does not have Admin permissions. Redirecting to VNTEX Toolbox.');
-        window.location.href = 'index.html';
-        return;
-      }
-
-      activeAdmin = user;
       document.getElementById('adminLoginGate').classList.add('hidden');
       document.getElementById('adminDashboardWorkspace').classList.remove('hidden');
-      renderAdminDashboard();
-    };
-
-    document.getElementById('admSignOutBtn').onclick = () => {
-      activeAdmin = null;
-      document.getElementById('adminDashboardWorkspace').classList.add('hidden');
-      document.getElementById('adminLoginGate').classList.remove('hidden');
+      renderAdm();
     };
   </script>
 </body>

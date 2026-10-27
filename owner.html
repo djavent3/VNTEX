@@ -8,367 +8,128 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --blood-void: #000000;
-      --blood-panel: #070102;
-      --blood-well: #030000;
-      --blood-red: #FF000D;
-      --blood-border: #3d0004;
-      --blood-hover: #220002;
-    }
-    * { box-sizing: border-box; user-select: none; }
-    body {
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255, 0, 13, 0.14), transparent 55%),
-        var(--blood-void);
-      color: #ffffff;
-      font-family: 'Inter', -apple-system, sans-serif;
-      margin: 0;
-    }
+    body { background: radial-gradient(circle at 50% 0%, rgba(255,0,13,0.16), transparent 55%), #000000; color: #ffffff; font-family: 'Inter', sans-serif; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .owner-card {
-      background: var(--blood-panel);
-      border: 1px solid var(--blood-red);
-      border-radius: 1rem;
-      box-shadow: 0 0 28px rgba(255, 0, 13, 0.14), inset 0 0 12px rgba(255, 0, 13, 0.05);
-    }
-    .owner-well {
-      background: var(--blood-well);
-      border: 1px solid var(--blood-border);
-      border-radius: 0.75rem;
-      color: #ffffff;
-    }
-    .owner-btn {
-      background: #000000;
-      border: 1px solid var(--blood-red);
-      color: var(--blood-red);
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .owner-btn:hover { background: var(--blood-hover); box-shadow: 0 0 12px rgba(255, 0, 13, 0.35); }
-    .owner-btn-solid {
-      background: var(--blood-red);
-      border: 1px solid var(--blood-red);
-      color: #000000;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 0 18px rgba(255, 0, 13, 0.4);
-      transition: all 0.15s ease;
-    }
-    .owner-btn-solid:hover { filter: brightness(1.15); }
+    .owner-card { background: #070102; border: 1px solid #FF000D; border-radius: 1rem; box-shadow: 0 0 28px rgba(255,0,13,0.14); }
+    .owner-well { background: #030000; border: 1px solid #3d0004; border-radius: 0.75rem; color: #ffffff; }
+    .owner-btn { background: #000; border: 1px solid #FF000D; color: #FF000D; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; }
+    .owner-btn-solid { background: #FF000D; border: 1px solid #FF000D; color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800; cursor: pointer; }
   </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
-
-  <!-- MASTER OWNER PASSCODE GATE -->
   <div id="ownerPasscodeGate" class="max-w-md mx-auto mt-20 owner-card p-7 space-y-5 text-center">
-    <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D] mx-auto flex items-center justify-center text-[#FF000D] text-2xl shadow-[0_0_25px_rgba(255,0,13,0.4)]">
-      <i class="fa-solid fa-crown"></i>
-    </div>
-    <div>
-      <h1 class="text-base font-extrabold uppercase font-mono-tech text-[#FF000D] tracking-wider">VNTEX Master Owner Portal</h1>
-      <p class="text-xs text-gray-400 font-mono-tech mt-1">Root Permission Inbox &amp; Full Suite Command Center</p>
-    </div>
-
+    <div class="w-14 h-14 rounded-2xl bg-[#FF000D]/15 border border-[#FF000D] mx-auto flex items-center justify-center text-[#FF000D] text-2xl"><i class="fa-solid fa-crown"></i></div>
+    <h1 class="text-base font-extrabold uppercase font-mono-tech text-[#FF000D]">VNTEX Master Owner Portal</h1>
     <form id="ownerPassForm" class="space-y-3.5 font-mono-tech text-xs">
-      <input id="ownerPassInput" type="password" required placeholder="Enter Master Passcode (Ownr$88!Vntx#Plains92Z)..." class="owner-well w-full px-4 py-3 text-center text-white focus:outline-none focus:border-[#FF000D]" />
-      <div id="ownerErr" class="hidden text-[#FF000D] font-bold text-[11px]">✕ Invalid Master Passcode.</div>
-      <button type="submit" class="owner-btn-solid w-full py-3 rounded-xl text-xs uppercase tracking-wider">
-        Unlock Owner Command Portal
-      </button>
+      <input id="ownerPassInput" type="password" required placeholder="Enter Master Passcode..." class="owner-well w-full px-4 py-3 text-center text-white" />
+      <div id="ownerErr" class="hidden text-[#FF000D] font-bold">✕ Invalid Master Passcode.</div>
+      <button type="submit" class="owner-btn-solid w-full py-3 rounded-xl uppercase">Unlock Owner Command Portal</button>
     </form>
   </div>
 
-  <!-- UNLOCKED OWNER PORTAL WORKSPACE (MIRRORS ADMIN PORTAL + REQUEST INBOX + FULL ROOT ACCESS) -->
   <div id="ownerWorkspace" class="hidden max-w-6xl mx-auto space-y-6">
-
-    <!-- Header -->
     <header class="owner-card p-4 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-[#FF000D]/15 border border-[#FF000D] flex items-center justify-center text-[#FF000D] text-lg">
-          <i class="fa-solid fa-crown"></i>
-        </div>
+        <i class="fa-solid fa-crown text-[#FF000D] text-xl"></i>
         <div>
-          <h1 class="text-sm font-extrabold text-white uppercase font-mono-tech tracking-wider">VNTEX Master Owner Portal — Full Access &amp; Request Inbox</h1>
-          <p class="text-[11px] text-[#FF000D] font-mono-tech">Root Privileges Active • Approve Admin Requests or Execute Direct Overrides</p>
+          <h1 class="text-sm font-extrabold text-white uppercase font-mono-tech">VNTEX Master Owner Portal — Full Access &amp; Permission Request Inbox</h1>
+          <p class="text-[11px] text-[#FF000D] font-mono-tech">Approve Admin Requests or Execute Direct Root Overrides</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex gap-2">
         <a href="index.html" class="owner-btn px-3.5 py-1.5 rounded-lg text-xs no-underline">Toolbox Menu</a>
-        <a href="admin.html" class="owner-btn px-3.5 py-1.5 rounded-lg text-xs no-underline">View Admin Portal</a>
-        <button id="ownerLockBtn" type="button" class="owner-btn-solid px-3.5 py-1.5 rounded-lg text-xs">Lock Portal</button>
+        <a href="admin.html" class="owner-btn px-3.5 py-1.5 rounded-lg text-xs no-underline">Admin Portal</a>
+        <button id="ownerLockBtn" type="button" class="owner-btn-solid px-3.5 py-1.5 rounded-lg text-xs">Lock</button>
       </div>
     </header>
 
-    <!-- Top Telemetry Row (Mirrors Admin Portal Telemetry) -->
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 font-mono-tech">
-      <div class="owner-card p-4">
-        <div class="text-[10px] text-gray-400 uppercase">PERMISSION REQUEST INBOX</div>
-        <div id="ownStatPending" class="text-2xl font-extrabold text-[#FF000D] mt-1">0 Pending</div>
-      </div>
-      <div class="owner-card p-4">
-        <div class="text-[10px] text-gray-400 uppercase">REGISTERED ACCOUNTS</div>
-        <div id="ownStatUsers" class="text-2xl font-extrabold text-white mt-1">0 Users</div>
-      </div>
-      <div class="owner-card p-4">
-        <div class="text-[10px] text-gray-400 uppercase">CONVERSION MONITOR</div>
-        <div id="ownStatConversions" class="text-2xl font-extrabold text-white mt-1">0 Jobs</div>
-      </div>
-      <div class="owner-card p-4">
-        <div class="text-[10px] text-gray-400 uppercase">SUPPORT TICKETS</div>
-        <div id="ownStatTickets" class="text-2xl font-extrabold text-white mt-1">0 Open</div>
-      </div>
-    </div>
-
-    <!-- 1. DEDICATED PERMISSION & TIER REQUEST INBOX (FROM ADMINS) -->
-    <section class="owner-card p-5 space-y-3.5 font-mono-tech text-xs">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#3d0004] pb-2.5">
-        <span class="text-xs font-extrabold uppercase text-[#FF000D] flex items-center gap-2">
-          <i class="fa-solid fa-inbox"></i>
-          <span>Admin Permission &amp; Tier Request Inbox</span>
-        </span>
-        <span class="text-[11px] text-gray-400">Changes submitted by Admins require your approval below</span>
-      </div>
+    <section class="owner-card p-5 space-y-3 font-mono-tech text-xs">
+      <div class="text-xs font-extrabold uppercase text-[#FF000D]"><i class="fa-solid fa-inbox mr-1.5"></i>Permission &amp; Tier Request Inbox (From Admins)</div>
       <div id="ownerApprovalsList" class="space-y-2.5"></div>
     </section>
 
-    <!-- 2. FULL ACCESS USER DIRECTORY (DIRECT INSTANT OWNER OVERRIDES) -->
-    <section class="owner-card p-5 space-y-3.5 font-mono-tech text-xs">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#3d0004] pb-2.5">
-        <span class="text-xs font-extrabold uppercase text-[#FF000D] flex items-center gap-2">
-          <i class="fa-solid fa-users-gear"></i>
-          <span>Full-Access User Directory (Instant Root Execution)</span>
-        </span>
-        <span class="text-[11px] text-gray-400">Unauthenticated sessions display as "not logged in"</span>
-      </div>
-
-      <!-- Default Unauthenticated Visitor Row -->
+    <section class="owner-card p-5 space-y-3 font-mono-tech text-xs">
+      <div class="text-xs font-extrabold uppercase text-[#FF000D]"><i class="fa-solid fa-users-gear mr-1.5"></i>Full-Access User Directory (Instant Root Execution)</div>
       <div class="owner-well p-3.5 flex items-center justify-between border-[#FF000D]/40">
-        <div>
-          <div class="font-bold text-[#FF000D]">not logged in <span class="text-gray-400 font-normal">(Unauthenticated Toolbox Visitors)</span></div>
-          <div class="text-[11px] text-gray-400">Default state when not signed in • Ephemeral local tool usage only</div>
-        </div>
-        <span class="px-2.5 py-1 rounded bg-[#FF000D]/15 text-[#FF000D] border border-[#FF000D]/40 text-[10px] font-bold">NOT LOGGED IN</span>
+        <div><div class="font-bold text-[#FF000D]">not logged in</div><div class="text-[11px] text-gray-400">Default state for unauthenticated toolbox visitors</div></div>
+        <span class="px-2.5 py-1 rounded bg-[#FF000D]/15 text-[#FF000D] text-[10px] font-bold">NOT LOGGED IN</span>
       </div>
-
       <div id="ownerUsersList" class="space-y-2.5"></div>
     </section>
-
-    <!-- 3. CONVERSION MONITOR & SUITE ACTIVITY LOGS -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono-tech text-xs">
-      <section class="owner-card p-5 space-y-3">
-        <div class="text-xs font-extrabold uppercase text-[#FF000D] border-b border-[#3d0004] pb-2">
-          <i class="fa-solid fa-bolt mr-1.5"></i>Conversion Monitor (Recent Jobs)
-        </div>
-        <div id="ownerConversionList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-      </section>
-
-      <section class="owner-card p-5 space-y-3">
-        <div class="text-xs font-extrabold uppercase text-[#FF000D] border-b border-[#3d0004] pb-2">
-          <i class="fa-solid fa-headset mr-1.5"></i>AI Chatbot Support Tickets Inbox
-        </div>
-        <div id="ownerTicketsList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-      </section>
-    </div>
-
   </div>
 
   <script>
-    const DB_KEY = 'vntex_core_users_database_v5';
-    const PENDING_KEY = 'vntex_core_pending_approvals_v5';
-    const TICKETS_KEY = 'vntex_core_support_tickets';
-    const MASTER_PASSCODE = 'Ownr$88!Vntx#Plains92Z';
+    const DB_KEY = 'vntex_core_users_database_v6';
+    const PENDING_KEY = 'vntex_core_pending_approvals_v6';
+    const PASS = 'Ownr$88!Vntx#Plains92Z';
 
-    function ensureUsersDb() {
+    function renderOwner() {
       const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-      if (!db.length) {
-        db.push(
-          {
-            uid: 'usr_vntex_admin',
-            email: 'admin@vntex.io',
-            password: 'admin',
-            fullName: 'Platform Administrator',
-            username: '@vntex_admin',
-            avatarId: 'av_1',
-            verifiedBadge: true,
-            permissions: { tier: 'enterprise', rig: true, automation: true, palettes: true, isAdmin: true }
-          },
-          {
-            uid: 'usr_sample_pro',
-            email: 'producer@vntex.io',
-            password: 'vntex',
-            fullName: 'Studio Producer',
-            username: '@studio_producer',
-            avatarId: 'av_3',
-            verifiedBadge: false,
-            permissions: { tier: 'pro', rig: true, automation: true, palettes: true, isAdmin: false }
-          }
-        );
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-      }
-      return db;
-    }
+      const list = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+      const pending = list.filter((r) => r.status === 'pending');
 
-    function renderOwnerPortal() {
-      const db = ensureUsersDb();
-      const allRequests = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
-      const pending = allRequests.filter((r) => r.status === 'pending');
-      const convs = JSON.parse(localStorage.getItem('vntex_core_convert_history') || '[]');
-      const tickets = JSON.parse(localStorage.getItem(TICKETS_KEY) || '[]');
-
-      document.getElementById('ownStatPending').textContent = `${pending.length} Pending`;
-      document.getElementById('ownStatUsers').textContent = `${db.length} Users`;
-      document.getElementById('ownStatConversions').textContent = `${convs.length} Jobs`;
-      document.getElementById('ownStatTickets').textContent = `${tickets.length} Tickets`;
-
-      // 1. Render Admin Permission Request Inbox
-      const inboxEl = document.getElementById('ownerApprovalsList');
-      inboxEl.innerHTML = pending.map((req) => `
-        <div class="owner-well p-4 flex flex-wrap items-center justify-between gap-3 border-l-4 border-l-[#FF000D]">
-          <div class="space-y-1">
-            <div class="font-bold text-white text-xs">${req.summaryText}</div>
-            <div class="text-[11px] text-gray-400">Requested by <strong class="text-[#FF000D]">${req.adminActor}</strong> • Target: ${req.targetUserEmail} • ${req.createdAt}</div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" data-approve="${req.id}" class="owner-btn-solid px-4 py-1.5 rounded-lg text-xs">✓ Approve</button>
-            <button type="button" data-deny="${req.id}" class="owner-btn px-4 py-1.5 rounded-lg text-xs">✕ Deny</button>
+      const inbox = document.getElementById('ownerApprovalsList');
+      inbox.innerHTML = pending.map((req) => `
+        <div class="owner-well p-4 flex items-center justify-between gap-3">
+          <div><div class="font-bold text-white">${req.summaryText}</div><div class="text-[11px] text-gray-400">Requested by ${req.adminActor} • ${req.createdAt}</div></div>
+          <div class="flex gap-2">
+            <button type="button" data-app="${req.id}" class="owner-btn-solid px-4 py-1.5 rounded-lg text-xs">✓ Approve</button>
+            <button type="button" data-den="${req.id}" class="owner-btn px-4 py-1.5 rounded-lg text-xs">✕ Deny</button>
           </div>
         </div>
-      `).join('') || `<div class="owner-well p-5 text-center text-gray-500">Permission Request Inbox is clear — 0 pending admin requests.</div>`;
+      `).join('') || '<div class="owner-well p-4 text-center text-gray-500">0 pending requests in inbox.</div>';
 
-      inboxEl.querySelectorAll('[data-approve]').forEach((b) => { b.onclick = () => decideRequest(b.getAttribute('data-approve'), true); });
-      inboxEl.querySelectorAll('[data-deny]').forEach((b) => { b.onclick = () => decideRequest(b.getAttribute('data-deny'), false); });
+      inbox.querySelectorAll('[data-app]').forEach((b) => { b.onclick = () => decide(b.getAttribute('data-app'), true); });
+      inbox.querySelectorAll('[data-den]').forEach((b) => { b.onclick = () => decide(b.getAttribute('data-den'), false); });
 
-      // 2. Render Full-Access User Directory (Direct Owner Controls)
-      const uEl = document.getElementById('ownerUsersList');
-      uEl.innerHTML = db.map((u) => `
+      const uBox = document.getElementById('ownerUsersList');
+      uBox.innerHTML = db.map((u) => `
         <div class="owner-well p-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="space-y-1">
-            <div class="font-bold text-white flex items-center gap-2">
-              <span>${u.username}</span>
-              <span class="text-gray-400 font-normal">(${u.fullName || 'Private'})</span>
-              ${u.verifiedBadge ? `<span class="px-2 py-0.5 rounded bg-[#FF000D]/20 text-[#FF000D] border border-[#FF000D]/40 text-[10px]">VERIFIED ✓</span>` : ''}
-              ${u.permissions?.isAdmin ? `<span class="px-2 py-0.5 rounded bg-white/10 text-white text-[10px]">ADMIN</span>` : ''}
-            </div>
-            <div class="text-[11px] text-gray-400">
-              ${u.email} • Current Tier: <strong class="text-[#FF000D] uppercase">${u.permissions?.tier || 'pro'}</strong>
-            </div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" data-own-tier="${u.email}" class="owner-btn px-3 py-1.5 rounded-lg text-[11px]">
-              Cycle Tier (${(u.permissions?.tier || 'pro').toUpperCase()})
-            </button>
-            <button type="button" data-own-verify="${u.email}" class="owner-btn px-3 py-1.5 rounded-lg text-[11px]">
-              ${u.verifiedBadge ? 'Revoke Badge' : 'Grant Badge'}
-            </button>
-            <button type="button" data-own-admin="${u.email}" class="owner-btn-solid px-3 py-1.5 rounded-lg text-[11px]">
-              ${u.permissions?.isAdmin ? 'Revoke Admin' : 'Make Admin'}
-            </button>
+          <div><div class="font-bold text-white">${u.username} (${u.fullName})</div><div class="text-[11px] text-gray-400">${u.email} • Tier: <strong class="text-[#FF000D] uppercase">${u.permissions?.tier || 'pro'}</strong> • Admin: <strong>${u.permissions?.isAdmin ? 'YES' : 'NO'}</strong></div></div>
+          <div class="flex gap-2">
+            <button type="button" data-tier="${u.email}" class="owner-btn px-3 py-1.5 rounded-lg text-[11px]">Cycle Tier</button>
+            <button type="button" data-adm="${u.email}" class="owner-btn-solid px-3 py-1.5 rounded-lg text-[11px]">${u.permissions?.isAdmin ? 'Revoke Admin' : 'Make Admin'}</button>
           </div>
         </div>
       `).join('');
 
-      uEl.querySelectorAll('[data-own-tier]').forEach((b) => {
+      uBox.querySelectorAll('[data-tier]').forEach((b) => {
         b.onclick = () => {
-          const email = b.getAttribute('data-own-tier');
-          const idx = db.findIndex((x) => x.email.toLowerCase() === email.toLowerCase());
-          if (idx >= 0) {
-            const tiers = ['free', 'pro', 'enterprise'];
-            const cur = db[idx].permissions?.tier || 'pro';
-            db[idx].permissions.tier = tiers[(tiers.indexOf(cur) + 1) % tiers.length];
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
-            renderOwnerPortal();
-          }
+          const em = b.getAttribute('data-tier'), idx = db.findIndex((x) => x.email === em);
+          if (idx >= 0) { const t = ['free','pro','enterprise']; db[idx].permissions.tier = t[(t.indexOf(db[idx].permissions.tier || 'pro') + 1) % 3]; localStorage.setItem(DB_KEY, JSON.stringify(db)); renderOwner(); }
         };
       });
-
-      uEl.querySelectorAll('[data-own-verify]').forEach((b) => {
+      uBox.querySelectorAll('[data-adm]').forEach((b) => {
         b.onclick = () => {
-          const email = b.getAttribute('data-own-verify');
-          const idx = db.findIndex((x) => x.email.toLowerCase() === email.toLowerCase());
-          if (idx >= 0) {
-            db[idx].verifiedBadge = !db[idx].verifiedBadge;
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
-            renderOwnerPortal();
-          }
+          const em = b.getAttribute('data-adm'), idx = db.findIndex((x) => x.email === em);
+          if (idx >= 0) { db[idx].permissions.isAdmin = !db[idx].permissions.isAdmin; localStorage.setItem(DB_KEY, JSON.stringify(db)); renderOwner(); }
         };
       });
-
-      uEl.querySelectorAll('[data-own-admin]').forEach((b) => {
-        b.onclick = () => {
-          const email = b.getAttribute('data-own-admin');
-          const idx = db.findIndex((x) => x.email.toLowerCase() === email.toLowerCase());
-          if (idx >= 0) {
-            db[idx].permissions.isAdmin = !db[idx].permissions.isAdmin;
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
-            renderOwnerPortal();
-          }
-        };
-      });
-
-      // 3. Render Conversion Monitor & Support Tickets
-      document.getElementById('ownerConversionList').innerHTML = convs.slice(0, 20).map((c) => `
-        <div class="owner-well p-2.5 flex items-center justify-between">
-          <span><strong class="text-white">${c.artist} — ${c.trackTitle}</strong></span>
-          <span class="text-[#FF000D]">.${(c.outputFormat || 'mp3').toUpperCase()} • ${c.bpm || 126} BPM</span>
-        </div>
-      `).join('') || `<div class="owner-well p-4 text-center text-gray-500">No conversions logged yet.</div>`;
-
-      document.getElementById('ownerTicketsList').innerHTML = tickets.map((t) => `
-        <div class="owner-well p-2.5 flex items-center justify-between">
-          <div><strong class="text-[#FF000D]">${t.user}</strong> <span class="text-gray-400">[${t.tool}]</span>: ${t.message}</div>
-          <span class="text-[10px] text-gray-500">${t.createdAt}</span>
-        </div>
-      `).join('') || `<div class="owner-well p-4 text-center text-gray-500">No support tickets escalated yet.</div>`;
     }
 
-    function decideRequest(id, approve) {
+    function decide(id, ok) {
       const list = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
       const req = list.find((r) => r.id === id);
       if (!req) return;
-      req.status = approve ? 'approved' : 'denied';
-      if (approve && req.payload) {
-        const db = ensureUsersDb();
-        const idx = db.findIndex((u) => u.email.toLowerCase() === req.targetUserEmail.toLowerCase());
-        if (idx >= 0) {
-          if (req.actionType === 'TIER_CHANGE') db[idx].permissions.tier = req.payload.tier;
-          if (req.actionType === 'VERIFY_TOGGLE') db[idx].verifiedBadge = req.payload.verifiedBadge;
-          if (req.actionType === 'ADMIN_TOGGLE') db[idx].permissions.isAdmin = req.payload.isAdmin;
-          localStorage.setItem(DB_KEY, JSON.stringify(db));
-        }
+      req.status = ok ? 'approved' : 'denied';
+      if (ok && req.payload) {
+        const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+        const idx = db.findIndex((x) => x.email === req.targetUserEmail);
+        if (idx >= 0 && req.actionType === 'TIER_CHANGE') { db[idx].permissions.tier = req.payload.tier; localStorage.setItem(DB_KEY, JSON.stringify(db)); }
       }
       localStorage.setItem(PENDING_KEY, JSON.stringify(list));
-      renderOwnerPortal();
-    }
-
-    function unlockOwnerView() {
-      sessionStorage.setItem('vntex_owner_unlocked', 'true');
-      document.getElementById('ownerPasscodeGate').classList.add('hidden');
-      document.getElementById('ownerWorkspace').classList.remove('hidden');
-      renderOwnerPortal();
+      renderOwner();
     }
 
     document.getElementById('ownerPassForm').onsubmit = (e) => {
       e.preventDefault();
-      if (document.getElementById('ownerPassInput').value.trim() === MASTER_PASSCODE) {
-        unlockOwnerView();
-      } else {
-        document.getElementById('ownerErr').classList.remove('hidden');
-      }
+      if (document.getElementById('ownerPassInput').value.trim() === PASS) {
+        document.getElementById('ownerPasscodeGate').classList.add('hidden');
+        document.getElementById('ownerWorkspace').classList.remove('hidden');
+        renderOwner();
+      } else { document.getElementById('ownerErr').classList.remove('hidden'); }
     };
-
-    document.getElementById('ownerLockBtn').onclick = () => {
-      sessionStorage.removeItem('vntex_owner_unlocked');
-      location.reload();
-    };
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('passcode') === MASTER_PASSCODE || sessionStorage.getItem('vntex_owner_unlocked') === 'true') {
-      unlockOwnerView();
-    }
+    document.getElementById('ownerLockBtn').onclick = () => location.reload();
   </script>
 </body>
 </html>
