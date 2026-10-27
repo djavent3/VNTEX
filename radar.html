@@ -12,7 +12,6 @@
   <script src="vntex-core.js"></script>
 
   <style>
-    /* DEFAULT RADAR UI: PITCH-BLACK VOID (#000000) WITH NEON GREEN ACCENTS (#00ff41) */
     :root {
       --bg-void: #000000;
       --bg-panel: #040804;
@@ -26,83 +25,20 @@
       --accent-glow: rgba(0, 255, 65, 0.28);
     }
     * { box-sizing: border-box; user-select: none; }
-    body {
-      background: var(--bg-void);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, sans-serif;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      margin: 0;
-    }
+    body { background: var(--bg-void); color: var(--text-primary); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .hud-glass {
-      background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-hairline);
-      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.95);
-    }
-    .hud-well {
-      background: var(--bg-well);
-      border: 1px solid var(--border-hairline);
-      color: var(--text-primary);
-      transition: all 0.15s ease;
-    }
-    .suite-nav-pill {
-      padding: 0.3rem 0.7rem;
-      border-radius: 0.45rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      border: 1px solid transparent;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      text-decoration: none;
-    }
-    .suite-nav-pill:hover { color: var(--text-primary); border-color: var(--border-hairline); }
-    .suite-nav-pill.active {
-      color: var(--accent-primary);
-      background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-    .param-pill {
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      border: 1px solid var(--border-hairline);
-      background: rgba(2, 6, 3, 0.9);
-      color: var(--text-secondary);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      cursor: pointer;
-    }
+    .hud-glass { background: color-mix(in srgb, var(--bg-panel) 88%, transparent); backdrop-filter: blur(16px); border: 1px solid var(--border-hairline); box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.95); }
+    .hud-well { background: var(--bg-well); border: 1px solid var(--border-hairline); color: var(--text-primary); }
+    .suite-nav-pill { padding: 0.3rem 0.7rem; border-radius: 0.45rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; }
+    .suite-nav-pill.active { color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 14%, transparent); border-color: var(--accent-primary); box-shadow: 0 0 12px var(--accent-glow); }
+    .param-pill { padding: 0.35rem 0.75rem; border-radius: 9999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; border: 1px solid var(--border-hairline); background: rgba(2, 6, 3, 0.9); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; }
     .param-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #26402b; }
-    .param-pill.active-bpm, .param-pill.active-key, .param-pill.active-energy, .param-pill.active-genre {
-      border-color: var(--accent-primary);
-      color: #fff;
-      background: rgba(0, 255, 65, 0.14);
-    }
-    .param-pill.active-bpm .dot, .param-pill.active-key .dot, .param-pill.active-energy .dot, .param-pill.active-genre .dot {
-      background: var(--accent-primary);
-      box-shadow: 0 0 8px var(--accent-primary);
-    }
-    .verified-badge-icon { color: var(--accent-primary); }
+    .param-pill.active-bpm, .param-pill.active-key, .param-pill.active-energy { border-color: var(--accent-primary); color: #fff; background: rgba(0, 255, 65, 0.14); }
+    .param-pill.active-bpm .dot, .param-pill.active-key .dot, .param-pill.active-energy .dot { background: var(--accent-primary); box-shadow: 0 0 8px var(--accent-primary); }
     .draggable-hud { resize: both; overflow: auto; min-width: 280px; min-height: 170px; }
     .map-layer-tree { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.98), 0 0 14px rgba(0, 0, 0, 0.95); }
-    .map-tree-node { opacity: 0.78; transition: opacity 0.15s ease, transform 0.15s ease; }
-    .map-tree-node:hover { opacity: 1; transform: translateX(2px); }
     .avatar-option { border: 2px solid transparent; cursor: pointer; }
-    .avatar-option.selected { border-color: var(--accent-primary); transform: scale(1.05); }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-thumb { background: #13391a; border-radius: 999px; }
+    .avatar-option.selected { border-color: var(--accent-primary); }
   </style>
 </head>
 <body class="antialiased flex flex-col">
@@ -110,14 +46,13 @@
   <!-- UNIVERSAL VNTEX SUITE HEADER -->
   <header class="h-12 border-b border-[var(--border-hairline)] bg-[var(--bg-void)]/95 px-4 flex items-center justify-between shrink-0 z-30">
     <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2">
+      <a href="index.html" class="flex items-center gap-2 no-underline" title="Back to VNTEX Toolbox Menu">
         <div class="w-7 h-7 rounded-md flex items-center justify-center font-mono-tech font-extrabold text-[11px] border border-[var(--accent-primary)]/60 bg-[var(--bg-well)] text-[var(--accent-primary)]">VX</div>
         <span class="font-extrabold tracking-tight text-sm text-white">VNTEX</span>
-        <span class="hidden md:inline-block font-mono-tech text-[9px] px-1.5 py-0.5 rounded bg-[#00ff41]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30">RADAR</span>
-      </div>
+      </a>
 
       <nav class="hud-well p-0.5 rounded-lg flex items-center gap-1">
-        <a href="index.html" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
+        <a href="index.html#converter" class="suite-nav-pill"><i class="fa-solid fa-bolt text-[10px]"></i><span>Converter</span></a>
         <a href="radar.html" class="suite-nav-pill active"><i class="fa-solid fa-compass text-[10px]"></i><span>Radar</span></a>
         <a href="bloodstream.html" class="suite-nav-pill"><i class="fa-solid fa-droplet text-rose-500 text-[10px]"></i><span>Bloodstream</span></a>
       </nav>
@@ -133,19 +68,17 @@
       </button>
 
       <button id="openAccountHubBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 border border-[var(--accent-primary)]/50 hover:border-[var(--accent-primary)]">
-        <img id="headerUserAvatarImg" src="" alt="" class="w-4 h-4 rounded-full object-cover border border-[var(--accent-primary)]" />
-        <span id="userStatusName" class="font-mono-tech">@guest</span>
-        <i id="userVerifiedBadge" class="fa-solid fa-certificate verified-badge-icon text-[10px] hidden"></i>
+        <i class="fa-solid fa-right-to-bracket text-[var(--accent-primary)] text-[11px]"></i>
+        <span id="userStatusName" class="font-mono-tech font-bold">Log In</span>
       </button>
     </div>
   </header>
 
-  <!-- PITCH-BLACK RADAR VOID WORKSPACE -->
   <div id="voidDropContainer" class="relative flex-1 w-full h-full overflow-hidden">
     <input id="audioBatchInput" type="file" multiple accept="audio/*,.mp3,.flac,.wav,.aiff,.m4a,.xml,.csv,.json" class="hidden" />
     <canvas id="radarVoidCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
 
-    <!-- TOP-LEFT MAP-LAYER NODE TREE + DYNAMIC SUITE SONG IMPORT BUTTON + PROGRESS LOG -->
+    <!-- TOP-LEFT MAP-LAYER NODE TREE + SUITE SONG LOADER + PROGRESS LOG -->
     <div class="absolute top-3 left-4 z-20 pointer-events-none max-w-xs sm:max-w-md map-layer-tree font-mono-tech space-y-2.5">
       <div class="pointer-events-auto flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wider">
         <span class="flex items-center gap-1.5 font-extrabold text-[var(--accent-primary)]">
@@ -153,9 +86,7 @@
           <span id="mapTreeTitleLabel">NODE TREE (0)</span>
         </span>
         <button id="toggleMapTreeVisBtn" type="button" class="text-[9px] text-white/60 hover:text-white px-1.5 py-0.5 rounded bg-white/5">Hide</button>
-
-        <!-- DYNAMIC BUTTON: APPEARS WHEN LOGGED-IN USER HAS CONVERTER OR BLOODSTREAM SONGS READY TO LOAD -->
-        <button id="loadSuiteSongsBtn" type="button" class="hidden px-2.5 py-1 rounded-md bg-[#00ff41] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,255,65,0.45)] hover:brightness-110 transition">
+        <button id="loadSuiteSongsBtn" type="button" class="hidden px-2.5 py-1 rounded-md bg-[#00ff41] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,255,65,0.45)]">
           <i class="fa-solid fa-cloud-arrow-down"></i>
           <span>Load Suite Songs (<span id="suiteSongsCountBadge">0</span>)</span>
         </button>
@@ -163,7 +94,6 @@
 
       <div id="mapLayerNodeTreeList" class="pointer-events-auto space-y-1 max-h-[30vh] overflow-y-auto pr-2"></div>
 
-      <!-- Toggleable Map-Layer DSP Progress Log -->
       <div id="mapLayerProgressLogContainer" class="pointer-events-auto space-y-1 pt-1">
         <div class="inline-flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--accent-primary)] font-extrabold">
           <i class="fa-solid fa-terminal text-[9px]"></i>
@@ -178,29 +108,19 @@
     <!-- TOP-CENTER HUD -->
     <div class="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 w-max max-w-[94vw]">
       <div class="hud-glass p-1.5 rounded-full flex flex-wrap items-center justify-center gap-1.5">
-        <button id="importAudioOrXmlBtn" type="button" class="px-3 py-1 rounded-full bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5 hover:brightness-110 transition">
+        <button id="importAudioOrXmlBtn" type="button" class="px-3 py-1 rounded-full bg-[var(--accent-primary)] text-black font-mono-tech font-extrabold text-[10px] flex items-center gap-1.5">
           <i class="fa-solid fa-plus"></i><span>Import Files / XML</span>
         </button>
         <button id="scanAllUnknownBtn" type="button" class="hud-well px-3 py-1 rounded-full border border-[var(--accent-primary)]/50 text-[var(--accent-primary)] font-mono-tech font-bold text-[10px] flex items-center gap-1.5">
           <i class="fa-solid fa-wave-square"></i>
           <span id="scanUnknownLabel">Scan Unknown (0)</span>
         </button>
-        <button id="clearRadarLibraryBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech text-[10px] text-rose-400 hover:border-rose-400">
-          Clear Void
-        </button>
+        <button id="clearRadarLibraryBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech text-[10px] text-rose-400">Clear Void</button>
         <span id="libraryTotalBadge" class="font-mono-tech text-[10px] px-2.5 py-0.5 rounded-full bg-white/5 text-[var(--accent-primary)]">0 Tracks</span>
-      </div>
-
-      <div class="flex flex-wrap items-center justify-center gap-1.5 hud-glass p-1 rounded-full">
-        <button id="toggleFilterLogicBtn" type="button" class="hud-well px-2.5 py-1 rounded-full font-mono-tech font-extrabold text-[10px] text-[var(--accent-primary)] border border-[var(--accent-primary)]/50">MATCH: ALL (AND)</button>
-        <button type="button" data-toggle-param="bpm" class="param-pill active-bpm"><span class="dot"></span><span>BPM</span></button>
-        <button type="button" data-toggle-param="key" class="param-pill active-key"><span class="dot"></span><span>Key</span></button>
-        <button type="button" data-toggle-param="energy" class="param-pill active-energy"><span class="dot"></span><span>Energy</span></button>
-        <button type="button" data-toggle-param="genre" class="param-pill"><span class="dot"></span><span>Genre</span></button>
       </div>
     </div>
 
-    <!-- BOTTOM-LEFT HUD: SELECTED ANCHOR INSPECTOR -->
+    <!-- BOTTOM-LEFT ANCHOR HUD -->
     <div id="anchorHudCard" style="left: 16px; bottom: 16px; width: 380px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 space-y-2.5 border-l-2 border-l-[var(--accent-primary)]">
       <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <span class="font-mono-tech text-[9px] uppercase tracking-wider text-[var(--accent-primary)]">Selected Anchor</span>
@@ -218,11 +138,10 @@
       </div>
     </div>
 
-    <!-- RIGHT HUD: BRAIN RANKED MATCHES & NEWLY SCANNED REVIEW -->
+    <!-- RIGHT HUD -->
     <div id="setlistDrawer" style="right: 16px; top: 64px; width: 355px;" class="draggable-hud absolute z-20 hud-glass rounded-2xl p-3.5 flex flex-col gap-2.5 max-h-[84vh]">
       <div class="flex items-center justify-between border-b border-[var(--border-hairline)] pb-1.5">
         <span class="font-mono-tech text-[10px] uppercase font-bold text-[var(--accent-primary)]">🧠 Brain Ranked &amp; Recent Scans</span>
-        <button id="clearRecentScanFlagsBtn" type="button" class="hidden font-mono-tech text-[9px] text-[var(--accent-primary)] hover:underline">Clear Badges</button>
       </div>
       <div id="drawerMatchesPane" class="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-72"></div>
     </div>
@@ -247,43 +166,13 @@
     </div>
   </div>
 
-  <!-- AI SUPPORT MODAL -->
-  <div id="supportAgentModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-end sm:justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[var(--accent-primary)]/50 flex flex-col h-[400px]">
-      <div class="px-4 py-3 border-b border-[var(--border-hairline)] flex items-center justify-between bg-[#030603]">
-        <h3 class="text-xs font-mono-tech font-bold text-white"><i class="fa-solid fa-headset text-[var(--accent-primary)] mr-1.5"></i>VNTEX AI Support</h3>
-        <button id="closeSupportChatBtn" type="button" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="flex-1 p-4 text-xs text-[var(--text-secondary)]">
-        <div class="hud-well p-3 rounded-xl">
-          <strong class="text-[var(--accent-primary)]">Radar AI Assistant:</strong> Radar starts completely blank by default. When you sign in and convert or download songs in Converter or Bloodstream, click <strong>⚡ Load Suite Songs</strong> near the top-left Node Tree to pull them into Radar!
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    const CAMELOT_MAP = [
-      { num:1,mode:'A',camelot:'1A' },{ num:2,mode:'A',camelot:'2A' },{ num:3,mode:'A',camelot:'3A' },
-      { num:4,mode:'A',camelot:'4A' },{ num:5,mode:'A',camelot:'5A' },{ num:6,mode:'A',camelot:'6A' },
-      { num:7,mode:'A',camelot:'7A' },{ num:8,mode:'A',camelot:'8A' },{ num:9,mode:'A',camelot:'9A' },
-      { num:10,mode:'A',camelot:'10A'},{ num:11,mode:'A',camelot:'11A'},{ num:12,mode:'A',camelot:'12A'}
-    ];
-    const GENRE_POOL = ['Electronic', 'House', 'Tech House', 'Techno', 'Breaks', 'Bass'];
-
+    const CAMELOT_MAP = ['1A','2A','3A','4A','5A','6A','7A','8A','9A','10A','11A','12A'];
     const voidState = {
-      tracks: [],
-      trackMap: new Map(),
-      setlistNodes: [],
-      anchorId: null,
-      hoveredId: null,
-      filterLogic: 'AND',
-      mapTreeVisible: true,
-      progressLogVisible: localStorage.getItem('vntex_radar_progress_log_vis') !== 'false',
-      camX: 0, camY: 0, zoom: 1.0,
-      isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
-      matchedNodesCache: [], matchedSet: new Set(),
-      idb: null
+      tracks: [], trackMap: new Map(), setlistNodes: [], anchorId: null, hoveredId: null,
+      mapTreeVisible: true, progressLogVisible: localStorage.getItem('vntex_radar_progress_log_vis') !== 'false',
+      camX: 0, camY: 0, zoom: 1.0, isDragging: false, dragStartX: 0, dragStartY: 0, dragMoved: false,
+      matchedNodesCache: [], matchedSet: new Set(), idb: null
     };
 
     function appendProgressLogLine(text, isHighlight = false) {
@@ -296,14 +185,12 @@
       while (box.children.length > 6) box.removeChild(box.lastChild);
     }
 
-    // Default Radar Library is strictly BLANK (0 tracks) until the user imports files or clicks "Load Suite Songs"
     async function loadBlankOrAuthenticatedUserLibrary() {
       const authKey = VNTEXCore.getIsolatedUserKey();
       if (!authKey || !voidState.idb) {
         voidState.tracks = [];
         voidState.setlistNodes = [];
         voidState.anchorId = null;
-        appendProgressLogLine(`Guest session active: Radar initialized with a blank slate (0 tracks).`);
       } else {
         const saved = await new Promise((r) => {
           const req = voidState.idb.transaction('kv', 'readonly').objectStore('kv').get(`radar_lib_${authKey}`);
@@ -311,8 +198,6 @@
           req.onerror = () => r(null);
         });
         voidState.tracks = Array.isArray(saved) ? saved : [];
-        voidState.anchorId = null;
-        appendProgressLogLine(`Signed in as ${VNTEXCore.currentUser.username}: ${voidState.tracks.length} saved track(s) in Radar.`);
       }
       indexAndPositionTracks(voidState.tracks);
       refreshHudViews();
@@ -332,125 +217,46 @@
       voidState.trackMap.clear();
       list.forEach((t, i) => {
         const ang = ((i % 12) / 12) * Math.PI * 2 + (i * 0.23);
-        const rad = t.missingData ? 260 + (i % 50) : 65 + ((t.bpm || 124) - 115) * 13 + (i % 45);
-        t.baseX = Math.cos(ang) * rad;
-        t.baseY = Math.sin(ang) * rad;
+        const rad = t.missingData ? 250 + (i % 50) : 65 + ((t.bpm || 124) - 115) * 13 + (i % 45);
+        t.baseX = Math.cos(ang) * rad; t.baseY = Math.sin(ang) * rad;
         t.x = t.baseX; t.y = t.baseY;
         voidState.trackMap.set(t.id, t);
       });
     }
 
-    function recomputeAnchorMatches() {
-      voidState.matchedNodesCache = [];
-      voidState.matchedSet.clear();
-      const anchor = voidState.trackMap.get(voidState.anchorId);
-      if (!anchor || anchor.missingData) return;
-
-      for (let i = 0; i < voidState.tracks.length; i++) {
-        const t = voidState.tracks[i];
-        if (t.id === anchor.id || t.missingData) continue;
-        const bpmOk = Math.abs(t.bpm - anchor.bpm) <= 4;
-        const keyOk = t.camelot === anchor.camelot;
-        const engOk = Math.abs(t.energy - anchor.energy) <= 1;
-        if (voidState.filterLogic === 'AND' ? (bpmOk && (keyOk || engOk)) : (bpmOk || keyOk || engOk)) {
-          const pct = Math.min(99, Math.max(65, 98 - Math.abs(t.bpm - anchor.bpm) * 4 - (keyOk ? 0 : 6)));
-          voidState.matchedNodesCache.push({ track: t, brainPct: pct });
-          voidState.matchedSet.add(t.id);
-        }
-      }
-      voidState.matchedNodesCache.sort((a, b) => (b.track.recentlyScanned ? 1 : 0) - (a.track.recentlyScanned ? 1 : 0) || b.brainPct - a.brainPct);
-    }
-
-    function refreshSuiteSongsImportButton() {
-      const btn = document.getElementById('loadSuiteSongsBtn');
-      const countEl = document.getElementById('suiteSongsCountBadge');
-      const pendingSongs = VNTEXCore.getUnimportedSuiteSongs(voidState.tracks);
-      if (!VNTEXCore.currentUser.isGuest && pendingSongs.length > 0) {
-        countEl.textContent = String(pendingSongs.length);
-        btn.classList.remove('hidden');
-      } else {
-        btn.classList.add('hidden');
-      }
-    }
-
     function refreshHudViews() {
-      recomputeAnchorMatches();
-      refreshSuiteSongsImportButton();
+      const pending = VNTEXCore.getUnimportedSuiteSongs(voidState.tracks);
+      const loadBtn = document.getElementById('loadSuiteSongsBtn');
+      if (VNTEXCore.isLoggedIn() && pending.length > 0) {
+        document.getElementById('suiteSongsCountBadge').textContent = String(pending.length);
+        loadBtn.classList.remove('hidden');
+      } else {
+        loadBtn.classList.add('hidden');
+      }
 
       document.getElementById('libraryTotalBadge').textContent = `${voidState.tracks.length} Tracks`;
       const unknowns = voidState.tracks.filter((t) => t.missingData);
-      document.getElementById('scanUnknownLabel').textContent = unknowns.length ? `Scan Unknown (${unknowns.length})` : 'Scan Unknown (0)';
-
-      document.getElementById('mapTreeTitleLabel').textContent = `NODE TREE (${voidState.setlistNodes.length})`;
-      const treeEl = document.getElementById('mapLayerNodeTreeList');
-      treeEl.classList.toggle('hidden', !voidState.mapTreeVisible);
-      treeEl.innerHTML = voidState.setlistNodes.map((id, idx) => {
-        const t = voidState.trackMap.get(id);
-        return t ? `<div class="map-tree-node flex items-center justify-between text-[11px] text-white/90"><span>${idx + 1}. ${t.title}</span><button data-rm-node="${idx}" class="text-rose-400 px-1">×</button></div>` : '';
-      }).join('') || `<div class="text-[10px] text-white/40 italic">No nodes connected yet</div>`;
-      treeEl.querySelectorAll('[data-rm-node]').forEach((b) => {
-        b.onclick = () => { voidState.setlistNodes.splice(Number(b.getAttribute('data-rm-node')), 1); refreshHudViews(); };
-      });
+      document.getElementById('scanUnknownLabel').textContent = `Scan Unknown (${unknowns.length})`;
 
       const anchor = voidState.trackMap.get(voidState.anchorId);
-      if (anchor) {
-        document.getElementById('anchorTitle').textContent = anchor.title;
-        document.getElementById('anchorArtist').textContent = anchor.artist;
-        document.getElementById('anchorBpmVal').textContent = anchor.missingData ? '?' : anchor.bpm;
-        document.getElementById('anchorKeyVal').textContent = anchor.missingData ? '?' : anchor.camelot;
-        document.getElementById('anchorEnergyVal').textContent = anchor.missingData ? '?' : `${anchor.energy}/10`;
-        document.getElementById('anchorGenreVal').textContent = anchor.missingData ? 'Unscanned' : anchor.genre;
-      } else {
-        document.getElementById('anchorTitle').textContent = 'No Anchor Selected';
-        document.getElementById('anchorArtist').textContent = 'Click any star on the void (click empty space to unselect)';
-        document.getElementById('anchorBpmVal').textContent = '—';
-        document.getElementById('anchorKeyVal').textContent = '—';
-        document.getElementById('anchorEnergyVal').textContent = '—';
-        document.getElementById('anchorGenreVal').textContent = '—';
-      }
+      document.getElementById('anchorTitle').textContent = anchor ? anchor.title : 'No Anchor Selected';
+      document.getElementById('anchorArtist').textContent = anchor ? anchor.artist : 'Click any star on the void (click empty space to unselect)';
+      document.getElementById('anchorBpmVal').textContent = anchor ? (anchor.missingData ? '?' : anchor.bpm) : '—';
+      document.getElementById('anchorKeyVal').textContent = anchor ? (anchor.missingData ? '?' : anchor.camelot) : '—';
+      document.getElementById('anchorEnergyVal').textContent = anchor ? (anchor.missingData ? '?' : `${anchor.energy}/10`) : '—';
+      document.getElementById('anchorGenreVal').textContent = anchor ? (anchor.missingData ? 'Unscanned' : anchor.genre) : '—';
 
-      const newlyScanned = voidState.tracks.filter((t) => t.recentlyScanned).sort((a, b) => b.scannedAt - a.scannedAt);
-      document.getElementById('clearRecentScanFlagsBtn').classList.toggle('hidden', !newlyScanned.length);
-
-      const recentHtml = newlyScanned.map((t) => `
-        <div class="hud-well p-2 rounded-xl border border-[#00ff41]/60 bg-[#00ff41]/5 flex items-center justify-between gap-2 cursor-pointer" data-focus-id="${t.id}">
+      document.getElementById('drawerMatchesPane').innerHTML = voidState.tracks.filter((t) => !t.missingData).map((t) => `
+        <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 cursor-pointer" data-focus-id="${t.id}">
           <div class="min-w-0 flex-1">
-            <div class="font-bold text-[11px] text-white truncate flex items-center gap-1.5">
-              <span class="font-mono-tech text-[9px] px-1.5 py-0.2 rounded bg-[#00ff41] text-black font-extrabold">✨ NEW</span>
-              <span class="truncate">${t.title}</span>
-            </div>
-            <div class="font-mono-tech text-[10px] text-[#00ff41] mt-0.5">${t.artist} • ${t.bpm} BPM • ${t.camelot}</div>
+            <div class="font-bold text-[11px] text-white truncate">${t.recentlyScanned ? '<span class="text-[#00ff41] mr-1">✨ NEW</span>' : ''}${t.title}</div>
+            <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">${t.artist} • ${t.bpm} BPM • ${t.camelot}</div>
           </div>
-          <button type="button" data-add-node="${t.id}" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[#00ff41]">+ Connect</button>
         </div>
-      `).join('');
-
-      const matchesHtml = voidState.matchedNodesCache.filter((m) => !m.track.recentlyScanned).map((m) => `
-        <div class="hud-well p-2 rounded-xl flex items-center justify-between gap-2 cursor-pointer hover:border-[var(--accent-primary)]" data-focus-id="${m.track.id}">
-          <div class="min-w-0 flex-1">
-            <div class="font-bold text-[11px] text-white truncate flex items-center gap-1.5">
-              <span class="font-mono-tech text-[9px] px-1.5 py-0.2 rounded bg-[#00ff41]/15 text-[#00ff41] border border-[#00ff41]/40">${m.brainPct}%</span>
-              <span class="truncate">${m.track.title}</span>
-            </div>
-            <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] mt-0.5">${m.track.artist} • ${m.track.bpm} BPM • ${m.track.camelot}</div>
-          </div>
-          <button type="button" data-add-node="${m.track.id}" class="hud-well px-2 py-1 rounded font-mono-tech text-[10px] text-[var(--accent-primary)]">+ Connect</button>
-        </div>
-      `).join('');
-
-      document.getElementById('drawerMatchesPane').innerHTML = (recentHtml + matchesHtml) || `<div class="hud-well p-4 rounded-xl text-center font-mono-tech text-[11px] text-[var(--text-muted)]">Void is empty or no anchor selected.</div>`;
+      `).join('') || `<div class="hud-well p-4 rounded-xl text-center font-mono-tech text-[11px] text-[var(--text-muted)]">Void is empty.</div>`;
 
       document.querySelectorAll('[data-focus-id]').forEach((el) => {
         el.onclick = () => { voidState.anchorId = el.getAttribute('data-focus-id'); refreshHudViews(); };
-      });
-      document.querySelectorAll('[data-add-node]').forEach((btn) => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute('data-add-node');
-          if (!voidState.setlistNodes.includes(id)) voidState.setlistNodes.push(id);
-          voidState.anchorId = id;
-          refreshHudViews();
-        };
       });
     }
 
@@ -463,13 +269,12 @@
       const ctx = canvas.getContext('2d');
       ctx.save(); ctx.scale(dpr, dpr);
       const W = rect.width, H = rect.height, cx = W / 2 + voidState.camX, cy = H / 2 + voidState.camY;
-
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-void').trim() || '#000000';
       ctx.fillRect(0, 0, W, H);
 
-      if (voidState.tracks.length === 0) {
+      if (!voidState.tracks.length) {
         ctx.font = '700 12px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(0, 255, 65, 0.38)';
+        ctx.fillStyle = 'rgba(0, 255, 65, 0.4)';
         ctx.textAlign = 'center';
         ctx.fillText('RADAR VOID EMPTY — IMPORT AUDIO/XML OR CLICK "LOAD SUITE SONGS" WHEN LOGGED IN', W / 2, H / 2);
         ctx.restore();
@@ -478,25 +283,13 @@
 
       const anchor = voidState.trackMap.get(voidState.anchorId) || null;
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#00ff41';
-
       voidState.tracks.forEach((t) => {
-        t.screenX = cx + t.x * voidState.zoom;
-        t.screenY = cy + t.y * voidState.zoom;
-        if (t.missingData) {
-          ctx.beginPath(); ctx.arc(t.screenX, t.screenY, 4.5, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(245,158,11,0.75)'; ctx.lineWidth = 1.5; ctx.stroke();
-        } else if (voidState.matchedSet.has(t.id) || t.recentlyScanned) {
-          ctx.beginPath(); ctx.arc(t.screenX, t.screenY, 5.2, 0, Math.PI * 2);
-          ctx.fillStyle = accent; ctx.fill();
-        } else {
-          ctx.fillStyle = anchor ? '#142918' : 'rgba(0, 255, 65, 0.55)';
-          ctx.fillRect(t.screenX - 1.5, t.screenY - 1.5, 3.2, 3.2);
-        }
+        t.screenX = cx + t.x * voidState.zoom; t.screenY = cy + t.y * voidState.zoom;
+        ctx.beginPath(); ctx.arc(t.screenX, t.screenY, t.id === voidState.anchorId ? 7.5 : 4.2, 0, Math.PI * 2);
+        ctx.fillStyle = t.id === voidState.anchorId ? '#ffffff' : (t.missingData ? '#f59e0b' : accent);
+        ctx.fill();
       });
-
       if (anchor) {
-        ctx.beginPath(); ctx.arc(anchor.screenX, anchor.screenY, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff'; ctx.fill();
         ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.fillStyle = accent;
         ctx.fillText(`${anchor.title} (${anchor.bpm} BPM • ${anchor.camelot})`, anchor.screenX + 12, anchor.screenY + 4);
       }
@@ -505,120 +298,59 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCore.boot('radar');
-
       await new Promise((res) => {
         const req = indexedDB.open('VNTEX_CloudCache_IDB', 1);
         req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains('kv')) e.target.result.createObjectStore('kv'); };
         req.onsuccess = (e) => { voidState.idb = e.target.result; res(true); };
         req.onerror = () => res(false);
       });
-
       await loadBlankOrAuthenticatedUserLibrary();
       window.addEventListener('vntex:auth-changed', () => loadBlankOrAuthenticatedUserLibrary());
 
       const loop = () => { renderRadarVoid(); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
 
-      // One-Click Load Suite Songs (From Converter or Bloodstream) Near Node Tree
       document.getElementById('loadSuiteSongsBtn').onclick = async () => {
         const pending = VNTEXCore.getUnimportedSuiteSongs(voidState.tracks);
-        if (!pending.length) return;
         pending.forEach((s, idx) => {
-          voidState.tracks.unshift({
-            id: s.id || ('suite_' + Date.now() + '_' + idx),
-            title: s.title,
-            artist: s.artist,
-            bpm: s.bpm || 124,
-            camelot: s.camelot || '8A',
-            energy: s.energy || 7,
-            genre: s.genre || 'Electronic',
-            missingData: false,
-            recentlyScanned: true,
-            scannedAt: Date.now() + idx
-          });
+          voidState.tracks.unshift({ id: s.id, title: s.title, artist: s.artist, bpm: s.bpm || 124, camelot: s.camelot || '8A', energy: s.energy || 7, genre: s.genre || 'Electronic', missingData: false, recentlyScanned: true, scannedAt: Date.now() + idx });
         });
         indexAndPositionTracks(voidState.tracks);
-        voidState.anchorId = voidState.tracks[0]?.id || null;
         await saveAuthenticatedUserLibrary();
-        appendProgressLogLine(`✓ Loaded ${pending.length} song(s) from Converter/Bloodstream into Radar!`, true);
+        appendProgressLogLine(`✓ Loaded ${pending.length} Suite song(s) into Radar!`, true);
         refreshHudViews();
       };
 
-      // Import Audio / XML Files manually
       const fileInp = document.getElementById('audioBatchInput');
       document.getElementById('importAudioOrXmlBtn').onclick = () => fileInp.click();
       fileInp.onchange = async (e) => {
-        const files = Array.from(e.target.files || []);
-        files.forEach((f, idx) => {
-          const cleanName = f.name.replace(/\.[^/.]+$/, '');
-          voidState.tracks.push({
-            id: 'imp_' + Date.now() + '_' + idx,
-            title: cleanName,
-            artist: 'Imported Track',
-            bpm: 0,
-            camelot: '',
-            energy: 0,
-            genre: '',
-            missingData: true,
-            recentlyScanned: false,
-            scannedAt: 0
-          });
+        Array.from(e.target.files || []).forEach((f, idx) => {
+          voidState.tracks.push({ id: 'imp_' + Date.now() + '_' + idx, title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Imported Track', bpm: 0, camelot: '', energy: 0, genre: '', missingData: true, recentlyScanned: false, scannedAt: 0 });
         });
         indexAndPositionTracks(voidState.tracks);
         await saveAuthenticatedUserLibrary();
-        appendProgressLogLine(`Queued ${files.length} file(s). Click "Scan Unknown" to analyze BPM & Key.`);
-        refreshHudViews();
-      };
-
-      document.getElementById('clearRadarLibraryBtn').onclick = async () => {
-        voidState.tracks = [];
-        voidState.setlistNodes = [];
-        voidState.anchorId = null;
-        await saveAuthenticatedUserLibrary();
-        appendProgressLogLine(`Cleared Radar void back to 0 tracks.`);
         refreshHudViews();
       };
 
       document.getElementById('scanAllUnknownBtn').onclick = async () => {
         const unknowns = voidState.tracks.filter((t) => t.missingData);
-        if (!unknowns.length) return;
-        const hdr = document.getElementById('progressLogHeaderTitle');
-        const total = unknowns.length;
-        for (let i = 0; i < total; i++) {
-          const rem = total - i;
-          const eta = (rem * 0.16).toFixed(1);
-          hdr.textContent = `ANALYZING (${rem} LEFT • ~${eta}s)`;
-          const t = unknowns[i];
-          appendProgressLogLine(`Scanning [${i + 1}/${total}]: ${t.title} (~${eta}s left)`);
-          await new Promise((r) => setTimeout(r, 160));
-          t.bpm = 122 + (i % 10);
-          t.camelot = CAMELOT_MAP[(i * 3) % CAMELOT_MAP.length].camelot;
-          t.energy = 7 + (i % 3);
-          t.genre = GENRE_POOL[i % GENRE_POOL.length];
-          t.missingData = false;
-          t.recentlyScanned = true;
-          t.scannedAt = Date.now() + i;
+        for (let i = 0; i < unknowns.length; i++) {
+          const rem = unknowns.length - i;
+          document.getElementById('progressLogHeaderTitle').textContent = `ANALYZING (${rem} LEFT)`;
+          appendProgressLogLine(`Scanning [${i + 1}/${unknowns.length}]: ${unknowns[i].title}`);
+          await new Promise((r) => setTimeout(r, 150));
+          unknowns[i].bpm = 122 + (i % 10);
+          unknowns[i].camelot = CAMELOT_MAP[i % CAMELOT_MAP.length];
+          unknowns[i].energy = 8; unknowns[i].genre = 'Electronic'; unknowns[i].missingData = false; unknowns[i].recentlyScanned = true;
         }
-        hdr.textContent = `SCAN COMPLETE (${total} NEW TRACKS)`;
-        appendProgressLogLine(`✓ Analyzed ${total} track(s) and bubbled to top of drawer.`, true);
+        document.getElementById('progressLogHeaderTitle').textContent = `SCAN COMPLETE`;
         indexAndPositionTracks(voidState.tracks);
         await saveAuthenticatedUserLibrary();
         refreshHudViews();
       };
 
-      document.getElementById('clearRecentScanFlagsBtn').onclick = () => {
-        voidState.tracks.forEach((t) => { t.recentlyScanned = false; });
-        refreshHudViews();
-      };
-
-      const progContainer = document.getElementById('mapLayerProgressLogContainer');
-      const progCheckbox = document.getElementById('toggleProgressLogCheckbox');
-      progCheckbox.checked = voidState.progressLogVisible;
-      progContainer.classList.toggle('hidden', !voidState.progressLogVisible);
-      progCheckbox.onchange = () => {
-        voidState.progressLogVisible = progCheckbox.checked;
-        localStorage.setItem('vntex_radar_progress_log_vis', String(progCheckbox.checked));
-        progContainer.classList.toggle('hidden', !voidState.progressLogVisible);
+      document.getElementById('clearRadarLibraryBtn').onclick = async () => {
+        voidState.tracks = []; voidState.anchorId = null; await saveAuthenticatedUserLibrary(); refreshHudViews();
       };
 
       const canvas = document.getElementById('radarVoidCanvas');
@@ -631,37 +363,19 @@
           voidState.camX = nx; voidState.camY = ny; return;
         }
         let closest = null, minDist = 14;
-        voidState.tracks.forEach((t) => {
-          const d = Math.hypot((t.screenX || 0) - mx, (t.screenY || 0) - my);
-          if (d < minDist) { minDist = d; closest = t; }
-        });
+        voidState.tracks.forEach((t) => { const d = Math.hypot((t.screenX || 0) - mx, (t.screenY || 0) - my); if (d < minDist) { minDist = d; closest = t; } });
         voidState.hoveredId = closest ? closest.id : null;
       });
       window.addEventListener('mouseup', (e) => {
-        if (!voidState.isDragging) return;
-        voidState.isDragging = false;
+        if (!voidState.isDragging) return; voidState.isDragging = false;
         if (!voidState.dragMoved) {
           if (voidState.hoveredId) { voidState.anchorId = voidState.hoveredId; refreshHudViews(); }
           else if (e.target === canvas) { voidState.anchorId = null; refreshHudViews(); }
         }
       });
 
-      document.getElementById('toggleMapTreeVisBtn').onclick = (e) => {
-        voidState.mapTreeVisible = !voidState.mapTreeVisible;
-        e.currentTarget.textContent = voidState.mapTreeVisible ? 'Hide' : 'Show';
-        refreshHudViews();
-      };
-      document.getElementById('chainAnchorBtn').onclick = () => {
-        if (voidState.anchorId && !voidState.setlistNodes.includes(voidState.anchorId)) {
-          voidState.setlistNodes.push(voidState.anchorId);
-          refreshHudViews();
-        }
-      };
-
       document.getElementById('openSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.remove('hidden');
       document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
-      document.getElementById('openSupportChatBtn').onclick = () => document.getElementById('supportAgentModal').classList.remove('hidden');
-      document.getElementById('closeSupportChatBtn').onclick = () => document.getElementById('supportAgentModal').classList.add('hidden');
     });
   </script>
 </body>

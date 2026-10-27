@@ -201,7 +201,7 @@
             <div class="hardware-well px-3 py-1.5 flex items-center gap-2.5" title="Drag both ends to constrain BPM detection range">
               <div class="text-[10px] font-mono-tech">
                 <span class=" uppercase text-[var(--text-secondary)]">BPM:</span>
-                <span id="bpmSliderReadout" class="font-bold text-[var(--accent-primary)] ml-1">75–160</span>
+                <span id="bpmSliderReadout" class="font-bold text-[var(--accent-primary)] ml-1"><span id=\"bpmRangeDynamicText\">75–160</span></span>
               </div>
               <div class="dual-range-wrap">
                 <div class="dual-range-track"></div>
@@ -1473,6 +1473,7 @@
     }
 
     function checkRouteMode() {
+      if (window.VNTEXCore) return;
       const isAdminRoute = window.location.hash.toLowerCase() === '#admin';
       const userApp = document.getElementById('userAppWrapper');
       const adminPortal = document.getElementById('adminPortalWrapper');
