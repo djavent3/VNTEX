@@ -56,12 +56,12 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="bridgeStatusBadge" type="button" class="hidden sm:inline-flex items-center gap-1.5 hud-well px-2.5 py-1 rounded-md font-mono-tech text-[10px] text-gray-300 cursor-pointer" title="Click to configure stream extractor">
-        <span id="bridgeStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span id="bridgeStatusText">Checking Extractor...</span>
+      <button id="bridgeStatusBadge" type="button" class="hidden sm:inline-flex items-center gap-1.5 hud-well px-2.5 py-1 rounded-md font-mono-tech text-[10px] text-gray-200 cursor-pointer" title="Default Mode: Universal yt-dlp Extractor">
+        <span id="bridgeStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="bridgeStatusText">Universal Extractor (Default)</span>
       </button>
 
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer" title="Bloodstream Stream Extractor Settings">
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer" title="Extractor Settings">
         <i class="fa-solid fa-sliders"></i>
       </button>
 
@@ -79,10 +79,10 @@
   <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3.5 overflow-hidden">
     <div class="blood-panel rounded-xl p-4 space-y-3 shrink-0">
       <div class="flex flex-wrap items-center gap-2.5">
-        <input id="ytUrlInput" type="text" placeholder="Paste ANY YouTube Link (Songs, Reaction Vids, Shorts, Podcasts, Mixes)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
+        <input id="ytUrlInput" type="text" placeholder="Paste ANY YouTube Link (Reaction Vids, Songs, Shorts, Podcasts, Livestreams)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
         <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase">Compile Video</button>
         <input id="localAudioTagInput" type="file" multiple accept="audio/*,video/*" class="hidden" />
-        <button id="importLocalAudioBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs" title="Load local audio or video files to extract & tag with ID3v2.3 cover art">
+        <button id="importLocalAudioBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">
           <i class="fa-solid fa-file-audio mr-1"></i>+ Local Audio/Video
         </button>
       </div>
@@ -106,7 +106,7 @@
             </select>
           </div>
         </div>
-        <span class="text-[11px] text-gray-400">Universal YouTube Audio Extractor (Supports Reaction Vids, Shorts &amp; Long-Form) + ID3v2.3 `APIC`</span>
+        <span class="text-[11px] text-emerald-400 font-bold">DEFAULT MODE: Direct Universal Video Extractor (Zero Public Proxies)</span>
       </div>
     </div>
 
@@ -119,7 +119,7 @@
     </div>
 
     <div class="blood-panel rounded-xl px-4 py-3 flex justify-between items-center shrink-0 font-mono-tech text-xs">
-      <span id="systemStatusLabel" class="text-white">System Idle — Paste any YouTube link (songs, reaction videos, shorts, etc.)</span>
+      <span id="systemStatusLabel" class="text-white">Universal Extractor Ready — Paste any YouTube video URL above</span>
       <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg uppercase">Download All</button>
     </div>
   </main>
@@ -128,45 +128,57 @@
   <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[#FF000D]/50 bg-[#080000] text-white">
       <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between">
-        <h3 class="text-sm font-bold"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Bloodstream Universal Extractor Settings</h3>
+        <h3 class="text-sm font-bold"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Default Universal Extractor Endpoint</h3>
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-4 text-xs font-mono-tech">
         <div class="space-y-1.5">
-          <label class="text-[10px] text-gray-400 uppercase">Primary yt-dlp Extractor Bridge URL</label>
-          <input id="customStreamBridgeInput" type="text" value="http://127.0.0.1:5055" class="blood-input w-full px-3 py-2 rounded-lg text-xs" />
+          <label class="text-[10px] text-gray-400 uppercase">Universal yt-dlp Extractor Endpoint</label>
+          <input id="customStreamBridgeInput" type="text" value="http://localhost:5055" class="blood-input w-full px-3 py-2 rounded-lg text-xs" />
           <p class="text-[10px] text-gray-400 leading-relaxed">
-            Extracts 100% of YouTube videos (reaction videos, vlogs, livestreams, age-restricted, and 1-hour+ videos) directly via <code>yt-dlp</code> with zero re-encoding lag. If offline, Bloodstream cascades through proxied Invidious/Piped stream relays.
+            Bloodstream defaults exclusively to Universal Extractor mode (no public proxies). If Safari blocks HTTPS-to-localhost requests, click below to open Bloodstream directly on the local extractor host.
           </p>
         </div>
-        <button id="saveStreamBridgeBtn" type="button" class="blood-btn-solid w-full py-2 rounded-lg text-xs uppercase">Save &amp; Re-Check Extractor</button>
+        <div class="flex gap-2">
+          <button id="saveStreamBridgeBtn" type="button" class="blood-btn-solid flex-1 py-2 rounded-lg text-xs uppercase">Save Endpoint</button>
+          <a href="http://localhost:5055/bloodstream.html" class="blood-btn px-3 py-2 rounded-lg text-xs no-underline flex items-center">Open Local Host →</a>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const queue = [];
-    let streamBridgeUrl = localStorage.getItem('vntex_bloodstream_bridge_url') || 'http://127.0.0.1:5055';
+    const CANDIDATE_BRIDGES = [
+      localStorage.getItem('vntex_bloodstream_bridge_url') || 'http://localhost:5055',
+      'http://localhost:5055',
+      'http://127.0.0.1:5055'
+    ];
+    let activeBridgeUrl = CANDIDATE_BRIDGES[0];
 
-    async function checkLocalBridgeHealth() {
+    async function resolveActiveUniversalBridge() {
       const dot = document.getElementById('bridgeStatusDot');
       const txt = document.getElementById('bridgeStatusText');
-      try {
-        const ctrl = new AbortController();
-        setTimeout(() => ctrl.abort(), 1500);
-        const r = await fetch(streamBridgeUrl.replace(/\/$/, '') + '/health', { signal: ctrl.signal });
-        if (r.ok) {
-          dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-          txt.textContent = 'yt-dlp Universal Extractor Active ✓';
-          return true;
-        }
-      } catch {}
-      dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-      txt.textContent = 'Public Proxy Relay Mode';
-      return false;
+      for (const candidate of CANDIDATE_BRIDGES) {
+        try {
+          const clean = candidate.replace(/\/$/, '');
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 1800);
+          const r = await fetch(clean + '/health', { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (r.ok) {
+            activeBridgeUrl = clean;
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+            txt.textContent = 'Universal Extractor Active ✓';
+            return clean;
+          }
+        } catch {}
+      }
+      dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+      txt.textContent = 'Extractor Offline (Click to Open)';
+      return null;
     }
 
-    // Universal YouTube Video ID Extractor (Handles watch?v=, youtu.be/, /shorts/, /live/, /embed/, mobile links)
     function extractYouTubeIdAndCleanUrl(raw) {
       const str = String(raw || '').trim();
       const reg = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
@@ -182,10 +194,8 @@
         .replace(/\(official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\)/ig, '')
         .replace(/\[official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\]/ig, '')
         .trim();
-
       let artist = String(rawUploader || 'YouTube Creator').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
-      let title = cleaned || 'YouTube Audio Track';
-
+      let title = cleaned || 'YouTube Audio';
       if (cleaned.includes(' - ')) {
         const parts = cleaned.split(' - ');
         artist = parts[0].trim();
@@ -194,15 +204,9 @@
       return { artist, title };
     }
 
-    // =========================================================================
-    // SPEC-COMPLIANT ID3v2.3 TAGGER (0x00 ISO-8859-1 + APIC JPEG COVER ART)
-    // =========================================================================
-    function encodeSyncSafeInt(val) {
-      return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F];
-    }
-    function encodeUint32BE(val) {
-      return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF];
-    }
+    // Spec-Compliant ID3v2.3 Tagger
+    function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
+    function encodeUint32BE(val) { return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF]; }
     function toIso88591Bytes(str) {
       const clean = String(str || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
       const out = new Uint8Array(clean.length);
@@ -234,26 +238,22 @@
       frame.set(jpegBytes, o);
       return frame;
     }
-
     function stripExistingId3v2Tag(mp3Bytes) {
       if (mp3Bytes.length > 10 && mp3Bytes[0] === 0x49 && mp3Bytes[1] === 0x44 && mp3Bytes[2] === 0x33) {
         const size = ((mp3Bytes[6] & 0x7F) << 21) | ((mp3Bytes[7] & 0x7F) << 14) | ((mp3Bytes[8] & 0x7F) << 7) | (mp3Bytes[9] & 0x7F);
         const startOffset = 10 + size;
-        if (startOffset < mp3Bytes.length) {
-          return mp3Bytes.subarray(startOffset);
-        }
+        if (startOffset < mp3Bytes.length) return mp3Bytes.subarray(startOffset);
       }
       return mp3Bytes;
     }
-
     function isLikelyMp3Buffer(uint8) {
       if (uint8.length < 4) return false;
-      if (uint8[0] === 0x49 && uint8[1] === 0x44 && uint8[2] === 0x33) return true; // 'ID3'
-      if (uint8[0] === 0xFF && (uint8[1] & 0xE0) === 0xE0) return true; // MPEG sync word
+      if (uint8[0] === 0x49 && uint8[1] === 0x44 && uint8[2] === 0x33) return true;
+      if (uint8[0] === 0xFF && (uint8[1] & 0xE0) === 0xE0) return true;
       return false;
     }
 
-    async function renderCoverArtToJpegBytes(thumbUrl, titleText, artistText) {
+    async function renderCoverArtToJpegBytes(thumbUrl) {
       const canvas = document.createElement('canvas');
       canvas.width = 400; canvas.height = 400;
       const ctx = canvas.getContext('2d');
@@ -277,118 +277,49 @@
       return bytes;
     }
 
-    // =========================================================================
-    // UNIVERSAL YOUTUBE AUDIO STREAM RESOLVER (REACTION VIDS, SHORTS, PODCASTS, MUSIC)
-    // =========================================================================
-    async function fetchUniversalVideoAudioBuffer(item, format, kbps, onProgressText) {
+    // DEFAULT MODE: Universal yt-dlp Extractor (Zero Public Proxy Fallback)
+    async function fetchFromDefaultUniversalExtractor(item, format, kbps, onProgressText) {
       if (item.sourceFile) {
         onProgressText('Reading local file...');
-        return { buffer: await item.sourceFile.arrayBuffer(), sourceLabel: 'Local File', isAlreadyMp3: item.sourceFile.name.toLowerCase().endsWith('.mp3') };
+        return { buffer: await item.sourceFile.arrayBuffer(), sourceLabel: 'Local File' };
       }
 
-      const baseBridge = streamBridgeUrl.replace(/\/$/, '');
-
-      // TIER 1: Local or Hosted yt-dlp Bridge (Extracts 100% of YouTube Videos Including Reaction Vids!)
-      try {
-        onProgressText('Connecting to yt-dlp Universal Extractor...');
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 2500);
-        const health = await fetch(baseBridge + '/health', { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (health.ok) {
-          onProgressText('Extracting full video audio via yt-dlp (works for reaction vids & any length)...');
-          const streamUrl = baseBridge + '/stream?url=' + encodeURIComponent(item.url) + '&format=' + encodeURIComponent(format) + '&kbps=' + encodeURIComponent(kbps);
-          const streamRes = await fetch(streamUrl);
-          if (streamRes.ok) {
-            const buf = await streamRes.arrayBuffer();
-            if (buf.byteLength > 1000) {
-              return { buffer: buf, sourceLabel: 'yt-dlp Direct Stream', isAlreadyMp3: format === 'mp3' };
-            }
-          }
+      const bridge = await resolveActiveUniversalBridge();
+      if (!bridge) {
+        if (window.location.protocol === 'https:') {
+          throw new Error('Your browser blocked HTTPS -> localhost connection (Safari Mixed Content). Click "Open Local Host →" inside the top-right Sliders settings to run on http://localhost:5055/bloodstream.html.');
         }
-      } catch {}
-
-      // TIER 2: Invidious Proxied Stream Endpoints (`&local=true` proxies googlevideo through the server to bypass IP locks!)
-      if (item.vid) {
-        const invidiousNodes = [
-          'https://inv.nadeko.net',
-          'https://invidious.nerdvpn.de',
-          'https://inv.tux.pizza',
-          'https://invidious.privacyredirect.com',
-          'https://yewtu.be'
-        ];
-        for (const node of invidiousNodes) {
-          try {
-            const host = new URL(node).hostname;
-            onProgressText('Trying proxied stream relay (' + host + ')...');
-            // Direct proxied M4A audio stream endpoint (itag=140 with local=true)
-            const directProxyUrl = node + '/latest_version?id=' + item.vid + '&itag=140&local=true';
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 7000);
-            const r = await fetch(directProxyUrl, { signal: ctrl.signal });
-            clearTimeout(timer);
-            if (r.ok) {
-              const buf = await r.arrayBuffer();
-              if (buf.byteLength > 10000) {
-                return { buffer: buf, sourceLabel: 'Proxied YouTube Stream (' + host + ')', isAlreadyMp3: false };
-              }
-            }
-          } catch {}
-        }
-
-        // TIER 3: Piped API + CORS Relay Proxy
-        const pipedNodes = [
-          'https://pipedapi.kavin.rocks',
-          'https://api.piped.private.coffee',
-          'https://pipedapi.drgns.space',
-          'https://pipedapi.smnz.de'
-        ];
-        for (const node of pipedNodes) {
-          try {
-            const host = new URL(node).hostname;
-            onProgressText('Querying Piped API (' + host + ')...');
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 5000);
-            const r = await fetch(node + '/streams/' + item.vid, { signal: ctrl.signal });
-            clearTimeout(timer);
-            if (r.ok) {
-              const data = await r.json();
-              const streams = (data.audioStreams || []).filter((s) => s.url);
-              // Prefer M4A (mp4a) first for universal browser AudioContext decoding, then WebM
-              streams.sort((a, b) => ((b.mimeType || '').includes('mp4') ? 1 : 0) - ((a.mimeType || '').includes('mp4') ? 1 : 0) || (b.bitrate || 0) - (a.bitrate || 0));
-              if (streams.length) {
-                const rawStreamUrl = streams[0].url;
-                onProgressText('Downloading audio stream from ' + host + '...');
-                for (const candidateUrl of [rawStreamUrl, 'https://corsproxy.io/?' + encodeURIComponent(rawStreamUrl)]) {
-                  try {
-                    const ar = await fetch(candidateUrl);
-                    if (ar.ok) {
-                      const buf = await ar.arrayBuffer();
-                      if (buf.byteLength > 10000) {
-                        return { buffer: buf, sourceLabel: 'Piped YouTube Stream', isAlreadyMp3: false };
-                      }
-                    }
-                  } catch {}
-                }
-              }
-            }
-          } catch {}
-        }
+        throw new Error('Universal Extractor service on port 5055 is not reachable.');
       }
 
-      throw new Error('Public proxies were rate-limited by YouTube for this video. Make sure bloodstream_server.py is running locally (see top-right status badge) to extract any video with yt-dlp.');
+      onProgressText('Extracting full audio via Default Universal Extractor (yt-dlp)...');
+      const streamUrl = bridge + '/stream?url=' + encodeURIComponent(item.url) + '&format=' + encodeURIComponent(format) + '&kbps=' + encodeURIComponent(kbps);
+      const res = await fetch(streamUrl);
+      if (!res.ok) {
+        let errDetail = 'HTTP ' + res.status;
+        try {
+          const errJson = await res.json();
+          if (errJson && errJson.error) errDetail = errJson.error;
+        } catch {}
+        throw new Error('Extractor error: ' + errDetail);
+      }
+
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength < 1000) {
+        throw new Error('Extracted audio stream was empty.');
+      }
+      return { buffer: buf, sourceLabel: 'Universal Extractor' };
     }
 
-    // Non-blocking chunked AudioContext decoder + LAME encoder (yields every 60 frames so long reaction videos don't freeze the tab)
     async function transcodeBufferToTargetFormat(arrayBuf, format, kbps, onProgressText) {
       const uint8 = new Uint8Array(arrayBuf);
-      // FAST PATH: If target is MP3 and buffer is already a valid MP3 (e.g. from yt-dlp bridge), skip AudioContext decode completely!
+      // Fast-Path: If target is MP3 and yt-dlp already delivered MP3 via ffmpeg, skip browser decoding!
       if (format === 'mp3' && isLikelyMp3Buffer(uint8)) {
         const stripped = stripExistingId3v2Tag(uint8);
         return { blob: new Blob([stripped], { type: 'audio/mpeg' }) };
       }
 
-      onProgressText('Decoding audio stream...');
+      onProgressText('Decoding audio stream in browser...');
       const actx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
       const audioBuf = await actx.decodeAudioData(arrayBuf);
       const sr = audioBuf.sampleRate;
@@ -415,9 +346,8 @@
           const mp3buf = enc.encodeBuffer(left.subarray(i, i + blockSize), right.subarray(i, i + blockSize));
           if (mp3buf.length > 0) mp3Chunks.push(new Uint8Array(mp3buf));
           frameCount++;
-          if (frameCount % 120 === 0) {
-            const pct = Math.round((i / len) * 100);
-            onProgressText('Encoding MP3 (' + pct + '%)...');
+          if (frameCount % 150 === 0) {
+            onProgressText('Encoding MP3 (' + Math.round((i / len) * 100) + '%)...');
             await new Promise((r) => setTimeout(r, 0));
           }
         }
@@ -458,13 +388,13 @@
       };
 
       try {
-        const { buffer, sourceLabel } = await fetchUniversalVideoAudioBuffer(item, format, kbps, updateStatus);
+        const { buffer, sourceLabel } = await fetchFromDefaultUniversalExtractor(item, format, kbps, updateStatus);
         const { blob: rawAudioBlob } = await transcodeBufferToTargetFormat(buffer, format, kbps, updateStatus);
 
         let finalBlob = rawAudioBlob;
         if (format === 'mp3') {
           updateStatus('Embedding ID3v2.3 Cover Art...');
-          const jpegBytes = await renderCoverArtToJpegBytes(item.thumb, safeTitle, safeArtist);
+          const jpegBytes = await renderCoverArtToJpegBytes(item.thumb);
           const frames = [
             createId3v23TextFrame('TIT2', safeTitle),
             createId3v23TextFrame('TPE1', safeArtist),
@@ -514,7 +444,7 @@
         });
         document.getElementById('systemStatusLabel').textContent = 'Completed "' + fileName + '" (' + sizeMb + ' MB) via ' + sourceLabel + '!';
       } catch (err) {
-        item.status = 'Error — See status bar';
+        item.status = err.message;
         renderQueue();
         document.getElementById('systemStatusLabel').textContent = err.message;
       }
@@ -536,12 +466,12 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-emerald-400 text-[11px]">${q.status}</span>
+            <span class="text-emerald-400 text-[11px] max-w-xs truncate">${q.status}</span>
             <button type="button" data-prev-one="${idx}" class="blood-btn px-3 py-1.5 rounded-lg text-[11px]">▶ Preview</button>
             <button type="button" data-dl-one="${idx}" class="blood-btn-solid px-3.5 py-1.5 rounded-lg text-[11px]">⬇ Download</button>
           </div>
         </div>
-      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Paste ANY YouTube link (songs, reaction videos, shorts, podcasts) above and click "Compile Video".</div>';
+      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Default Universal Extractor Active — Paste ANY YouTube URL (reaction video, song, short, podcast) above and click "Compile Video".</div>';
 
       box.querySelectorAll('[data-q-title]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-title'))].title = inp.value; }; });
       box.querySelectorAll('[data-q-artist]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-artist'))].uploader = inp.value; }; });
@@ -551,9 +481,8 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCore.boot('bloodstream');
-      document.getElementById('customStreamBridgeInput').value = streamBridgeUrl;
-      checkLocalBridgeHealth();
-      setInterval(checkLocalBridgeHealth, 5000);
+      await resolveActiveUniversalBridge();
+      setInterval(resolveActiveUniversalBridge, 4000);
       renderQueue();
 
       document.getElementById('compileUrlBtn').onclick = async () => {
@@ -565,7 +494,7 @@
         let rawUploader = 'YouTube Channel';
         let thumb = vid ? ('https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg') : '';
 
-        document.getElementById('systemStatusLabel').textContent = 'Fetching YouTube video details...';
+        document.getElementById('systemStatusLabel').textContent = 'Fetching YouTube video metadata...';
         try {
           const r = await fetch('https://noembed.com/embed?url=' + encodeURIComponent(clean));
           if (r.ok) {
@@ -577,7 +506,7 @@
         } catch {}
 
         const parsed = parseCleanArtistAndTitle(rawTitle, rawUploader);
-        queue.push({ url: clean, vid, title: parsed.title, uploader: parsed.artist, thumb, sourceFile: null, status: 'Ready to Extract' });
+        queue.push({ url: clean, vid, title: parsed.title, uploader: parsed.artist, thumb, sourceFile: null, status: 'Ready (Universal Extractor)' });
         renderQueue();
         document.getElementById('systemStatusLabel').textContent = 'Compiled "' + parsed.title + '". Click ⬇ Download or ▶ Preview!';
       };
@@ -603,9 +532,10 @@
       document.getElementById('bridgeStatusBadge').onclick = openSettings;
       document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
       document.getElementById('saveStreamBridgeBtn').onclick = () => {
-        streamBridgeUrl = document.getElementById('customStreamBridgeInput').value.trim() || 'http://127.0.0.1:5055';
-        localStorage.setItem('vntex_bloodstream_bridge_url', streamBridgeUrl);
-        checkLocalBridgeHealth();
+        const val = document.getElementById('customStreamBridgeInput').value.trim() || 'http://localhost:5055';
+        localStorage.setItem('vntex_bloodstream_bridge_url', val);
+        CANDIDATE_BRIDGES[0] = val;
+        resolveActiveUniversalBridge();
         document.getElementById('suiteSettingsModal').classList.add('hidden');
       };
     });
