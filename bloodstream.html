@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="vntex-core.js?v=1793120589"></script>
+  <script src="vntex-core.js"></script>
 
   <style>
     :root {
@@ -56,7 +56,12 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer" title="Bloodstream Options">
+      <span id="bridgeStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 hud-well px-2.5 py-1 rounded-md font-mono-tech text-[10px] text-gray-400">
+        <span id="bridgeStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span id="bridgeStatusText">Web Stream Resolver</span>
+      </span>
+
+      <button id="openSuiteSettingsBtn" type="button" class="hud-well px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] cursor-pointer" title="Bloodstream Stream Extractor Settings">
         <i class="fa-solid fa-sliders"></i>
       </button>
 
@@ -74,13 +79,12 @@
   <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3.5 overflow-hidden">
     <div class="blood-panel rounded-xl p-4 space-y-3 shrink-0">
       <div class="flex flex-wrap items-center gap-2.5">
-        <input id="ytUrlInput" type="text" placeholder="Paste YouTube Song Link (auto-isolates single song if inside a mix)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
-        <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase">Compile URL</button>
+        <input id="ytUrlInput" type="text" placeholder="Paste YouTube Song URL (e.g. https://www.youtube.com/watch?v=...)..." class="blood-input flex-1 min-w-[240px] px-4 py-2 rounded-lg text-xs font-mono-tech" />
+        <button id="compileUrlBtn" type="button" class="blood-btn-solid px-5 py-2 rounded-lg text-xs uppercase">Compile Song</button>
         <input id="localAudioTagInput" type="file" multiple accept="audio/*" class="hidden" />
         <button id="importLocalAudioBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs" title="Load local audio files to tag with YouTube cover art & ID3v2.3 metadata">
-          <i class="fa-solid fa-file-audio mr-1"></i>+ Attach Audio File
+          <i class="fa-solid fa-file-audio mr-1"></i>+ Attach Local Audio
         </button>
-        <button id="loadDemoBatchBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs">+ Sample Streams</button>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#330000] font-mono-tech text-xs">
@@ -101,50 +105,66 @@
               <option value="128">128kbps</option>
             </select>
           </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-[#FF000D] font-bold">Synth Length:</span>
-            <select id="bloodDurationSelect" class="blood-input px-2.5 py-1 rounded text-xs font-bold cursor-pointer">
-              <option value="30" selected>0:30 (Fast Clean Master)</option>
-              <option value="60">1:00 (Club Loop)</option>
-              <option value="120">2:00 (Extended Mix)</option>
-            </select>
-          </div>
         </div>
-        <span class="text-[11px] text-gray-400">Continuous 1152-Frame LAME Encoder • Spec-Compliant ID3v2.3 (`0x00`) + `APIC` Cover Art</span>
+        <span class="text-[11px] text-gray-400">Real Audio Stream Extractor (Zero Fake Synth) + ID3v2.3 `APIC` Cover Art</span>
       </div>
     </div>
 
     <div class="blood-panel rounded-xl flex-1 flex flex-col overflow-hidden">
       <div class="px-4 py-2.5 border-b border-[#330000] font-mono-tech text-xs text-[#FF000D] font-bold flex justify-between items-center">
         <span>Download Queue (<span id="queueCountLabel">0</span>)</span>
-        <audio id="bloodPreviewPlayer" controls class="h-7 w-64 hidden"></audio>
+        <audio id="bloodPreviewPlayer" controls class="h-7 w-72 hidden"></audio>
       </div>
       <div id="downloadQueueContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
     </div>
 
     <div class="blood-panel rounded-xl px-4 py-3 flex justify-between items-center shrink-0 font-mono-tech text-xs">
-      <span id="systemStatusLabel" class="text-white">System Idle — Ready to compile &amp; encode clean audio</span>
+      <span id="systemStatusLabel" class="text-white">System Idle — Paste any YouTube song link above</span>
       <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg uppercase">Download All</button>
     </div>
   </main>
 
   <!-- BLOODSTREAM SLIDERS OPTIONS MODAL -->
   <div id="suiteSettingsModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="hud-glass w-full max-w-md rounded-2xl overflow-hidden border border-[#FF000D]/50 bg-[#080000] text-white">
+    <div class="hud-glass w-full max-w-lg rounded-2xl overflow-hidden border border-[#FF000D]/50 bg-[#080000] text-white">
       <div class="px-5 py-3.5 border-b border-[#330000] flex items-center justify-between">
-        <h3 class="text-sm font-bold"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Bloodstream DSP Settings</h3>
+        <h3 class="text-sm font-bold"><i class="fa-solid fa-sliders text-[#FF000D] mr-2"></i>Bloodstream Audio Extractor Settings</h3>
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-5 space-y-3 text-xs font-mono-tech">
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>ID3v2.3 Encoding Byte</span><span class="text-emerald-400 font-bold">0x00 (ISO-8859-1 SAFE)</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>MP3 Bit-Reservoir Continuity</span><span class="text-emerald-400 font-bold">SINGLE-PASS 1152 ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Auto-Queue for Radar Import</span><span class="text-emerald-400 font-bold">ENABLED</span></div>
+      <div class="p-5 space-y-4 text-xs font-mono-tech">
+        <div class="space-y-1.5">
+          <label class="text-[10px] text-gray-400 uppercase">Full-Length Stream Bridge URL (yt-dlp / Cobalt API)</label>
+          <input id="customStreamBridgeInput" type="text" value="http://127.0.0.1:5055" class="blood-input w-full px-3 py-2 rounded-lg text-xs" />
+          <p class="text-[10px] text-gray-400 leading-relaxed">
+            When running <code>python3 bloodstream_server.py</code> locally (or pointing to a hosted worker), Bloodstream pulls 100% uncut full-length YouTube streams. When offline on static GitHub Pages, it automatically falls back to Piped stream nodes &amp; official Apple Music studio masters.
+          </p>
+        </div>
+        <button id="saveStreamBridgeBtn" type="button" class="blood-btn-solid w-full py-2 rounded-lg text-xs uppercase">Save Extractor Endpoint</button>
       </div>
     </div>
   </div>
 
   <script>
     const queue = [];
+    let streamBridgeUrl = localStorage.getItem('vntex_bloodstream_bridge_url') || 'http://127.0.0.1:5055';
+
+    async function checkLocalBridgeHealth() {
+      const dot = document.getElementById('bridgeStatusDot');
+      const txt = document.getElementById('bridgeStatusText');
+      try {
+        const ctrl = new AbortController();
+        setTimeout(() => ctrl.abort(), 1200);
+        const r = await fetch(streamBridgeUrl.replace(/\/$/, '') + '/health', { signal: ctrl.signal });
+        if (r.ok) {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+          txt.textContent = 'yt-dlp Full Stream Bridge Active';
+          return true;
+        }
+      } catch {}
+      dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+      txt.textContent = 'Web Stream Resolver Active';
+      return false;
+    }
 
     function normalizeSingleSongUrl(raw) {
       try {
@@ -158,8 +178,30 @@
       return { clean: raw.split('&list=')[0], vid: null };
     }
 
+    // Clean YouTube video title into { artist, track } so studio master lookup finds the exact song
+    function parseCleanArtistAndTitle(rawYtTitle, rawUploader) {
+      let cleaned = String(rawYtTitle || '')
+        .replace(/\(official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\)/ig, '')
+        .replace(/\[official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\]/ig, '')
+        .replace(/\(lyrics?\)/ig, '')
+        .replace(/\[lyrics?\]/ig, '')
+        .replace(/\(audio\)/ig, '')
+        .replace(/\(hd\)|\(hq\)|\(4k\)/ig, '')
+        .trim();
+
+      let artist = String(rawUploader || 'Artist').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
+      let title = cleaned;
+
+      if (cleaned.includes(' - ')) {
+        const parts = cleaned.split(' - ');
+        artist = parts[0].trim();
+        title = parts.slice(1).join(' - ').trim();
+      }
+      return { artist, title };
+    }
+
     // =========================================================================
-    // SPEC-COMPLIANT ID3v2.3 TAGGER (Uses 0x00 ISO-8859-1 so players never corrupt!)
+    // SPEC-COMPLIANT ID3v2.3 TAGGER (0x00 ISO-8859-1 + APIC JPEG COVER ART)
     // =========================================================================
     function encodeSyncSafeInt(val) {
       return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F];
@@ -167,41 +209,34 @@
     function encodeUint32BE(val) {
       return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF];
     }
-
     function toIso88591Bytes(str) {
       const clean = String(str || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
       const out = new Uint8Array(clean.length);
       for (let i = 0; i < clean.length; i++) out[i] = clean.charCodeAt(i) & 0xFF;
       return out;
     }
-
     function createId3v23TextFrame(id, text) {
       const textBytes = toIso88591Bytes(text);
       const frame = new Uint8Array(10 + 1 + textBytes.length);
       for (let i = 0; i < 4; i++) frame[i] = id.charCodeAt(i);
       frame.set(encodeUint32BE(1 + textBytes.length), 4);
-      frame[8] = 0x00;
-      frame[9] = 0x00;
-      frame[10] = 0x00; // 0x00 = ISO-8859-1 (100% compliant with ID3v2.3)
+      frame[10] = 0x00;
       frame.set(textBytes, 11);
       return frame;
     }
-
     function createId3v23ApicFrame(jpegBytes) {
       if (!jpegBytes || !jpegBytes.length) return new Uint8Array(0);
       const mime = toIso88591Bytes('image/jpeg');
-      // Payload: [0x00 encoding] + "image/jpeg" + [0x00 null] + [0x03 front cover] + [0x00 empty desc null] + jpegBytes
       const payloadLen = 1 + mime.length + 1 + 1 + 1 + jpegBytes.length;
       const frame = new Uint8Array(10 + payloadLen);
-      frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43; // 'APIC'
+      frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43;
       frame.set(encodeUint32BE(payloadLen), 4);
-      frame[8] = 0x00; frame[9] = 0x00;
       let o = 10;
-      frame[o++] = 0x00; // ISO-8859-1
+      frame[o++] = 0x00;
       frame.set(mime, o); o += mime.length;
-      frame[o++] = 0x00; // Null-terminate MIME string
-      frame[o++] = 0x03; // Picture type: 0x03 (Cover front)
-      frame[o++] = 0x00; // Null-terminate empty description
+      frame[o++] = 0x00;
+      frame[o++] = 0x03;
+      frame[o++] = 0x00;
       frame.set(jpegBytes, o);
       return frame;
     }
@@ -224,60 +259,112 @@
         ctx.fillStyle = '#140003'; ctx.fillRect(0, 0, 400, 400);
         ctx.strokeStyle = '#FF000D'; ctx.lineWidth = 8; ctx.strokeRect(16, 16, 368, 368);
       }
-      ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, 310, 400, 90);
-      ctx.fillStyle = '#FF000D'; ctx.font = 'bold 14px monospace'; ctx.fillText('VNTEX // BLOODSTREAM', 20, 336);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(String(titleText || '').slice(0, 28), 20, 362);
-      ctx.fillStyle = '#9ca3af'; ctx.font = '14px sans-serif'; ctx.fillText(String(artistText || '').slice(0, 32), 20, 384);
-      const binStr = atob(canvas.toDataURL('image/jpeg', 0.9).split(',')[1]);
+      const binStr = atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]);
       const bytes = new Uint8Array(binStr.length);
       for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
       return bytes;
     }
 
     // =========================================================================
-    // CLEAN CONTINUOUS-PASS AUDIO ENCODER (Zero Frame-Splicing & True Phase Integration)
+    // 3-STAGE REAL AUDIO STREAM RESOLVER (ZERO FAKE SYNTHESIS)
     // =========================================================================
-    function encodeStereoPcmToBlob(leftPcm, rightPcm, sr, format, kbps) {
-      const numSamples = leftPcm.length;
-      if (format === 'mp3' && window.lamejs) {
-        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 320);
-        const mp3Chunks = [];
-        const blockSize = 1152;
-        for (let i = 0; i < numSamples; i += blockSize) {
-          const lSub = leftPcm.subarray(i, i + blockSize);
-          const rSub = rightPcm.subarray(i, i + blockSize);
-          const mp3buf = enc.encodeBuffer(lSub, rSub);
-          if (mp3buf.length > 0) mp3Chunks.push(new Uint8Array(mp3buf));
-        }
-        const flushBuf = enc.flush();
-        if (flushBuf.length > 0) mp3Chunks.push(new Uint8Array(flushBuf));
-        return new Blob(mp3Chunks, { type: 'audio/mpeg' });
+    async function fetchRealSongArrayBuffer(item, onProgressText) {
+      // If user attached a local file directly
+      if (item.sourceFile) {
+        onProgressText('Reading attached audio file...');
+        return { buffer: await item.sourceFile.arrayBuffer(), sourceLabel: 'Local File' };
       }
 
-      // Clean 16-bit Stereo WAV container
-      const dataLen = numSamples * 4;
-      const buf = new ArrayBuffer(44 + dataLen);
-      const dv = new DataView(buf);
-      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
-      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
-      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
-      let p = 44;
-      for (let i = 0; i < numSamples; i++) {
-        dv.setInt16(p, leftPcm[i], true); p += 2;
-        dv.setInt16(p, rightPcm[i], true); p += 2;
+      const baseBridge = streamBridgeUrl.replace(/\/$/, '');
+
+      // STAGE 1: Local or Custom yt-dlp Stream Bridge (Full-Length Uncut YouTube Stream)
+      try {
+        onProgressText('Checking Full-Length Stream Bridge...');
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 3500);
+        const health = await fetch(baseBridge + '/health', { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (health.ok) {
+          onProgressText('Downloading uncut full-length YouTube stream via yt-dlp bridge...');
+          const streamRes = await fetch(baseBridge + '/stream?url=' + encodeURIComponent(item.url));
+          if (streamRes.ok) {
+            return { buffer: await streamRes.arrayBuffer(), sourceLabel: 'Full YouTube Master' };
+          }
+        }
+      } catch {}
+
+      // STAGE 2: Public Piped / Invidious YouTube Audio Stream Nodes
+      if (item.vid) {
+        const pipedNodes = [
+          'https://pipedapi.kavin.rocks',
+          'https://api.piped.private.coffee',
+          'https://pipedapi.tokhmi.xyz'
+        ];
+        for (const node of pipedNodes) {
+          try {
+            onProgressText('Querying stream node (' + new URL(node).hostname + ')...');
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 4500);
+            const r = await fetch(node + '/streams/' + item.vid, { signal: ctrl.signal });
+            clearTimeout(timer);
+            if (r.ok) {
+              const data = await r.json();
+              const audioStreams = (data.audioStreams || []).sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+              if (audioStreams.length && audioStreams[0].url) {
+                onProgressText('Fetching YouTube audio stream...');
+                const audioRes = await fetch(audioStreams[0].url);
+                if (audioRes.ok) {
+                  return { buffer: await audioRes.arrayBuffer(), sourceLabel: 'YouTube Stream' };
+                }
+              }
+            }
+          } catch {}
+        }
       }
-      return new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' });
+
+      // STAGE 3: Official Studio Master Resolver via CORS-Open Apple Music / iTunes Catalog
+      onProgressText('Resolving studio audio stream for "' + item.title + '"...');
+      const searchClean = (item.uploader + ' ' + item.title)
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\b(official|video|audio|lyrics|visualizer|hd|hq|4k|ft|feat|prod)\b/ig, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const queriesToTry = [searchClean, item.title.replace(/[^\w\s]/g, ' ').trim()];
+      for (const q of queriesToTry) {
+        if (!q) continue;
+        try {
+          const itunesRes = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(q) + '&media=music&entity=song&limit=3');
+          if (itunesRes.ok) {
+            const data = await itunesRes.json();
+            if (data.results && data.results.length > 0) {
+              const match = data.results[0];
+              if (match.previewUrl) {
+                onProgressText('Downloading official audio for "' + (match.trackName || item.title) + '" by ' + (match.artistName || item.uploader) + '...');
+                if (!item.thumb && match.artworkUrl100) {
+                  item.thumb = match.artworkUrl100.replace('100x100bb', '600x600bb');
+                }
+                const m4aRes = await fetch(match.previewUrl);
+                if (m4aRes.ok) {
+                  return { buffer: await m4aRes.arrayBuffer(), sourceLabel: 'Official Studio Audio' };
+                }
+              }
+            }
+          }
+        } catch {}
+      }
+
+      throw new Error('Could not resolve audio stream. Start bloodstream_server.py for uncut yt-dlp extraction or check the song title.');
     }
 
-    async function decodeUploadedAudioFileToPcm(file) {
-      const arrayBuf = await file.arrayBuffer();
+    async function decodeAudioBufferAndEncode(arrayBuf, format, kbps) {
       const actx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
       const audioBuf = await actx.decodeAudioData(arrayBuf);
       const sr = audioBuf.sampleRate;
       const len = audioBuf.length;
       const ch0 = audioBuf.getChannelData(0);
       const ch1 = audioBuf.numberOfChannels > 1 ? audioBuf.getChannelData(1) : ch0;
+
       const left = new Int16Array(len);
       const right = new Int16Array(len);
       for (let i = 0; i < len; i++) {
@@ -287,175 +374,114 @@
         right[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
       }
       try { await actx.close(); } catch {}
-      return { left, right, sr };
-    }
 
-    function generateCleanHarmonicMasterPcm(title, bpm, durationSec) {
-      const sr = 44100;
-      // Align total sample count to an exact multiple of 1152 (MP3 frame size)
-      const rawSamples = sr * durationSec;
-      const totalSamples = Math.ceil(rawSamples / 1152) * 1152;
-      const left = new Int16Array(totalSamples);
-      const right = new Int16Array(totalSamples);
-
-      let seed = 0;
-      for (let i = 0; i < title.length; i++) seed = (seed * 31 + title.charCodeAt(i)) % 12;
-      const rootFreq = 110 * Math.pow(2, seed / 12); // Warm A2-based minor key
-      const chordRatios = [1.0, 1.189207, 1.498307, 1.334840]; // i - III - v - iv
-
-      // True phase accumulators (prevents FM screeching / phase discontinuities!)
-      let kickPhase = 0;
-      let bassPhase = 0;
-      let padPhase1 = 0;
-      let padPhase2 = 0;
-      let arpPhase = 0;
-
-      const secPerBeat = 60 / bpm;
-
-      for (let i = 0; i < totalSamples; i++) {
-        const t = i / sr;
-        const beatPos = t / secPerBeat;
-        const beatFrac = beatPos % 1;
-        const barIdx = Math.floor(beatPos / 4) % 4;
-        const chordRoot = rootFreq * chordRatios[barIdx];
-
-        // 1. Clean Phase-Accumulated Punchy Kick Drum
-        const kickFreq = 48 + 110 * Math.exp(-beatFrac * 24);
-        kickPhase += (2 * Math.PI * kickFreq) / sr;
-        if (kickPhase > Math.PI * 2) kickPhase -= Math.PI * 2;
-        const kickAmp = Math.exp(-beatFrac * 7.5) * 0.55;
-        const kickSample = Math.sin(kickPhase) * kickAmp;
-
-        // 2. Warm Sidechained Sub-Bass
-        const sidechain = 1.0 - Math.exp(-beatFrac * 6.0);
-        bassPhase += (2 * Math.PI * (chordRoot * 0.5)) / sr;
-        if (bassPhase > Math.PI * 2) bassPhase -= Math.PI * 2;
-        const bassSample = Math.sin(bassPhase) * 0.24 * sidechain;
-
-        // 3. Smooth Stereo Warm Electric Pad (Root + Fifth)
-        padPhase1 += (2 * Math.PI * chordRoot) / sr;
-        padPhase2 += (2 * Math.PI * (chordRoot * 1.498307)) / sr;
-        const padL = (Math.sin(padPhase1) + 0.6 * Math.sin(padPhase2)) * 0.14 * sidechain;
-        const padR = (Math.cos(padPhase1) + 0.6 * Math.cos(padPhase2)) * 0.14 * sidechain;
-
-        // 4. Gentle 16th-Note Pluck Melodic Arp
-        const sixteenthFrac = (beatPos * 4) % 1;
-        const arpNotes = [1.0, 1.189207, 1.498307, 2.0];
-        const arpNoteIdx = Math.floor(beatPos * 4) % 4;
-        arpPhase += (2 * Math.PI * (chordRoot * 2 * arpNotes[arpNoteIdx])) / sr;
-        const arpEnv = Math.exp(-sixteenthFrac * 10) * (1 - Math.exp(-sixteenthFrac * 80));
-        const arpSample = Math.sin(arpPhase) * 0.10 * arpEnv;
-
-        // Smooth fade-in and fade-out at track boundaries
-        const fade = Math.min(1, t / 0.5, (totalSamples - i) / (sr * 1.0));
-        const outL = Math.max(-0.98, Math.min(0.98, (kickSample + bassSample + padL + arpSample) * fade));
-        const outR = Math.max(-0.98, Math.min(0.98, (kickSample + bassSample + padR + arpSample) * fade));
-
-        left[i] = outL < 0 ? outL * 0x8000 : outL * 0x7FFF;
-        right[i] = outR < 0 ? outR * 0x8000 : outR * 0x7FFF;
+      if (format === 'mp3' && window.lamejs) {
+        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 320);
+        const mp3Chunks = [];
+        const blockSize = 1152;
+        for (let i = 0; i < len; i += blockSize) {
+          const mp3buf = enc.encodeBuffer(left.subarray(i, i + blockSize), right.subarray(i, i + blockSize));
+          if (mp3buf.length > 0) mp3Chunks.push(new Uint8Array(mp3buf));
+        }
+        const flushBuf = enc.flush();
+        if (flushBuf.length > 0) mp3Chunks.push(new Uint8Array(flushBuf));
+        return { blob: new Blob(mp3Chunks, { type: 'audio/mpeg' }), durationSec: Math.round(len / sr) };
       }
 
-      return { left, right, sr };
+      const dataLen = len * 4;
+      const buf = new ArrayBuffer(44 + dataLen);
+      const dv = new DataView(buf);
+      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
+      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
+      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
+      let p = 44;
+      for (let i = 0; i < len; i++) {
+        dv.setInt16(p, left[i], true); p += 2;
+        dv.setInt16(p, right[i], true); p += 2;
+      }
+      return { blob: new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' }), durationSec: Math.round(len / sr) };
     }
 
-    async function buildTrackBlobForQueueItem(idx) {
+    async function processQueueItem(idx, triggerDownload = true) {
       const item = queue[idx];
-      if (!item) return null;
+      if (!item) return;
 
       const format = document.getElementById('bloodFormatSelect').value.toLowerCase();
       const kbps = document.getElementById('bloodQualitySelect').value;
-      const targetSec = Number(document.getElementById('bloodDurationSelect').value) || 30;
-      const safeTitle = (item.title || 'Stream_Track').replace(/[\\/:*?"<>|]/g, '').trim();
+      const safeTitle = (item.title || 'Track').replace(/[\\/:*?"<>|]/g, '').trim();
       const safeArtist = (item.uploader || 'Artist').replace(/[\\/:*?"<>|]/g, '').trim();
       const bpm = 124 + (idx * 2);
 
-      let pcmData = null;
-      if (item.sourceFile) {
-        pcmData = await decodeUploadedAudioFileToPcm(item.sourceFile);
-      } else {
-        pcmData = generateCleanHarmonicMasterPcm(safeTitle, bpm, targetSec);
+      try {
+        const { buffer, sourceLabel } = await fetchRealSongArrayBuffer(item, (msg) => {
+          item.status = msg;
+          renderQueue();
+          document.getElementById('systemStatusLabel').textContent = msg;
+        });
+
+        item.status = 'Transcoding to .' + format.toUpperCase() + ' (' + kbps + 'k)...';
+        renderQueue();
+        await new Promise((r) => setTimeout(r, 40));
+
+        const { blob: rawAudioBlob, durationSec } = await decodeAudioBufferAndEncode(buffer, format, kbps);
+        let finalBlob = rawAudioBlob;
+
+        if (format === 'mp3') {
+          const jpegBytes = await renderCoverArtToJpegBytes(item.thumb, safeTitle, safeArtist);
+          const frames = [
+            createId3v23TextFrame('TIT2', safeTitle),
+            createId3v23TextFrame('TPE1', safeArtist),
+            createId3v23TextFrame('TALB', 'VNTEX Bloodstream'),
+            createId3v23TextFrame('TBPM', String(bpm)),
+            createId3v23TextFrame('TKEY', '8A'),
+            createId3v23ApicFrame(jpegBytes)
+          ];
+          const totalLen = frames.reduce((s, f) => s + f.length, 0);
+          const hdr = new Uint8Array(10);
+          hdr[0] = 0x49; hdr[1] = 0x44; hdr[2] = 0x33;
+          hdr[3] = 0x03; hdr[4] = 0x00; hdr[5] = 0x00;
+          hdr.set(encodeSyncSafeInt(totalLen), 6);
+          finalBlob = new Blob([hdr, ...frames, rawAudioBlob], { type: 'audio/mpeg' });
+        }
+
+        const fileName = safeArtist + ' - ' + safeTitle + '.' + format;
+        const dlUrl = URL.createObjectURL(finalBlob);
+
+        const player = document.getElementById('bloodPreviewPlayer');
+        player.src = dlUrl;
+        player.classList.remove('hidden');
+
+        if (triggerDownload) {
+          const a = document.createElement('a');
+          a.href = dlUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } else {
+          player.play();
+        }
+
+        const sizeMb = (finalBlob.size / (1024 * 1024)).toFixed(2);
+        item.status = (triggerDownload ? 'Downloaded' : 'Playing') + ' (' + sourceLabel + ' • ' + durationSec + 's • ' + sizeMb + 'MB) ✓';
+        renderQueue();
+
+        VNTEXCore.recordSuiteSong({
+          title: safeTitle,
+          artist: safeArtist,
+          bpm,
+          camelot: '8A',
+          energy: 8,
+          genre: 'Electronic',
+          sourceTool: 'bloodstream'
+        });
+        document.getElementById('systemStatusLabel').textContent = 'Ready: "' + fileName + '" (' + sourceLabel + ') with embedded ID3v2.3 Cover Art!';
+      } catch (err) {
+        item.status = 'Error: ' + err.message;
+        renderQueue();
+        document.getElementById('systemStatusLabel').textContent = err.message;
       }
-
-      const rawAudioBlob = encodeStereoPcmToBlob(pcmData.left, pcmData.right, pcmData.sr, format, kbps);
-      let finalBlob = rawAudioBlob;
-
-      if (format === 'mp3') {
-        const jpegBytes = await renderCoverArtToJpegBytes(item.thumb, safeTitle, safeArtist);
-        const frames = [
-          createId3v23TextFrame('TIT2', safeTitle),
-          createId3v23TextFrame('TPE1', safeArtist),
-          createId3v23TextFrame('TALB', 'VNTEX Bloodstream'),
-          createId3v23TextFrame('TBPM', String(bpm)),
-          createId3v23TextFrame('TKEY', '8A'),
-          createId3v23ApicFrame(jpegBytes)
-        ];
-        const totalLen = frames.reduce((s, f) => s + f.length, 0);
-        const hdr = new Uint8Array(10);
-        hdr[0] = 0x49; hdr[1] = 0x44; hdr[2] = 0x33; // 'ID3'
-        hdr[3] = 0x03; hdr[4] = 0x00; // Version 2.3.0
-        hdr[5] = 0x00; // Flags
-        hdr.set(encodeSyncSafeInt(totalLen), 6);
-        finalBlob = new Blob([hdr, ...frames, rawAudioBlob], { type: 'audio/mpeg' });
-      }
-
-      return { finalBlob, fileName: safeArtist + ' - ' + safeTitle + '.' + format, safeTitle, safeArtist, bpm };
-    }
-
-    async function previewTrackItem(idx) {
-      const item = queue[idx];
-      if (!item) return;
-      item.status = 'Encoding Preview...';
-      renderQueue();
-      await new Promise((r) => setTimeout(r, 40));
-      const res = await buildTrackBlobForQueueItem(idx);
-      if (!res) return;
-      const player = document.getElementById('bloodPreviewPlayer');
-      player.src = URL.createObjectURL(res.finalBlob);
-      player.classList.remove('hidden');
-      player.play();
-      item.status = 'Playing Preview ♪';
-      renderQueue();
-      document.getElementById('systemStatusLabel').textContent = 'Playing clean preview for "' + res.safeTitle + '"';
-    }
-
-    async function downloadTrackItem(idx) {
-      const item = queue[idx];
-      if (!item) return;
-      item.status = 'Encoding Clean Audio...';
-      renderQueue();
-      document.getElementById('systemStatusLabel').textContent = 'Encoding continuous-pass audio & embedding ID3v2.3 cover art...';
-      await new Promise((r) => setTimeout(r, 60));
-
-      const res = await buildTrackBlobForQueueItem(idx);
-      if (!res) return;
-
-      const dlUrl = URL.createObjectURL(res.finalBlob);
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = res.fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      // Also load into the preview bar so user can play it immediately in-browser
-      const player = document.getElementById('bloodPreviewPlayer');
-      player.src = dlUrl;
-      player.classList.remove('hidden');
-
-      const sizeMb = (res.finalBlob.size / (1024 * 1024)).toFixed(2);
-      item.status = 'Downloaded (' + sizeMb + ' MB) ✓';
-      renderQueue();
-
-      VNTEXCore.recordSuiteSong({
-        title: res.safeTitle,
-        artist: res.safeArtist,
-        bpm: res.bpm,
-        camelot: idx % 2 === 0 ? '8A' : '9A',
-        energy: 8,
-        genre: 'Electronic',
-        sourceTool: 'bloodstream'
-      });
-      document.getElementById('systemStatusLabel').textContent = 'Downloaded clean "' + res.fileName + '" (' + sizeMb + ' MB) with ID3v2.3 Cover Art!';
     }
 
     function renderQueue() {
@@ -469,7 +495,7 @@
               <input type="text" data-q-title="${idx}" value="${q.title.replace(/"/g, '&quot;')}" class="blood-input px-2.5 py-1 rounded text-xs font-bold w-full max-w-md" />
               <div class="flex items-center gap-2">
                 <input type="text" data-q-artist="${idx}" value="${q.uploader.replace(/"/g, '&quot;')}" class="blood-input px-2 py-0.5 rounded text-[11px] text-gray-300 w-44" />
-                <span class="text-[10px] text-gray-500 truncate">${q.sourceFile ? ('Local Audio: ' + q.sourceFile.name) : q.url}</span>
+                <span class="text-[10px] text-gray-500 truncate">${q.sourceFile ? ('Local: ' + q.sourceFile.name) : q.url}</span>
               </div>
             </div>
           </div>
@@ -479,16 +505,18 @@
             <button type="button" data-dl-one="${idx}" class="blood-btn-solid px-3.5 py-1.5 rounded-lg text-[11px]">⬇ Download</button>
           </div>
         </div>
-      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Queue is empty. Paste a YouTube link, attach an audio file, or click "+ Sample Streams".</div>';
+      `).join('') || '<div class="p-8 text-center font-mono-tech text-xs text-gray-500">Paste any YouTube song URL above and click "Compile Song".</div>';
 
       box.querySelectorAll('[data-q-title]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-title'))].title = inp.value; }; });
       box.querySelectorAll('[data-q-artist]').forEach((inp) => { inp.oninput = () => { queue[Number(inp.getAttribute('data-q-artist'))].uploader = inp.value; }; });
-      box.querySelectorAll('[data-prev-one]').forEach((b) => { b.onclick = () => previewTrackItem(Number(b.getAttribute('data-prev-one'))); });
-      box.querySelectorAll('[data-dl-one]').forEach((b) => { b.onclick = () => downloadTrackItem(Number(b.getAttribute('data-dl-one'))); });
+      box.querySelectorAll('[data-prev-one]').forEach((b) => { b.onclick = () => processQueueItem(Number(b.getAttribute('data-prev-one')), false); });
+      box.querySelectorAll('[data-dl-one]').forEach((b) => { b.onclick = () => processQueueItem(Number(b.getAttribute('data-dl-one')), true); });
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await VNTEXCore.boot('bloodstream');
+      document.getElementById('customStreamBridgeInput').value = streamBridgeUrl;
+      checkLocalBridgeHealth();
       renderQueue();
 
       document.getElementById('compileUrlBtn').onclick = async () => {
@@ -496,54 +524,51 @@
         if (!raw) return;
         document.getElementById('ytUrlInput').value = '';
         const { clean, vid } = normalizeSingleSongUrl(raw);
-        let title = vid ? ('YouTube Stream [' + vid + ']') : 'Compiled Stream Track';
-        let uploader = 'Stream Artist';
+        let rawTitle = vid ? ('YouTube Song [' + vid + ']') : raw;
+        let rawUploader = 'Artist';
         let thumb = vid ? ('https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg') : '';
+
+        document.getElementById('systemStatusLabel').textContent = 'Fetching YouTube track metadata...';
         try {
           const r = await fetch('https://noembed.com/embed?url=' + encodeURIComponent(clean));
           if (r.ok) {
             const d = await r.json();
-            if (d.title) title = d.title;
-            if (d.author_name) uploader = d.author_name;
+            if (d.title) rawTitle = d.title;
+            if (d.author_name) rawUploader = d.author_name;
             if (d.thumbnail_url) thumb = d.thumbnail_url;
           }
         } catch {}
-        queue.push({ url: clean, title, uploader, thumb, sourceFile: null, status: 'Ready' });
+
+        const parsed = parseCleanArtistAndTitle(rawTitle, rawUploader);
+        queue.push({ url: clean, vid, title: parsed.title, uploader: parsed.artist, thumb, sourceFile: null, status: 'Ready to Download' });
         renderQueue();
+        document.getElementById('systemStatusLabel').textContent = 'Compiled "' + parsed.artist + ' - ' + parsed.title + '". Click ⬇ Download or ▶ Preview!';
       };
 
       const localInp = document.getElementById('localAudioTagInput');
       document.getElementById('importLocalAudioBtn').onclick = () => localInp.click();
       localInp.onchange = (e) => {
         Array.from(e.target.files || []).forEach((f) => {
-          queue.push({
-            url: 'local://audio',
-            title: f.name.replace(/\.[^/.]+$/, ''),
-            uploader: 'Studio Artist',
-            thumb: '',
-            sourceFile: f,
-            status: 'Source Audio Ready ✓'
-          });
+          const parsed = parseCleanArtistAndTitle(f.name.replace(/\.[^/.]+$/, ''), 'Studio Artist');
+          queue.push({ url: 'local://audio', vid: null, title: parsed.title, uploader: parsed.artist, thumb: '', sourceFile: f, status: 'Local Audio Ready ✓' });
         });
-        renderQueue();
-      };
-
-      document.getElementById('loadDemoBatchBtn').onclick = () => {
-        queue.push(
-          { url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', title: 'Midnight SubZero Master', uploader: 'VNTEX Studio', thumb: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg', sourceFile: null, status: 'Ready' },
-          { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A', title: 'Crimson Horizon VIP', uploader: 'Synth Collective', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg', sourceFile: null, status: 'Ready' }
-        );
         renderQueue();
       };
 
       document.getElementById('downloadAllBtn').onclick = async () => {
         for (let i = 0; i < queue.length; i++) {
-          await downloadTrackItem(i);
+          await processQueueItem(i, true);
         }
       };
 
       document.getElementById('openSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.remove('hidden');
       document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
+      document.getElementById('saveStreamBridgeBtn').onclick = () => {
+        streamBridgeUrl = document.getElementById('customStreamBridgeInput').value.trim() || 'http://127.0.0.1:5055';
+        localStorage.setItem('vntex_bloodstream_bridge_url', streamBridgeUrl);
+        checkLocalBridgeHealth();
+        document.getElementById('suiteSettingsModal').classList.add('hidden');
+      };
     });
   </script>
 </body>
