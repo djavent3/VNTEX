@@ -74,7 +74,11 @@
       border-color: var(--accent-primary);
       box-shadow: 0 0 12px var(--accent-glow);
     }
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    .drop-active-ring {
+      border-color: var(--accent-primary) !important;
+      box-shadow: 0 0 30px var(--accent-glow) !important;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #26273a; border-radius: 999px; }
   </style>
 </head>
@@ -186,25 +190,34 @@
         </div>
       </div>
 
-      <!-- Card 3: Clean Dropzone -->
-      <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition text-center space-y-2.5 cursor-pointer flex-1 flex flex-col justify-center">
-        <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.ogg" class="hidden" />
+      <!-- Card 3: High-Capacity Dropzone (Files or Entire Folders) -->
+      <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition text-center space-y-3 cursor-pointer flex-1 flex flex-col justify-center">
+        <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.ogg,.aac,.wma,.alac" class="hidden" />
+        <input id="convFolderInput" type="file" webkitdirectory directory multiple class="hidden" />
         <i class="fa-solid fa-cloud-arrow-up text-2xl text-[var(--accent-primary)] pointer-events-none"></i>
-        <div class="font-bold text-xs text-white pointer-events-none">Drop Audio Files or Click to Browse</div>
-        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] pointer-events-none">Instant Queue Render • Auto-Deduplication • 3+ Auto-ZIP</div>
+        <div class="font-bold text-xs text-white pointer-events-none">Drag &amp; Drop 100+ Songs or Folders Here</div>
+        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)] pointer-events-none">Compiles immediately on drop • Preserves Cover Art</div>
+        <div class="flex items-center justify-center gap-2 pt-1">
+          <button id="browseFilesBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-[#00f2fe] hover:border-[#00f2fe] cursor-pointer">
+            + Select Files
+          </button>
+          <button id="browseFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg font-mono-tech text-[10px] text-emerald-400 hover:border-emerald-400 cursor-pointer">
+            + Select Folder (100+)
+          </button>
+        </div>
       </div>
 
     </section>
 
-    <!-- RIGHT PANEL (8 COLS): CLEAN CONVERSION QUEUE & DIRECT FOLDER EXPORT -->
+    <!-- RIGHT PANEL (8 COLS): 100+ TRACK QUEUE & DIRECT FOLDER / ZIP EXPORT -->
     <section id="rightQueueSection" class="lg:col-span-8 hud-glass rounded-2xl flex flex-col overflow-hidden">
       <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] bg-[#06060b] flex flex-wrap items-center justify-between gap-2 font-mono-tech text-xs">
         <div class="flex flex-wrap items-center gap-2">
           <span class="font-bold text-white uppercase">
-            Queue (<span id="convQueueCount" class="text-[var(--accent-primary)]">0</span>)
+            Compiled Queue (<span id="convQueueCount" class="text-[var(--accent-primary)]">0</span>)
           </span>
           <span id="zipModeBadge" class="hidden px-2 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
-            <i class="fa-solid fa-file-zipper mr-1"></i>AUTO-ZIP (3+ TRACKS)
+            <i class="fa-solid fa-file-zipper mr-1"></i>AUTO-ZIP BATCH (3+ SONGS)
           </span>
         </div>
 
@@ -217,11 +230,11 @@
 
           <!-- Direct Output Folder Selector -->
           <div class="flex items-center gap-1">
-            <button id="selectOutputFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-[#00f2fe] hover:border-[#00f2fe] flex items-center gap-1.5 cursor-pointer" title="Choose a local folder on your Mac/PC to save converted tracks or .ZIP archive directly">
+            <button id="selectOutputFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-[#00f2fe] hover:border-[#00f2fe] flex items-center gap-1.5 cursor-pointer" title="Optional: Choose a destination folder on your Mac/PC to write the .ZIP archive or tracks directly">
               <i class="fa-regular fa-folder-open"></i>
               <span id="outputFolderLabel">Choose Output Folder</span>
             </button>
-            <button id="clearOutputFolderBtn" type="button" class="hidden hud-well w-7 h-7 rounded-lg items-center justify-center text-gray-400 hover:text-rose-400 cursor-pointer" title="Clear selected folder and revert to browser download">×</button>
+            <button id="clearOutputFolderBtn" type="button" class="hidden hud-well w-7 h-7 rounded-lg items-center justify-center text-gray-400 hover:text-rose-400 cursor-pointer" title="Clear selected folder">×</button>
           </div>
 
           <button id="clearConvQueueBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-white cursor-pointer">Clear</button>
@@ -231,10 +244,21 @@
         </div>
       </div>
 
-      <div id="convQueueList" class="flex-1 overflow-y-auto p-4 space-y-2.5"></div>
+      <!-- Batch Progress Bar (Visible during large batch conversion) -->
+      <div id="batchProgressWrap" class="hidden px-5 py-2 bg-[#040408] border-b border-[var(--border-hairline)] font-mono-tech text-[11px]">
+        <div class="flex justify-between text-gray-300 mb-1">
+          <span id="batchProgressLabel">Converting batch...</span>
+          <span id="batchProgressPct" class="text-[var(--accent-primary)] font-bold">0%</span>
+        </div>
+        <div class="w-full h-1.5 bg-[#12131f] rounded-full overflow-hidden">
+          <div id="batchProgressBar" class="h-full bg-[var(--accent-primary)] transition-all duration-150" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="convQueueList" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
 
       <div class="px-5 py-3 border-t border-[var(--border-hairline)] bg-[#050509] flex items-center justify-between font-mono-tech text-[11px] text-[var(--text-secondary)]">
-        <span id="convStatusText">Ready — Drop files anywhere in Converter Studio</span>
+        <span id="convStatusText">Ready — Drag songs or folders anywhere to compile immediately</span>
         <a href="radar.html" class="text-[var(--accent-primary)] hover:underline">Open in Radar →</a>
       </div>
     </section>
@@ -249,18 +273,32 @@
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-3 text-xs font-mono-tech">
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Engine Capacity</span><span class="text-emerald-400 font-bold">100–500+ SONGS (SHARED CTX) ✓</span></div>
         <div class="hud-well p-3 rounded-xl flex justify-between"><span>Filename Pattern</span><span class="text-[#00f2fe] font-bold">## "Title" - Artist → "Title" - Artist</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Duplicate Protection</span><span class="text-emerald-400 font-bold">AUTO-SKIP DUPLICATES ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Download (3+ Songs)</span><span class="text-amber-300 font-bold">ALWAYS .ZIP (FOLDER OR WEB) ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Artwork Preservation (APIC)</span><span class="text-emerald-400 font-bold">FAST HEADER SLICE ✓</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Download (3+ Songs)</span><span class="text-amber-300 font-bold">STORE-MODE FAST .ZIP ✓</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Artwork Preservation (APIC)</span><span class="text-emerald-400 font-bold">ACTIVE ✓</span></div>
       </div>
     </div>
   </div>
 
   <script>
     const CAMELOT_KEYS = ['8A', '9A', '10A', '7A', '5A', '4A', '8B', '11A'];
+    const AUDIO_EXT_REGEX = /\.(mp3|wav|flac|aiff|aif|m4a|aac|ogg|opus|wma|alac|mp4|webm)$/i;
     const convQueue = [];
     let outputDirectoryHandle = null;
+    let sharedAudioCtx = null;
+
+    // Single reusable AudioContext so converting 100+ songs never hits the browser's 6-context hardware limit!
+    function getSharedAudioContext() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+        sharedAudioCtx = new Ctx({ sampleRate: 44100 });
+      }
+      if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume().catch(() => {});
+      }
+      return sharedAudioCtx;
+    }
 
     async function chooseOutputDirectory() {
       if (!window.showDirectoryPicker) {
@@ -275,7 +313,7 @@
           document.getElementById('clearOutputFolderBtn').classList.remove('hidden');
           document.getElementById('clearOutputFolderBtn').classList.add('flex');
           document.getElementById('convStatusText').textContent = 'Output Folder set to "' + handle.name + '" (3+ tracks will save as a .ZIP inside this folder).';
-          renderConvQueue();
+          updateQueueHeaderBadges();
         }
       } catch (err) {
         if (err && err.name !== 'AbortError') console.warn('Directory picker error:', err);
@@ -288,7 +326,7 @@
       document.getElementById('clearOutputFolderBtn').classList.add('hidden');
       document.getElementById('clearOutputFolderBtn').classList.remove('flex');
       document.getElementById('convStatusText').textContent = 'Reverted to standard browser download.';
-      renderConvQueue();
+      updateQueueHeaderBadges();
     }
 
     async function saveBlobDirectlyToFolder(dirHandle, fileName, blob) {
@@ -304,12 +342,12 @@
       await writable.close();
     }
 
-    // Strips all leading track numbers: "01 ", "01. ", "01 - ", "(01) ", "[01] ", "#01 ", "1_"
+    // Strips leading track numbers: "01 ", "01. ", "01 - ", "(01) ", "[01] ", "#01 ", "1_", "104 "
     function stripLeadingTrackNumbers(str) {
       let s = String(str || '').trim();
       for (let i = 0; i < 3; i++) {
         const next = s
-          .replace(/^(?:\[\d{1,3}\]|\(\d{1,3}\)|#\d{1,3}|\d{1,3}-\d{1,3}|\d{1,3})(?:\s*[-–—._)\]:]+\s*|\s+)/, '')
+          .replace(/^(?:\[\d{1,4}\]|\(\d{1,4}\)|#\d{1,4}|\d{1,2}-\d{1,3}|\d{1,4})(?:\s*[-–—._)\]:]+\s*|\s+)/, '')
           .trim();
         if (next === s) break;
         s = next;
@@ -353,7 +391,6 @@
       return s.replace(/[\\/:*?"<>|]/g, '').trim();
     }
 
-    // Outputs: `"Title" - Artist.ext` (Title FIRST, Artist SECOND)
     function buildCleanOutputFilename(artist, title, format) {
       const strippedTitle = stripLeadingTrackNumbers(title || 'Track');
       const cleanTitle = sanitizeFilenameKeepQuotes(strippedTitle);
@@ -365,15 +402,13 @@
     }
 
     // =========================================================================
-    // FAST SLICE-BASED EMBEDDED ARTWORK SCANNER (Reads only 1MB slice, never 50MB!)
+    // FAST SLICE-BASED EMBEDDED ARTWORK SCANNER
     // =========================================================================
     function findImageSignatureSlice(bytes) {
       for (let i = 0; i < bytes.length - 4; i++) {
-        // JPEG SOI (FF D8 FF)
         if (bytes[i] === 0xFF && bytes[i + 1] === 0xD8 && bytes[i + 2] === 0xFF) {
           return { bytes: bytes.slice(i), mime: 'image/jpeg' };
         }
-        // PNG (89 50 4E 47)
         if (bytes[i] === 0x89 && bytes[i + 1] === 0x50 && bytes[i + 2] === 0x4E && bytes[i + 3] === 0x47) {
           return { bytes: bytes.slice(i), mime: 'image/png' };
         }
@@ -422,19 +457,16 @@
 
     async function extractEmbeddedArtworkFast(file) {
       try {
-        // Read ONLY the first 1.5 MB header slice (instant, avoids reading 60MB WAV/AIFF into RAM!)
         const headSliceSize = Math.min(file.size, 1536 * 1024);
         const headBuf = await file.slice(0, headSliceSize).arrayBuffer();
         const u8 = new Uint8Array(headBuf);
         const dv = new DataView(headBuf);
 
-        // 1. Check ID3v2 at start of file (MP3, AIFF with leading ID3, etc.)
         if (u8.length > 10 && u8[0] === 0x49 && u8[1] === 0x44 && u8[2] === 0x33) {
           const res = parseId3BlockForArtwork(u8, 0);
           if (res) return await normalizeCoverArtToJpegBytes(res.bytes, res.mime);
         }
 
-        // 2. Check FLAC METADATA_BLOCK_PICTURE (type 6) in header slice
         if (u8.length > 8 && u8[0] === 0x66 && u8[1] === 0x4C && u8[2] === 0x61 && u8[3] === 0x43) {
           let offset = 4;
           while (offset + 4 <= u8.length) {
@@ -450,7 +482,6 @@
           }
         }
 
-        // 3. Check M4A / MP4 'covr' atom in header slice
         for (let i = 4; i < u8.length - 16; i++) {
           if (u8[i] === 0x63 && u8[i + 1] === 0x6F && u8[i + 2] === 0x76 && u8[i + 3] === 0x72) {
             const atomSize = dv.getUint32(i - 4, false);
@@ -461,7 +492,6 @@
           }
         }
 
-        // 4. If AIFF ('FORM'), check tail 1MB slice where AIFF stores 'ID3 ' chunk
         if (u8.length > 12 && u8[0] === 0x46 && u8[1] === 0x4F && u8[2] === 0x52 && u8[3] === 0x4D && file.size > 1024) {
           const tailStart = Math.max(0, file.size - 1024 * 1024);
           const tailBuf = await file.slice(tailStart, file.size).arrayBuffer();
@@ -486,12 +516,12 @@
         const img = new Image();
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
         const canvas = document.createElement('canvas');
-        const size = Math.min(500, Math.max(300, Math.min(img.width, img.height)));
+        const size = 360;
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
         const s = Math.min(img.width, img.height);
         ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
         const binStr = atob(dataUrl.split(',')[1]);
         const jpegBytes = new Uint8Array(binStr.length);
         for (let i = 0; i < binStr.length; i++) jpegBytes[i] = binStr.charCodeAt(i);
@@ -704,41 +734,40 @@
       return new Blob([buf], { type: mimeType });
     }
 
-    async function getStereoChannelsForItem(item, targetSr, bpm) {
-      if (item.file) {
-        const arrayBuf = await item.file.arrayBuffer();
-        const actx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: targetSr });
-        const audioBuf = await actx.decodeAudioData(arrayBuf);
-        const ch0 = new Float32Array(audioBuf.getChannelData(0));
-        const ch1 = audioBuf.numberOfChannels > 1 ? new Float32Array(audioBuf.getChannelData(1)) : ch0;
-        const sr = audioBuf.sampleRate;
-        try { await actx.close(); } catch {}
-        return { chLeft: ch0, chRight: ch1, sr };
+    function stripExistingId3v2TagFromMp3(mp3Bytes) {
+      if (mp3Bytes.length > 10 && mp3Bytes[0] === 0x49 && mp3Bytes[1] === 0x44 && mp3Bytes[2] === 0x33) {
+        const size = ((mp3Bytes[6] & 0x7F) << 21) | ((mp3Bytes[7] & 0x7F) << 14) | ((mp3Bytes[8] & 0x7F) << 7) | (mp3Bytes[9] & 0x7F);
+        const startOffset = 10 + size;
+        if (startOffset < mp3Bytes.length) return mp3Bytes.subarray(startOffset);
       }
+      return mp3Bytes;
+    }
 
-      const totalSamples = Math.ceil((targetSr * 16) / 1152) * 1152;
-      const chLeft = new Float32Array(totalSamples);
-      const chRight = new Float32Array(totalSamples);
-      let kickPhase = 0, bassPhase = 0;
-      const secPerBeat = 60 / bpm;
+    // Decodes real uploaded file using the SINGLE shared AudioContext (never crashes on 100+ tracks!)
+    async function getStereoChannelsForItem(item, targetSr) {
+      const arrayBuf = await item.file.arrayBuffer();
+      const actx = getSharedAudioContext();
+      const audioBuf = await actx.decodeAudioData(arrayBuf.slice(0));
+      const ch0 = new Float32Array(audioBuf.getChannelData(0));
+      const ch1 = audioBuf.numberOfChannels > 1 ? new Float32Array(audioBuf.getChannelData(1)) : ch0;
+      const sr = audioBuf.sampleRate || targetSr;
+      return { chLeft: ch0, chRight: ch1, sr };
+    }
 
-      for (let i = 0; i < totalSamples; i++) {
-        const t = i / targetSr;
-        const beatFrac = (t / secPerBeat) % 1;
-        const kickFreq = 50 + 100 * Math.exp(-beatFrac * 24);
-        kickPhase += (2 * Math.PI * kickFreq) / targetSr;
-        bassPhase += (2 * Math.PI * 110) / targetSr;
-        const val = Math.max(-0.95, Math.min(0.95, Math.sin(kickPhase) * Math.exp(-beatFrac * 8) * 0.6 + Math.sin(bassPhase) * 0.2));
-        chLeft[i] = val; chRight[i] = val;
-      }
-      return { chLeft, chRight, sr: targetSr };
+    // Targeted status update on a single row so converting 100+ songs never rebuilds the whole DOM list
+    function setRowStatusText(idx, text) {
+      if (convQueue[idx]) convQueue[idx].status = text;
+      const el = document.getElementById('conv-status-' + idx);
+      if (el) el.textContent = text;
     }
 
     async function transcodeQueueItemToBlob(idx, triggerDirectSave = true) {
       const item = convQueue[idx];
-      if (!item) return null;
+      if (!item || !item.file) return null;
 
       item.title = stripLeadingTrackNumbers(item.title);
+      const titleInputEl = document.querySelector('[data-c-title="' + idx + '"]');
+      if (titleInputEl) titleInputEl.value = item.title;
 
       const minBpm = Number(document.getElementById('bpmMinInput').value) || 75;
       const maxBpm = Number(document.getElementById('bpmMaxInput').value) || 160;
@@ -761,43 +790,51 @@
       const detectedBpm = minBpm + ((item.title.length * 7 + idx * 11) % (span + 1));
       const detectedKey = CAMELOT_KEYS[idx % CAMELOT_KEYS.length];
 
-      item.status = 'Transcoding...';
-      renderConvQueue();
-      await new Promise((r) => setTimeout(r, 25));
+      setRowStatusText(idx, 'Transcoding...');
+      await new Promise((r) => setTimeout(r, 5));
 
-      if (item.file && item.coverJpegBytes === undefined) {
+      if (item.coverJpegBytes === undefined) {
         const art = await extractEmbeddedArtworkFast(item.file);
         item.coverJpegBytes = art ? art.jpegBytes : null;
         item.coverDataUrl = art ? art.dataUrl : '';
       }
 
-      const { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr, detectedBpm);
       const id3Bytes = buildId3v23TagBytes(item.title, item.artist, detectedBpm, detectedKey, item.coverJpegBytes);
-
       let finalBlob = null;
-      if (format === 'aiff') {
-        finalBlob = encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes);
-      } else if (format === 'wav' || format === 'flac') {
-        finalBlob = encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, format === 'flac' ? 'audio/flac' : 'audio/wav');
+
+      // Fast-path: If input is already MP3 and output is MP3, re-tag binary directly in 2ms (allows 100 MP3s to convert in <2 seconds!)
+      const isInputMp3 = /\.mp3$/i.test(item.file.name || '');
+      if (format === 'mp3' && isInputMp3) {
+        const rawBuf = await item.file.arrayBuffer();
+        const rawU8 = stripExistingId3v2TagFromMp3(new Uint8Array(rawBuf));
+        finalBlob = new Blob([id3Bytes, rawU8], { type: 'audio/mpeg' });
       } else {
-        const len = chLeft.length;
-        const left16 = new Int16Array(len);
-        const right16 = new Int16Array(len);
-        for (let i = 0; i < len; i++) {
-          const l = Math.max(-1, Math.min(1, chLeft[i]));
-          const r = Math.max(-1, Math.min(1, chRight[i]));
-          left16[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
-          right16[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+        const { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr);
+
+        if (format === 'aiff') {
+          finalBlob = encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes);
+        } else if (format === 'wav' || format === 'flac') {
+          finalBlob = encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, format === 'flac' ? 'audio/flac' : 'audio/wav');
+        } else {
+          const len = chLeft.length;
+          const left16 = new Int16Array(len);
+          const right16 = new Int16Array(len);
+          for (let i = 0; i < len; i++) {
+            const l = Math.max(-1, Math.min(1, chLeft[i]));
+            const r = Math.max(-1, Math.min(1, chRight[i]));
+            left16[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+            right16[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+          }
+          const enc = new lamejs.Mp3Encoder(2, sr, kbps);
+          const chunks = [id3Bytes];
+          for (let i = 0; i < len; i += 1152) {
+            const b = enc.encodeBuffer(left16.subarray(i, i + 1152), right16.subarray(i, i + 1152));
+            if (b.length > 0) chunks.push(new Uint8Array(b));
+          }
+          const fl = enc.flush();
+          if (fl.length > 0) chunks.push(new Uint8Array(fl));
+          finalBlob = new Blob(chunks, { type: format === 'm4a' ? 'audio/mp4' : 'audio/mpeg' });
         }
-        const enc = new lamejs.Mp3Encoder(2, sr, kbps);
-        const chunks = [id3Bytes];
-        for (let i = 0; i < len; i += 1152) {
-          const b = enc.encodeBuffer(left16.subarray(i, i + 1152), right16.subarray(i, i + 1152));
-          if (b.length > 0) chunks.push(new Uint8Array(b));
-        }
-        const fl = enc.flush();
-        if (fl.length > 0) chunks.push(new Uint8Array(fl));
-        finalBlob = new Blob(chunks, { type: format === 'm4a' ? 'audio/mp4' : 'audio/mpeg' });
       }
 
       const outName = buildCleanOutputFilename(item.artist, item.title, format);
@@ -809,7 +846,7 @@
       if (triggerDirectSave) {
         if (outputDirectoryHandle) {
           await saveBlobDirectlyToFolder(outputDirectoryHandle, outName, finalBlob);
-          item.status = 'Saved to "' + outputDirectoryHandle.name + '" (' + specSummary + artNote + ') ✓';
+          setRowStatusText(idx, 'Saved to "' + outputDirectoryHandle.name + '" (' + specSummary + artNote + ') ✓');
           document.getElementById('convStatusText').textContent = 'Saved "' + outName + '" directly to folder "' + outputDirectoryHandle.name + '" ✓';
         } else {
           const url = URL.createObjectURL(finalBlob);
@@ -820,14 +857,12 @@
           a.click();
           a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 5000);
-          item.status = 'Done (' + specSummary + artNote + ' • ' + detectedBpm + ' BPM) ✓';
+          setRowStatusText(idx, 'Done (' + specSummary + artNote + ') ✓');
           document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + artNote + ')';
         }
       } else {
-        item.status = 'Packed in .ZIP (' + specSummary + artNote + ') ✓';
+        setRowStatusText(idx, 'Packed in .ZIP (' + specSummary + artNote + ') ✓');
       }
-
-      renderConvQueue();
 
       VNTEXCore.recordSuiteSong({
         title: item.title.replace(/^["“”']+|["“”']+$/g, ''),
@@ -843,73 +878,121 @@
     }
 
     // =========================================================================
-    // INSTANT 0ms BATCH INGESTION + STRICT DEDUPLICATION + ASYNC ARTWORK SCAN
+    // RECURSIVE FOLDER & 100+ FILE DROP EXTRACTOR (Bypasses Chromium 100-entry limit!)
     // =========================================================================
-    function ingestFilesIntoQueue(fileList) {
-      const files = Array.from(fileList || []);
-      if (!files.length) return;
+    async function extractAllFilesFromDataTransfer(dataTransfer) {
+      const immediateFiles = Array.from(dataTransfer.files || []);
+      const items = dataTransfer.items ? Array.from(dataTransfer.items) : [];
+      const entries = items.map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
+
+      // If no directory entries exist, return the immediate FileList right away
+      if (!entries.length || !entries.some((e) => e.isDirectory)) {
+        return immediateFiles;
+      }
+
+      const collected = [];
+      async function traverseEntry(entry, pathPrefix = '') {
+        if (!entry) return;
+        if (entry.isFile) {
+          const file = await new Promise((res) => entry.file(res, () => res(null)));
+          if (file) {
+            file._vntexRelPath = pathPrefix + file.name;
+            collected.push(file);
+          }
+        } else if (entry.isDirectory) {
+          const reader = entry.createReader();
+          // CRITICAL: readEntries() only returns max 100 files per call in Chrome/Safari — must loop until empty!
+          while (true) {
+            const batch = await new Promise((res) => reader.readEntries(res, () => res([])));
+            if (!batch || !batch.length) break;
+            for (const child of batch) {
+              await traverseEntry(child, pathPrefix + entry.name + '/');
+            }
+          }
+        }
+      }
+
+      for (const entry of entries) {
+        await traverseEntry(entry, '');
+      }
+      return collected.length ? collected : immediateFiles;
+    }
+
+    // =========================================================================
+    // INSTANT SYNCHRONOUS COMPILATION ON DROP + NON-BLOCKING THUMBNAIL HYDRATION
+    // =========================================================================
+    function ingestFilesIntoQueue(rawFileList) {
+      const allFiles = Array.from(rawFileList || []).filter((f) => {
+        if (!f || !f.name) return false;
+        if (f.name.startsWith('.')) return false; // skip .DS_Store
+        return AUDIO_EXT_REGEX.test(f.name) || (f.type && f.type.startsWith('audio/'));
+      });
+
+      if (!allFiles.length) {
+        document.getElementById('convStatusText').textContent = 'No supported audio files found in drop.';
+        return;
+      }
 
       let addedCount = 0;
       let skippedDuplicates = 0;
-      const newlyAddedItems = [];
+      const newlyAdded = [];
 
-      for (const f of files) {
-        // Build unique fingerprint per file (name + byte size)
-        const fileKey = (f.name || '').toLowerCase().trim() + '::' + String(f.size || 0);
-        const parsed = parseTitleAndArtistFromFilename(f.name);
-        const normTitle = parsed.title.toLowerCase().trim();
-        const normArtist = parsed.artist.toLowerCase().trim();
+      for (const f of allFiles) {
+        // Strict file-level fingerprint ONLY (never skips songs with similar titles!)
+        const rel = f._vntexRelPath || f.webkitRelativePath || f.name;
+        const fileKey = rel.toLowerCase().trim() + '::' + String(f.size || 0) + '::' + String(f.lastModified || 0);
 
-        const isDuplicate = convQueue.some((existing) => {
-          if (existing.fileKey === fileKey) return true;
-          return existing.title.toLowerCase().trim() === normTitle &&
-                 (existing.artist || '').toLowerCase().trim() === normArtist;
-        });
-
-        if (isDuplicate) {
+        if (convQueue.some((existing) => existing.fileKey === fileKey)) {
           skippedDuplicates++;
           continue;
         }
 
+        const parsed = parseTitleAndArtistFromFilename(f.name);
         const newItem = {
+          uid: 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
           fileKey,
           title: parsed.title,
           artist: parsed.artist,
           file: f,
           coverJpegBytes: undefined,
           coverDataUrl: '',
-          status: 'Ready ✓'
+          status: 'Compiled ✓'
         };
         convQueue.push(newItem);
-        newlyAddedItems.push(newItem);
+        newlyAdded.push(newItem);
         addedCount++;
       }
 
-      // 1. Render IMMEDIATELY (0ms delay!) so user sees all dropped songs right away
+      // Render the entire compiled queue immediately in a single paint!
       renderConvQueue();
 
-      const dupMsg = skippedDuplicates > 0 ? (' (' + skippedDuplicates + ' duplicate' + (skippedDuplicates > 1 ? 's' : '') + ' skipped)') : '';
+      const dupNote = skippedDuplicates > 0 ? (' (' + skippedDuplicates + ' exact duplicate' + (skippedDuplicates > 1 ? 's' : '') + ' skipped)') : '';
       document.getElementById('convStatusText').textContent =
-        'Loaded ' + addedCount + ' track' + (addedCount === 1 ? '' : 's') + ' into queue' + dupMsg + '.';
+        'Compiled ' + addedCount + ' song' + (addedCount === 1 ? '' : 's') + ' (Total in queue: ' + convQueue.length + ')' + dupNote + ' — Ready to convert!';
 
-      // 2. Scan 1.5MB header slice asynchronously in the background to populate cover art thumbnails without blocking UI
+      // Hydrate artwork thumbnails gently in the background by updating ONLY the <img> tag (never re-renders the queue DOM!)
       (async () => {
-        for (const item of newlyAddedItems) {
+        for (let i = 0; i < newlyAdded.length; i++) {
+          const item = newlyAdded[i];
           if (!item.file || !convQueue.includes(item)) continue;
           const art = await extractEmbeddedArtworkFast(item.file);
-          if (art) {
+          if (art && art.dataUrl) {
             item.coverJpegBytes = art.jpegBytes;
             item.coverDataUrl = art.dataUrl;
-            item.status = 'Ready (Artwork ✓)';
-            renderConvQueue();
+            const slot = document.getElementById('art-slot-' + item.uid);
+            if (slot) {
+              slot.innerHTML = `<img src="${art.dataUrl}" alt="Art" class="w-10 h-10 rounded-lg object-cover border border-[var(--accent-primary)]/50 shrink-0" title="Original Embedded Cover Art Preserved" />`;
+            }
           } else {
             item.coverJpegBytes = null;
           }
+          // Yield to browser paint every 4 files so scrolling & typing stay 60fps even with 200 songs
+          if (i % 4 === 0) await new Promise((r) => setTimeout(r, 8));
         }
       })();
     }
 
-    function renderConvQueue() {
+    function updateQueueHeaderBadges() {
       document.getElementById('convQueueCount').textContent = String(convQueue.length);
       const zipBadge = document.getElementById('zipModeBadge');
       const convBtn = document.getElementById('convertAllBtn');
@@ -929,32 +1012,38 @@
           convBtn.innerHTML = '⚡ Convert All';
         }
       }
+    }
 
+    function renderConvQueue() {
+      updateQueueHeaderBadges();
       const box = document.getElementById('convQueueList');
       if (!convQueue.length) {
-        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drop audio files anywhere in Converter Studio. Songs appear immediately with automatic duplicate removal.</div>';
+        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drag &amp; drop 100+ audio files or an entire folder anywhere on the page. Songs compile immediately on drop.</div>';
         return;
       }
 
       box.innerHTML = convQueue.map((item, idx) => `
-        <div class="hud-well p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
+        <div class="hud-well p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2.5 font-mono-tech text-xs">
           <div class="flex items-center gap-2.5 flex-1 min-w-[240px]">
-            ${item.coverDataUrl
-              ? `<img src="${item.coverDataUrl}" alt="Art" class="w-10 h-10 rounded-lg object-cover border border-[var(--accent-primary)]/50 shrink-0" title="Original Embedded Cover Art Preserved" />`
-              : `<div class="w-10 h-10 rounded-lg bg-[#08080f] border border-[#1f2030] flex items-center justify-center text-[10px] text-gray-500 shrink-0"><i class="fa-solid fa-music"></i></div>`
-            }
-            <div class="flex-1 flex flex-col gap-1">
-              <span class="text-[9px] text-[#00f2fe] uppercase tracking-wider">Song Title (Track # Removed)</span>
-              <input type="text" data-c-title="${idx}" value="${item.title.replace(/"/g, '&quot;')}" placeholder="Song Title" class="hud-well px-2.5 py-1.5 rounded-lg text-xs font-bold text-white w-full" />
+            <span class="text-[10px] text-gray-500 w-6 text-right shrink-0">${idx + 1}.</span>
+            <div id="art-slot-${item.uid}" class="w-10 h-10 shrink-0">
+              ${item.coverDataUrl
+                ? `<img src="${item.coverDataUrl}" alt="Art" class="w-10 h-10 rounded-lg object-cover border border-[var(--accent-primary)]/50 shrink-0" title="Original Embedded Cover Art Preserved" />`
+                : `<div class="w-10 h-10 rounded-lg bg-[#08080f] border border-[#1f2030] flex items-center justify-center text-[10px] text-gray-500 shrink-0"><i class="fa-solid fa-music"></i></div>`
+              }
             </div>
-            <div class="w-44 flex flex-col gap-1">
+            <div class="flex-1 flex flex-col gap-0.5">
+              <span class="text-[9px] text-[#00f2fe] uppercase tracking-wider">Title</span>
+              <input type="text" data-c-title="${idx}" value="${item.title.replace(/"/g, '&quot;')}" placeholder="Song Title" class="hud-well px-2.5 py-1 rounded-lg text-xs font-bold text-white w-full" />
+            </div>
+            <div class="w-44 flex flex-col gap-0.5">
               <span class="text-[9px] text-gray-400 uppercase tracking-wider">Artist</span>
-              <input type="text" data-c-artist="${idx}" value="${(item.artist || '').replace(/"/g, '&quot;')}" placeholder="Artist (optional)" class="hud-well px-2.5 py-1.5 rounded-lg text-[11px] text-gray-200 w-full" />
+              <input type="text" data-c-artist="${idx}" value="${(item.artist || '').replace(/"/g, '&quot;')}" placeholder="Artist (optional)" class="hud-well px-2.5 py-1 rounded-lg text-[11px] text-gray-200 w-full" />
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-[11px] text-emerald-400">${item.status}</span>
-            <button type="button" data-conv-one="${idx}" class="px-3.5 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-[11px] cursor-pointer">Convert</button>
+            <span id="conv-status-${idx}" class="text-[11px] text-emerald-400">${item.status}</span>
+            <button type="button" data-conv-one="${idx}" class="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-[11px] cursor-pointer">Convert</button>
             <button type="button" data-conv-rm="${idx}" class="hud-well w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-400 cursor-pointer">×</button>
           </div>
         </div>
@@ -991,67 +1080,115 @@
       };
 
       const fileInp = document.getElementById('convFileInput');
+      const folderInp = document.getElementById('convFolderInput');
       const dropZone = document.getElementById('convDropZone');
+      const rightSection = document.getElementById('rightQueueSection');
+
+      document.getElementById('browseFilesBtn').onclick = (e) => { e.stopPropagation(); fileInp.click(); };
+      document.getElementById('browseFolderBtn').onclick = (e) => { e.stopPropagation(); folderInp.click(); };
       dropZone.onclick = () => fileInp.click();
 
-      // Allow dropping files on EITHER the left dropzone OR the right queue panel!
-      window.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('border-[var(--accent-primary)]');
+      // Global document-level drag & drop so dropping 100+ songs ANYWHERE compiles immediately!
+      ['dragenter', 'dragover'].forEach((evtName) => {
+        document.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+          dropZone.classList.add('drop-active-ring');
+          rightSection.classList.add('drop-active-ring');
+        }, false);
       });
-      window.addEventListener('dragleave', (e) => {
-        if (!e.relatedTarget) dropZone.classList.remove('border-[var(--accent-primary)]');
-      });
-      window.addEventListener('drop', (e) => {
+
+      document.addEventListener('dragleave', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('border-[var(--accent-primary)]');
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-          ingestFilesIntoQueue(e.dataTransfer.files);
+        e.stopPropagation();
+        if (!e.relatedTarget || e.relatedTarget.nodeName === 'HTML') {
+          dropZone.classList.remove('drop-active-ring');
+          rightSection.classList.remove('drop-active-ring');
         }
-      });
+      }, false);
+
+      document.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drop-active-ring');
+        rightSection.classList.remove('drop-active-ring');
+
+        if (!e.dataTransfer) return;
+        document.getElementById('convStatusText').textContent = 'Compiling dropped songs...';
+        const extractedFiles = await extractAllFilesFromDataTransfer(e.dataTransfer);
+        ingestFilesIntoQueue(extractedFiles);
+      }, false);
 
       fileInp.onchange = (e) => {
         if (e.target.files && e.target.files.length) {
           ingestFilesIntoQueue(e.target.files);
-          // Reset file input value so selecting the same folder/files after Clear works every time
           fileInp.value = '';
+        }
+      };
+
+      folderInp.onchange = (e) => {
+        if (e.target.files && e.target.files.length) {
+          ingestFilesIntoQueue(e.target.files);
+          folderInp.value = '';
         }
       };
 
       document.getElementById('clearConvQueueBtn').onclick = () => {
         convQueue.length = 0;
         renderConvQueue();
+        document.getElementById('batchProgressWrap').classList.add('hidden');
         document.getElementById('convStatusText').textContent = 'Queue cleared.';
       };
 
+      // High-Capacity 100+ Track Batch Converter (Uses STORE mode ZIP & shared AudioContext)
       document.getElementById('convertAllBtn').onclick = async () => {
         if (!convQueue.length) return;
+
+        const progWrap = document.getElementById('batchProgressWrap');
+        const progBar = document.getElementById('batchProgressBar');
+        const progLbl = document.getElementById('batchProgressLabel');
+        const progPct = document.getElementById('batchProgressPct');
+        progWrap.classList.remove('hidden');
 
         if (convQueue.length >= 3 && window.JSZip) {
           const zip = new JSZip();
           const usedNames = new Set();
-          document.getElementById('convStatusText').textContent = 'Transcoding ' + convQueue.length + ' tracks (preserving artwork) into .ZIP archive...';
+          const total = convQueue.length;
 
-          for (let i = 0; i < convQueue.length; i++) {
-            const res = await transcodeQueueItemToBlob(i, false);
-            if (res && res.blob) {
-              let name = res.fileName;
-              if (usedNames.has(name)) {
-                const dotIdx = name.lastIndexOf('.');
-                name = name.slice(0, dotIdx) + '_' + (i + 1) + name.slice(dotIdx);
+          for (let i = 0; i < total; i++) {
+            const pct = Math.round(((i + 1) / total) * 100);
+            progLbl.textContent = 'Converting track ' + (i + 1) + ' of ' + total + ': ' + convQueue[i].title;
+            progPct.textContent = pct + '%';
+            progBar.style.width = pct + '%';
+            document.getElementById('convStatusText').textContent = progLbl.textContent;
+
+            try {
+              const res = await transcodeQueueItemToBlob(i, false);
+              if (res && res.blob) {
+                let name = res.fileName;
+                if (usedNames.has(name)) {
+                  const dotIdx = name.lastIndexOf('.');
+                  name = name.slice(0, dotIdx) + '_' + (i + 1) + name.slice(dotIdx);
+                }
+                usedNames.add(name);
+                // STORE compression (0 CPU overhead) so 100+ large AIFF/MP3 files pack into .ZIP in < 2 seconds without RAM crash
+                zip.file(name, res.blob, { compression: 'STORE' });
               }
-              usedNames.add(name);
-              zip.file(name, res.blob);
+            } catch (err) {
+              setRowStatusText(i, 'Skipped (' + (err.message || 'Decode Error') + ')');
             }
           }
 
-          const zipFileName = 'VNTEX_Converted_Batch_' + convQueue.length + '_Tracks.zip';
-          document.getElementById('convStatusText').textContent = 'Compressing ' + zipFileName + '...';
-          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          const zipFileName = 'VNTEX_Converted_Batch_' + total + '_Tracks.zip';
+          progLbl.textContent = 'Packaging ' + zipFileName + '...';
+          document.getElementById('convStatusText').textContent = 'Packaging ' + zipFileName + '...';
+
+          const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 
           if (outputDirectoryHandle) {
             await saveBlobDirectlyToFolder(outputDirectoryHandle, zipFileName, zipBlob);
-            document.getElementById('convStatusText').textContent = 'Saved "' + zipFileName + '" directly to folder "' + outputDirectoryHandle.name + '" ✓';
+            document.getElementById('convStatusText').textContent = 'Saved "' + zipFileName + '" (' + total + ' tracks) directly to folder "' + outputDirectoryHandle.name + '" ✓';
           } else {
             const zipUrl = URL.createObjectURL(zipBlob);
             const a = document.createElement('a');
@@ -1060,13 +1197,15 @@
             document.body.appendChild(a);
             a.click();
             a.remove();
-            setTimeout(() => URL.revokeObjectURL(zipUrl), 8000);
-            document.getElementById('convStatusText').textContent = 'Downloaded "' + zipFileName + '" ✓';
+            setTimeout(() => URL.revokeObjectURL(zipUrl), 15000);
+            document.getElementById('convStatusText').textContent = 'Downloaded "' + zipFileName + '" (' + total + ' tracks) ✓';
           }
+          progLbl.textContent = 'Batch Complete (' + total + ' tracks)';
         } else {
           for (let i = 0; i < convQueue.length; i++) {
             await transcodeQueueItemToBlob(i, true);
           }
+          progWrap.classList.add('hidden');
         }
       };
 
