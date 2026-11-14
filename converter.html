@@ -425,11 +425,9 @@
     }
 
     // =========================================================================
-    // LOSSLESS ORIGINAL-BYTE ARTWORK EXTRACTOR (ZERO CANVAS RE-ENCODING)
-    // Preserves 100% untouched original JPEG/PNG bytes & keeps Blob URLs alive
+    // SPEC-COMPLIANT BINARY APIC / FLAC / MP4 COVR EXTRACTOR (ZERO FALSE OFFSETS)
+    // Walks exact ID3v2 APIC header fields & takes untouched payload to end of frame
     // =========================================================================
-    let activeArtBlobUrls = [];
-
     function removeId3Unsynchronisation(bytes) {
       let count = 0;
       for (let i = 0; i < bytes.length - 1; i++) {
@@ -445,68 +443,117 @@
       return out;
     }
 
-    // Extracts exact image boundaries without corrupting internal 0xFF 0x00 JPEG entropy bytes
-    function findImageSignatureSlice(rawBytes, applyUnsync = false) {
-      const bytes = applyUnsync ? removeId3Unsynchronisation(rawBytes) : rawBytes;
-      for (let i = 0; i < bytes.length - 12; i++) {
-        // 1. JPEG SOI marker: FF D8 FF (E0, E1, E2, E8, DB, C0, C4, EE, FE)
-        if (
-          bytes[i] === 0xFF &&
-          bytes[i + 1] === 0xD8 &&
-          bytes[i + 2] === 0xFF &&
-          (bytes[i + 3] >= 0xC0 && bytes[i + 3] <= 0xFE)
-        ) {
-          // Find last JPEG EOI marker (FF D9) or take until end of frame
-          let endIdx = bytes.length;
-          for (let j = bytes.length - 2; j > i + 16; j--) {
-            if (bytes[j] === 0xFF && bytes[j + 1] === 0xD9) {
-              endIdx = j + 2;
-              break;
-            }
-          }
-          return { bytes: bytes.slice(i, endIdx), mime: 'image/jpeg', formatName: 'JPEG' };
-        }
+    function detectImageMimeFromHeader(b) {
+      if (!b || b.length < 12) return null;
+      if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return { mime: 'image/jpeg', formatName: 'JPEG' };
+      if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return { mime: 'image/png', formatName: 'PNG' };
+      if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) {
+        return { mime: 'image/webp', formatName: 'WebP' };
+      }
+      return null;
+    }
 
-        // 2. PNG signature: 89 50 4E 47 0D 0A 1A 0A
-        if (
-          bytes[i] === 0x89 && bytes[i + 1] === 0x50 && bytes[i + 2] === 0x4E && bytes[i + 3] === 0x47 &&
-          bytes[i + 4] === 0x0D && bytes[i + 5] === 0x0A && bytes[i + 6] === 0x1A && bytes[i + 7] === 0x0A
-        ) {
-          // Find PNG IEND chunk (49 45 4E 44 + 4B CRC)
-          let endIdx = bytes.length;
-          for (let j = i + 16; j < bytes.length - 8; j++) {
-            if (bytes[j] === 0x49 && bytes[j + 1] === 0x45 && bytes[j + 2] === 0x4E && bytes[j + 3] === 0x44) {
-              endIdx = Math.min(bytes.length, j + 8);
-              break;
-            }
-          }
-          return { bytes: bytes.slice(i, endIdx), mime: 'image/png', formatName: 'PNG' };
-        }
+    // Walks the exact ID3v2.3 / ID3v2.4 APIC frame structure:
+    // [0] Encoding (1B) | MIME string + 0x00 | PicType (1B) | Description + NullTerm | RAW IMAGE BYTES TO END OF FRAME
+    function parseExactApicFrame(rawFrameBytes, hasDataLenIndicator, isUnsynced) {
+      let fb = rawFrameBytes;
+      // In ID3v2.4, if flag bit 0x01 (Data Length Indicator) is set, skip the 4-byte syncsafe length prefix
+      if (hasDataLenIndicator && fb.length > 4) {
+        fb = fb.subarray(4);
+      }
+      if (isUnsynced) {
+        fb = removeId3Unsynchronisation(fb);
+      }
+      if (fb.length < 16) return null;
 
-        // 3. WebP signature: 'RIFF' + 4B size + 'WEBP'
-        if (
-          bytes[i] === 0x52 && bytes[i + 1] === 0x49 && bytes[i + 2] === 0x46 && bytes[i + 3] === 0x46 &&
-          bytes[i + 8] === 0x57 && bytes[i + 9] === 0x45 && bytes[i + 10] === 0x42 && bytes[i + 11] === 0x50
-        ) {
-          const riffSize = (bytes[i + 4]) | (bytes[i + 5] << 8) | (bytes[i + 6] << 16) | ((bytes[i + 7] << 24) >>> 0);
-          const endIdx = (riffSize > 12 && i + 8 + riffSize <= bytes.length) ? (i + 8 + riffSize) : bytes.length;
-          return { bytes: bytes.slice(i, endIdx), mime: 'image/webp', formatName: 'WebP' };
+      const encoding = fb[0]; // 0 = ISO-8859-1, 1 = UTF-16, 2 = UTF-16BE, 3 = UTF-8
+      let pos = 1;
+
+      // 1. Read null-terminated ASCII MIME string
+      while (pos < fb.length && fb[pos] !== 0x00) pos++;
+      pos++; // skip 0x00 terminator
+
+      if (pos >= fb.length) return null;
+
+      // 2. Skip 1-byte Picture Type (e.g. 0x03 = Front Cover)
+      pos++;
+
+      // 3. Skip null-terminated Description string based on text encoding
+      if (encoding === 1 || encoding === 2) {
+        // UTF-16 / UTF-16BE uses 2-byte null terminator (0x00 0x00) aligned on 2-byte step
+        while (pos + 1 < fb.length && !(fb[pos] === 0x00 && fb[pos + 1] === 0x00)) {
+          pos += 2;
+        }
+        pos += 2;
+      } else {
+        // Latin-1 (0) or UTF-8 (3) uses single 0x00 terminator
+        while (pos < fb.length && fb[pos] !== 0x00) {
+          pos++;
+        }
+        pos++;
+      }
+
+      // Skip any extra leading 0x00 padding byte right before magic signature
+      while (pos < fb.length - 12 && fb[pos] === 0x00) {
+        pos++;
+      }
+
+      // Check if exact offset lands on JPEG (FF D8 FF), PNG (89 50 4E 47), or WebP (RIFF....WEBP)
+      const payload = fb.subarray(pos);
+      const sig = detectImageMimeFromHeader(payload);
+      if (sig) {
+        // Take the ENTIRE remaining frame payload (NEVER cut early at internal EXIF thumbnail FF D9!)
+        return { bytes: new Uint8Array(payload), mime: sig.mime, formatName: sig.formatName };
+      }
+
+      // Fallback scan if encoder wrote non-standard description header: find first magic header and take all bytes to end of frame
+      for (let i = 0; i < fb.length - 16; i++) {
+        const sub = fb.subarray(i);
+        const s = detectImageMimeFromHeader(sub);
+        if (s) {
+          return { bytes: new Uint8Array(sub), mime: s.mime, formatName: s.formatName };
         }
       }
       return null;
     }
 
-    // Parses ID3v2 APIC frame according to official spec (skips encoding byte, MIME string, picType byte, and description string)
-    function extractApicPayload(frameBytes, isUnsynced) {
-      let data = isUnsynced ? removeId3Unsynchronisation(frameBytes) : frameBytes;
-      // If data length indicator (4 bytes) preceded the unsynced payload, findImageSignatureSlice locates the exact SOI/PNG header cleanly
-      const direct = findImageSignatureSlice(data, false);
-      if (direct && direct.bytes.length > 128) return direct;
-      if (!isUnsynced) {
-        const retryUnsync = findImageSignatureSlice(frameBytes, true);
-        if (retryUnsync && retryUnsync.bytes.length > 128) return retryUnsync;
+    // Walks ID3v2.2 'PIC' frame: [0] Encoding (1B) | Format (3B, e.g. 'JPG'/'PNG') | PicType (1B) | Desc + Null | Image Bytes
+    function parseExactPicFrameV22(rawFrameBytes, isUnsynced) {
+      let fb = isUnsynced ? removeId3Unsynchronisation(rawFrameBytes) : rawFrameBytes;
+      if (fb.length < 16) return null;
+      const encoding = fb[0];
+      let pos = 5; // 1B encoding + 3B format + 1B picType
+      if (encoding === 1 || encoding === 2) {
+        while (pos + 1 < fb.length && !(fb[pos] === 0x00 && fb[pos + 1] === 0x00)) pos += 2;
+        pos += 2;
+      } else {
+        while (pos < fb.length && fb[pos] !== 0x00) pos++;
+        pos++;
       }
-      return direct;
+      while (pos < fb.length - 12 && fb[pos] === 0x00) pos++;
+      const payload = fb.subarray(pos);
+      const sig = detectImageMimeFromHeader(payload);
+      if (sig) return { bytes: new Uint8Array(payload), mime: sig.mime, formatName: sig.formatName };
+      return null;
+    }
+
+    // Walks FLAC METADATA_BLOCK_PICTURE (Block Type 6) exact binary spec:
+    // 4B picType | 4B mimeLen | mimeStr | 4B descLen | descStr | 16B dims | 4B dataLen | exact dataLen bytes
+    function parseExactFlacPictureBlock(blockBytes) {
+      if (blockBytes.length < 32) return null;
+      const dv = new DataView(blockBytes.buffer, blockBytes.byteOffset, blockBytes.byteLength);
+      let pos = 4; // skip 4B picture type
+      const mimeLen = dv.getUint32(pos, false); pos += 4 + mimeLen;
+      if (pos + 4 > blockBytes.length) return null;
+      const descLen = dv.getUint32(pos, false); pos += 4 + descLen;
+      pos += 16; // skip width(4), height(4), depth(4), colors(4)
+      if (pos + 4 > blockBytes.length) return null;
+      const dataLen = dv.getUint32(pos, false); pos += 4;
+      const endPos = Math.min(blockBytes.length, pos + dataLen);
+      const imgBytes = blockBytes.subarray(pos, endPos);
+      const sig = detectImageMimeFromHeader(imgBytes);
+      if (sig) return { bytes: new Uint8Array(imgBytes), mime: sig.mime, formatName: sig.formatName };
+      return null;
     }
 
     function parseId3BlockForArtworkAndFrames(u8, startOffset) {
@@ -539,7 +586,7 @@
           if (!/^[A-Z0-9]{3}$/.test(fid) || fsize <= 0 || pos + 6 + fsize > endPos) break;
           framesFound.push(fid + ' (' + fsize + 'B)');
           if (fid === 'PIC' && !foundArt) {
-            foundArt = extractApicPayload(u8.subarray(pos + 6, pos + 6 + fsize), tagUnsync);
+            foundArt = parseExactPicFrameV22(u8.subarray(pos + 6, pos + 6 + fsize), tagUnsync);
           }
           pos += 6 + fsize;
         } else {
@@ -547,24 +594,32 @@
           if (!/^[A-Z0-9]{4}$/.test(fid)) break;
           const syncSafeSize = ((u8[pos + 4] & 0x7F) << 21) | ((u8[pos + 5] & 0x7F) << 14) | ((u8[pos + 6] & 0x7F) << 7) | (u8[pos + 7] & 0x7F);
           const uint32Size = ((u8[pos + 4] << 24) >>> 0) + (u8[pos + 5] << 16) + (u8[pos + 6] << 8) + u8[pos + 7];
+
           let fsize = version === 4 ? syncSafeSize : uint32Size;
-          if (version === 4 && (pos + 10 + fsize > endPos || (fid === 'APIC' && fsize < 64 && uint32Size <= endPos - pos - 10))) {
-            fsize = uint32Size;
+          // Auto-detect if an ID3v2.4 encoder wrote a standard 32-bit integer size instead of syncsafe
+          if (version === 4) {
+            const nextSyncOffset = pos + 10 + syncSafeSize;
+            const nextUintOffset = pos + 10 + uint32Size;
+            const validNextSync = nextSyncOffset + 4 <= endPos && (/^[A-Z0-9]{4}$/.test(String.fromCharCode(u8[nextSyncOffset], u8[nextSyncOffset+1], u8[nextSyncOffset+2], u8[nextSyncOffset+3])) || u8[nextSyncOffset] === 0);
+            const validNextUint = nextUintOffset + 4 <= endPos && (/^[A-Z0-9]{4}$/.test(String.fromCharCode(u8[nextUintOffset], u8[nextUintOffset+1], u8[nextUintOffset+2], u8[nextUintOffset+3])) || u8[nextUintOffset] === 0);
+            if (!validNextSync && validNextUint) {
+              fsize = uint32Size;
+            }
           }
+
           if (fsize <= 0 || pos + 10 + fsize > endPos) break;
           const frameFlags2 = u8[pos + 9];
+          const hasDataLen = version === 4 && (frameFlags2 & 0x01) !== 0;
           const frameUnsync = tagUnsync || (version === 4 && (frameFlags2 & 0x02) !== 0);
+
           framesFound.push(fid + ' (' + fsize + 'B)');
           if (fid === 'APIC' && !foundArt) {
-            foundArt = extractApicPayload(u8.subarray(pos + 10, pos + 10 + fsize), frameUnsync);
+            foundArt = parseExactApicFrame(u8.subarray(pos + 10, pos + 10 + fsize), hasDataLen, frameUnsync);
           }
           pos += 10 + fsize;
         }
       }
 
-      if (!foundArt) {
-        foundArt = findImageSignatureSlice(u8.subarray(startOffset + 10, endPos), tagUnsync);
-      }
       return { art: foundArt, framesFound, version: 'ID3v2.' + version, declaredTagSize: tagSize };
     }
 
@@ -614,12 +669,24 @@
           const moovBuf = await file.slice(offset, offset + readLen).arrayBuffer();
           const m8 = new Uint8Array(moovBuf);
           const mdv = new DataView(moovBuf);
-          for (let i = 4; i < m8.length - 16; i++) {
+          for (let i = 4; i < m8.length - 24; i++) {
+            // Find 'covr' atom -> inside it is 'data' atom: [size 4B]['data' 4B][type 4B][locale 4B][IMAGE BYTES]
             if (m8[i] === 0x63 && m8[i + 1] === 0x6F && m8[i + 2] === 0x76 && m8[i + 3] === 0x72) {
-              const covrSize = mdv.getUint32(i - 4, false);
-              const endSlice = Math.min(m8.length, i - 4 + (covrSize > 16 && covrSize < m8.length ? covrSize : 6 * 1024 * 1024));
-              const found = findImageSignatureSlice(m8.subarray(i + 4, endSlice), false);
-              if (found) return { art: found, atomsList };
+              const dataAtomPos = i + 4;
+              if (
+                dataAtomPos + 16 < m8.length &&
+                m8[dataAtomPos + 4] === 0x64 && m8[dataAtomPos + 5] === 0x61 &&
+                m8[dataAtomPos + 6] === 0x74 && m8[dataAtomPos + 7] === 0x61
+              ) {
+                const dataSize = mdv.getUint32(dataAtomPos, false);
+                const imgStart = dataAtomPos + 16;
+                const imgEnd = Math.min(m8.length, dataAtomPos + dataSize);
+                const payload = m8.subarray(imgStart, imgEnd);
+                const sig = detectImageMimeFromHeader(payload);
+                if (sig) {
+                  return { art: { bytes: new Uint8Array(payload), mime: sig.mime, formatName: sig.formatName }, atomsList };
+                }
+              }
             }
           }
         }
@@ -664,9 +731,7 @@
               return { ...norm, diag };
             }
           }
-          diag.diagnosisNote = parsed.framesFound.length
-            ? ('ID3 tag present (' + parsed.framesFound.join(', ') + '), but no APIC/PIC cover image frame exists in this file.')
-            : 'ID3 header has 0 picture frames.';
+          diag.diagnosisNote = 'No valid APIC image payload found.';
         }
 
         if (magic4 === 'FORM') {
@@ -718,7 +783,7 @@
             diag.chunksOrAtoms.push('BlockType_' + blockType + ' (' + (blockLen / 1024).toFixed(1) + ' KB)');
             if (blockType === 6 && offset + 4 + blockLen <= file.size) {
               const picBuf = await file.slice(offset + 4, offset + 4 + blockLen).arrayBuffer();
-              const found = findImageSignatureSlice(new Uint8Array(picBuf), false);
+              const found = parseExactFlacPictureBlock(new Uint8Array(picBuf));
               if (found) {
                 const norm = await prepareOriginalCoverArtBytes(found.bytes, found.mime);
                 if (norm) {
@@ -745,7 +810,7 @@
             if (norm) {
               diag.artworkFound = true;
               diag.artworkFormat = walked.art.formatName + ' (Original)';
-              diag.diagnosisNote = 'Original artwork preserved from MP4 covr atom.';
+              diag.diagnosisNote = 'Original artwork preserved from MP4 covr/data atom.';
               return { ...norm, diag };
             }
           }
@@ -758,40 +823,22 @@
       return { jpegBytes: null, coverMime: 'image/jpeg', dataUrl: '', diag };
     }
 
-    // Preserves 100% of the ORIGINAL image bytes for JPEG & PNG without touching <canvas> (never turns grey!)
+    // Converts untouched original bytes into a self-contained Base64 Data URL via FileReader (never expires, never turns grey!)
     async function prepareOriginalCoverArtBytes(rawBytes, mimeType) {
       if (!rawBytes || rawBytes.length < 32) return null;
       const mime = mimeType || 'image/jpeg';
+      const cleanCopy = new Uint8Array(rawBytes);
+      const blob = new Blob([cleanCopy], { type: mime });
 
-      // For JPEG and PNG: keep the exact original binary bytes from the source file!
-      // Create a persistent Blob URL (never revoked until Clear Queue) so the preview thumbnail never turns grey.
-      if (mime === 'image/jpeg' || mime === 'image/png') {
-        const blob = new Blob([rawBytes], { type: mime });
-        const persistentUrl = URL.createObjectURL(blob);
-        activeArtBlobUrls.push(persistentUrl);
-        return { jpegBytes: rawBytes, coverMime: mime, dataUrl: persistentUrl };
-      }
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(blob);
+      });
 
-      // Only if the source cover is WebP, convert to baseline JPEG for hardware CDJ compatibility while keeping persistent preview URL
-      const blob = new Blob([rawBytes], { type: mime });
-      const persistentUrl = URL.createObjectURL(blob);
-      activeArtBlobUrls.push(persistentUrl);
-      try {
-        const img = new Image();
-        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = persistentUrl; });
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || 500;
-        canvas.height = img.naturalHeight || 500;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        const binStr = atob(dataUrl.split(',')[1]);
-        const jpegBytes = new Uint8Array(binStr.length);
-        for (let i = 0; i < binStr.length; i++) jpegBytes[i] = binStr.charCodeAt(i);
-        return { jpegBytes, coverMime: 'image/jpeg', dataUrl: persistentUrl };
-      } catch {
-        return { jpegBytes: rawBytes, coverMime: 'image/jpeg', dataUrl: persistentUrl };
-      }
+      if (!dataUrl) return null;
+      return { jpegBytes: cleanCopy, coverMime: mime, dataUrl };
     }
 
         // Opens the live Binary Tag Inspector Modal for any track in the queue
