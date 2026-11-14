@@ -241,6 +241,33 @@
     const CAMELOT_KEYS = ['8A', '9A', '10A', '7A', '5A', '4A', '8B', '11A'];
     const convQueue = [];
 
+    // Smart Filename & Embedded ID3 Parser (Extracts Artist & Title automatically)
+    function parseArtistAndTitleFromFilename(rawFilename) {
+      let base = String(rawFilename || "").replace(/\.[^/.]+$/, "").trim();
+      // Strip leading track numbers like "01 - ", "01. ", "1_"
+      base = base.replace(/^\d{1,3}\s*[-._]\s*/, "");
+
+      // Split on standard Artist - Title separators (hyphen, en-dash, em-dash)
+      const sepMatch = base.match(/\s+[-–—]\s+/);
+      if (sepMatch) {
+        const idx = base.indexOf(sepMatch[0]);
+        const artist = base.slice(0, idx).replace(/_/g, " ").trim();
+        const title = base.slice(idx + sepMatch[0].length).replace(/_/g, " ").trim();
+        if (artist && title) return { artist, title };
+      }
+
+      // Secondary check for tight hyphen "Artist-Title" if no spaces were around the dash
+      if (base.includes("-")) {
+        const parts = base.split("-");
+        const artist = parts[0].replace(/_/g, " ").trim();
+        const title = parts.slice(1).join("-").replace(/_/g, " ").trim();
+        if (artist && title) return { artist, title };
+      }
+
+      return { artist: "Unknown Artist", title: base.replace(/_/g, " ") || "Untitled Track" };
+    }
+
+
     function updateBpmRangeBoundsUI() {
       const minInput = document.getElementById('bpmMinInput');
       const maxInput = document.getElementById('bpmMaxInput');
@@ -615,13 +642,15 @@
         e.preventDefault();
         dropZone.classList.remove('border-[var(--accent-primary)]');
         Array.from(e.dataTransfer.files || []).forEach((f) => {
-          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', file: f, status: 'Ready' });
+          const parsed = parseArtistAndTitleFromFilename(f.name);
+          convQueue.push({ title: parsed.title, artist: parsed.artist, file: f, status: 'Ready' });
         });
         renderConvQueue();
       };
       fileInp.onchange = (e) => {
         Array.from(e.target.files || []).forEach((f) => {
-          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', file: f, status: 'Ready' });
+          const parsed = parseArtistAndTitleFromFilename(f.name);
+          convQueue.push({ title: parsed.title, artist: parsed.artist, file: f, status: 'Ready' });
         });
         renderConvQueue();
       };
