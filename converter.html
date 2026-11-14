@@ -191,23 +191,33 @@
         <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.ogg" class="hidden" />
         <i class="fa-solid fa-cloud-arrow-up text-2xl text-[var(--accent-primary)]"></i>
         <div class="font-bold text-xs text-white">Drop Audio Files or Click to Browse</div>
-        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">3+ tracks automatically bundle as a .ZIP archive</div>
+        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Choose a target folder or auto-bundle 3+ tracks as .ZIP</div>
       </div>
 
     </section>
 
-    <!-- RIGHT PANEL (8 COLS): CLEAN CONVERSION QUEUE -->
+    <!-- RIGHT PANEL (8 COLS): CLEAN CONVERSION QUEUE & DIRECT FOLDER EXPORT -->
     <section class="lg:col-span-8 hud-glass rounded-2xl flex flex-col overflow-hidden">
-      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] bg-[#06060b] flex items-center justify-between font-mono-tech text-xs">
-        <div class="flex items-center gap-2.5">
+      <div class="px-5 py-3.5 border-b border-[var(--border-hairline)] bg-[#06060b] flex flex-wrap items-center justify-between gap-2 font-mono-tech text-xs">
+        <div class="flex flex-wrap items-center gap-2">
           <span class="font-bold text-white uppercase">
             Queue (<span id="convQueueCount" class="text-[var(--accent-primary)]">0</span>)
           </span>
           <span id="zipModeBadge" class="hidden px-2 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
-            <i class="fa-solid fa-file-zipper mr-1"></i>AUTO-ZIP BATCH (3+ TRACKS)
+            <i class="fa-solid fa-file-zipper mr-1"></i>AUTO-ZIP (3+ TRACKS)
           </span>
         </div>
-        <div class="flex items-center gap-2">
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Direct Output Folder Selector -->
+          <div class="flex items-center gap-1">
+            <button id="selectOutputFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-[#00f2fe] hover:border-[#00f2fe] flex items-center gap-1.5 cursor-pointer" title="Choose a local folder on your Mac/PC to save converted tracks directly">
+              <i class="fa-regular fa-folder-open"></i>
+              <span id="outputFolderLabel">Choose Output Folder</span>
+            </button>
+            <button id="clearOutputFolderBtn" type="button" class="hidden hud-well w-7 h-7 rounded-lg items-center justify-center text-gray-400 hover:text-rose-400 cursor-pointer" title="Clear selected folder and revert to browser download">×</button>
+          </div>
+
           <button id="clearConvQueueBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-gray-400 hover:text-white cursor-pointer">Clear</button>
           <button id="convertAllBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[var(--accent-primary)] text-black font-extrabold text-xs uppercase hover:brightness-110 transition cursor-pointer">
             ⚡ Convert All
@@ -233,9 +243,9 @@
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-3 text-xs font-mono-tech">
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Direct Folder Export</span><span id="modalFolderState" class="text-[#00f2fe] font-bold">BROWSER DEFAULT</span></div>
         <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Download Mode (3+ Songs)</span><span class="text-amber-300 font-bold">AUTO .ZIP ARCHIVE ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>24-Bit AIFF ID3v2.3 Chunk</span><span class="text-[#00f2fe] font-bold">ENABLED ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Active BPM Range Bounds</span><span id="modalBpmBoundsLabel" class="text-emerald-400 font-bold">75 – 160 BPM</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>24-Bit AIFF ID3v2.3 Chunk</span><span class="text-emerald-400 font-bold">ENABLED ✓</span></div>
       </div>
     </div>
   </div>
@@ -243,6 +253,54 @@
   <script>
     const CAMELOT_KEYS = ['8A', '9A', '10A', '7A', '5A', '4A', '8B', '11A'];
     const convQueue = [];
+    let outputDirectoryHandle = null;
+
+    // Pick a direct destination folder on disk via File System Access API
+    async function chooseOutputDirectory() {
+      if (!window.showDirectoryPicker) {
+        alert('Direct folder selection requires a Chromium browser (Chrome, Edge, Brave, Arc).');
+        return;
+      }
+      try {
+        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        if (handle) {
+          outputDirectoryHandle = handle;
+          document.getElementById('outputFolderLabel').textContent = 'Folder: ' + handle.name;
+          document.getElementById('clearOutputFolderBtn').classList.remove('hidden');
+          document.getElementById('clearOutputFolderBtn').classList.add('flex');
+          document.getElementById('modalFolderState').textContent = handle.name.toUpperCase();
+          document.getElementById('convStatusText').textContent = 'Direct Output Folder set to "' + handle.name + '" — files will save directly into this folder.';
+          renderConvQueue();
+        }
+      } catch (err) {
+        if (err && err.name !== 'AbortError') {
+          console.warn('Directory picker error:', err);
+        }
+      }
+    }
+
+    function clearOutputDirectory() {
+      outputDirectoryHandle = null;
+      document.getElementById('outputFolderLabel').textContent = 'Choose Output Folder';
+      document.getElementById('clearOutputFolderBtn').classList.add('hidden');
+      document.getElementById('clearOutputFolderBtn').classList.remove('flex');
+      document.getElementById('modalFolderState').textContent = 'BROWSER DEFAULT';
+      document.getElementById('convStatusText').textContent = 'Reverted to standard browser download.';
+      renderConvQueue();
+    }
+
+    async function saveBlobDirectlyToFolder(dirHandle, fileName, blob) {
+      const opts = { mode: 'readwrite' };
+      if ((await dirHandle.queryPermission(opts)) !== 'granted') {
+        if ((await dirHandle.requestPermission(opts)) !== 'granted') {
+          throw new Error('Write permission to folder was denied.');
+        }
+      }
+      const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    }
 
     // Clean Filename Parser: Extracts Artist & Title if separated by a dash; otherwise leaves Artist BLANK ("")
     function parseArtistAndTitleFromFilename(rawFilename) {
@@ -257,7 +315,6 @@
         if (artist && title) return { artist, title };
       }
 
-      // If no clear "Artist - Title" separator exists, keep the full name in Title and leave Artist blank ("")
       return { artist: '', title: base || 'Track' };
     }
 
@@ -283,8 +340,6 @@
       document.getElementById('bpmMaxValLabel').textContent = String(maxVal);
       const labelText = minVal + ' – ' + maxVal + ' BPM';
       document.getElementById('bpmRangeDynamicText').textContent = labelText;
-      const modalLbl = document.getElementById('modalBpmBoundsLabel');
-      if (modalLbl) modalLbl.textContent = labelText;
     }
 
     function applyConverterPreset(presetKey) {
@@ -320,7 +375,6 @@
       }
     });
 
-    // Spec-Compliant ID3v2.3 Tag Builder (Omits TPE1 frame if artist is blank)
     function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
     function encodeUint32BE(val) { return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF]; }
     function toIso88591Bytes(str) {
@@ -484,8 +538,7 @@
       return { chLeft, chRight, sr: targetSr };
     }
 
-    // Builds the converted Blob + clean filename for an item; optionally triggers a single file download
-    async function transcodeQueueItemToBlob(idx, triggerDirectDownload = true) {
+    async function transcodeQueueItemToBlob(idx, triggerDirectSave = true) {
       const item = convQueue[idx];
       if (!item) return null;
 
@@ -544,23 +597,31 @@
       }
 
       const outName = buildCleanOutputFilename(item.artist, item.title, format);
-
-      if (triggerDirectDownload) {
-        const url = URL.createObjectURL(finalBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = outName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-      }
-
       const specSummary = (format === 'aiff' || format === 'wav' || format === 'flac')
         ? (bitDepth + '-Bit .' + format.toUpperCase())
         : (kbps + 'k .' + format.toUpperCase());
 
-      item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
+      if (triggerDirectSave) {
+        if (outputDirectoryHandle) {
+          await saveBlobDirectlyToFolder(outputDirectoryHandle, outName, finalBlob);
+          item.status = 'Saved to "' + outputDirectoryHandle.name + '" (' + specSummary + ') ✓';
+          document.getElementById('convStatusText').textContent = 'Saved "' + outName + '" directly to folder "' + outputDirectoryHandle.name + '" ✓';
+        } else {
+          const url = URL.createObjectURL(finalBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = outName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
+          document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + ')';
+        }
+      } else {
+        item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
+      }
+
       renderConvQueue();
 
       VNTEXCore.recordSuiteSong({
@@ -573,10 +634,6 @@
         sourceTool: 'converter'
       });
 
-      if (triggerDirectDownload) {
-        document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + ')';
-      }
-
       return { blob: finalBlob, fileName: outName };
     }
 
@@ -585,7 +642,10 @@
       const zipBadge = document.getElementById('zipModeBadge');
       const convBtn = document.getElementById('convertAllBtn');
 
-      if (convQueue.length >= 3) {
+      if (outputDirectoryHandle) {
+        zipBadge.classList.add('hidden');
+        convBtn.innerHTML = '<i class="fa-solid fa-folder-arrow-down mr-1"></i>Save All to "' + outputDirectoryHandle.name + '"';
+      } else if (convQueue.length >= 3) {
         zipBadge.classList.remove('hidden');
         convBtn.innerHTML = '<i class="fa-solid fa-file-zipper mr-1"></i>Convert &amp; Download .ZIP (' + convQueue.length + ')';
       } else {
@@ -595,7 +655,7 @@
 
       const box = document.getElementById('convQueueList');
       if (!convQueue.length) {
-        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drop audio files on the left to begin. Batches of 3+ songs automatically export as a .ZIP archive.</div>';
+        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drop audio files on the left to begin. Click "Choose Output Folder" above to save files directly to any folder on your Mac.</div>';
         return;
       }
 
@@ -628,6 +688,8 @@
       document.getElementById('bpmMinInput').addEventListener('input', updateBpmRangeBoundsUI);
       document.getElementById('bpmMaxInput').addEventListener('input', updateBpmRangeBoundsUI);
       document.getElementById('converterPresetSelect').addEventListener('change', (e) => applyConverterPreset(e.target.value));
+      document.getElementById('selectOutputFolderBtn').onclick = chooseOutputDirectory;
+      document.getElementById('clearOutputFolderBtn').onclick = clearOutputDirectory;
 
       const fileInp = document.getElementById('convFileInput');
       const dropZone = document.getElementById('convDropZone');
@@ -653,10 +715,19 @@
 
       document.getElementById('clearConvQueueBtn').onclick = () => { convQueue.length = 0; renderConvQueue(); };
 
-      // Batch Conversion Handler: 3+ tracks automatically bundle into a single .ZIP download
       document.getElementById('convertAllBtn').onclick = async () => {
         if (!convQueue.length) return;
 
+        // If user selected a direct output folder, write every file directly to that folder!
+        if (outputDirectoryHandle) {
+          for (let i = 0; i < convQueue.length; i++) {
+            await transcodeQueueItemToBlob(i, true);
+          }
+          document.getElementById('convStatusText').textContent = 'Saved all ' + convQueue.length + ' converted tracks directly to "' + outputDirectoryHandle.name + '" ✓';
+          return;
+        }
+
+        // Otherwise, if 3+ tracks and no folder selected, bundle as a .ZIP archive
         if (convQueue.length >= 3 && window.JSZip) {
           const zip = new JSZip();
           const usedNames = new Set();

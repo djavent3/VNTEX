@@ -117,7 +117,13 @@
 
     <div class="blood-panel rounded-xl px-4 py-3 flex justify-between items-center shrink-0 font-mono-tech text-xs">
       <span id="systemStatusLabel" class="text-white">Ready — Paste any YouTube link above</span>
-      <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg uppercase">Download All</button>
+      <div class="flex items-center gap-2">
+        <button id="selectBloodFolderBtn" type="button" class="blood-btn px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5">
+          <i class="fa-regular fa-folder-open"></i><span id="bloodFolderLabel">Choose Output Folder</span>
+        </button>
+        <button id="clearBloodFolderBtn" type="button" class="hidden blood-btn px-2.5 py-2 rounded-lg text-xs">×</button>
+        <button id="downloadAllBtn" type="button" class="blood-btn-solid px-6 py-2 rounded-lg uppercase">Download All</button>
+      </div>
     </div>
   </main>
 
@@ -138,6 +144,40 @@
 
   <script>
     const queue = [];
+
+    let bloodOutputDirHandle = null;
+    async function chooseBloodOutputFolder() {
+      if (!window.showDirectoryPicker) {
+        alert("Direct folder selection requires a Chromium browser (Chrome, Edge, Brave, Arc).");
+        return;
+      }
+      try {
+        const h = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (h) {
+          bloodOutputDirHandle = h;
+          document.getElementById("bloodFolderLabel").textContent = "Folder: " + h.name;
+          document.getElementById("clearBloodFolderBtn").classList.remove("hidden");
+          document.getElementById("systemStatusLabel").textContent = "Direct Output Folder set to \"" + h.name + "\"";
+        }
+      } catch {}
+    }
+    function clearBloodOutputFolder() {
+      bloodOutputDirHandle = null;
+      document.getElementById("bloodFolderLabel").textContent = "Choose Output Folder";
+      document.getElementById("clearBloodFolderBtn").classList.add("hidden");
+      document.getElementById("systemStatusLabel").textContent = "Reverted to browser download.";
+    }
+    async function saveBloodBlobToFolder(dirHandle, fileName, blob) {
+      const opts = { mode: "readwrite" };
+      if ((await dirHandle.queryPermission(opts)) !== "granted") {
+        if ((await dirHandle.requestPermission(opts)) !== "granted") throw new Error("Folder permission denied");
+      }
+      const fh = await dirHandle.getFileHandle(fileName, { create: true });
+      const w = await fh.createWritable();
+      await w.write(blob);
+      await w.close();
+    }
+
 
     function extractYouTubeIdAndCleanUrl(raw) {
       const str = String(raw || '').trim();
@@ -494,6 +534,8 @@
           item.status = 'Packed in .ZIP (' + sizeMb + ' MB) ✓';
           renderQueue();
           return { finalBlob, fileName };
+        } else if (triggerDownload && bloodOutputDirHandle) {
+          await saveBloodBlobToFolder(bloodOutputDirHandle, fileName, finalBlob);
         } else if (triggerDownload) {
           const a = document.createElement('a');
           a.href = dlUrl;
@@ -597,6 +639,10 @@
 
       document.getElementById('downloadAllBtn').onclick = async () => {
         if (!queue.length) return;
+        if (bloodOutputDirHandle) {
+          for (let i = 0; i < queue.length; i++) await processQueueItem(i, true);
+          return;
+        }
         if (queue.length >= 3 && window.JSZip) {
           const zip = new JSZip();
           const used = new Set();
@@ -630,6 +676,8 @@
         }
       };
 
+      document.getElementById('selectBloodFolderBtn').onclick = chooseBloodOutputFolder;
+      document.getElementById('clearBloodFolderBtn').onclick = clearBloodOutputFolder;
       document.getElementById('openSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.remove('hidden');
       document.getElementById('closeSuiteSettingsBtn').onclick = () => document.getElementById('suiteSettingsModal').classList.add('hidden');
     });
