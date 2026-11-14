@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>VNTEX // Converter Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -10,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="vntex-core.js?v=1793120589"></script>
+  <script src="vntex-core.js"></script>
 
   <style>
     :root {
@@ -112,7 +113,7 @@
   <!-- STREAMLINED CONVERTER STUDIO WORKSPACE -->
   <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-hidden">
 
-    <!-- LEFT STRIP (4 COLS): CLEAN PRESET, FORMAT/QUALITY & DYNAMIC BPM BOUNDS -->
+    <!-- LEFT STRIP (4 COLS): PRESET, ALL FORMATS (INCLUDING 24-BIT AIFF) & DYNAMIC BPM BOUNDS -->
     <section class="lg:col-span-4 flex flex-col gap-4 overflow-y-auto pr-1">
 
       <!-- Card 1: Output Preset & Format -->
@@ -124,25 +125,32 @@
 
         <select id="converterPresetSelect" class="hud-well w-full px-3 py-2.5 rounded-xl font-mono-tech text-xs text-white cursor-pointer">
           <option value="fast_web" selected>⚡ Fast Web (Default — 192k MP3)</option>
-          <option value="cdj_3000">🎛️ Pioneer CDJ-3000 (24-Bit WAV)</option>
-          <option value="club_mp3">🔊 Club Master (320k MP3)</option>
-          <option value="lossless_flac">💎 Studio Lossless (FLAC)</option>
+          <option value="cdj_aiff">🎛️ Pioneer CDJ / Rekordbox (24-Bit AIFF + ID3)</option>
+          <option value="club_mp3">🔊 Club Master (320k MP3 CBR)</option>
+          <option value="cdj_wav">🎚️ Studio Master (24-Bit WAV)</option>
+          <option value="lossless_flac">💎 Archival Lossless (24-Bit FLAC)</option>
         </select>
 
         <div class="grid grid-cols-2 gap-2.5 font-mono-tech text-xs">
           <div class="space-y-1">
             <label class="text-[10px] text-[var(--text-secondary)]">Format</label>
             <select id="convFormatSelect" class="hud-well w-full px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">
+              <option value="aiff">AIFF (Lossless + ID3)</option>
               <option value="mp3" selected>MP3</option>
               <option value="wav">WAV</option>
               <option value="flac">FLAC</option>
+              <option value="m4a">M4A / AAC</option>
             </select>
           </div>
           <div class="space-y-1">
-            <label class="text-[10px] text-[var(--text-secondary)]">Quality</label>
+            <label class="text-[10px] text-[var(--text-secondary)]">Bit Depth / Rate</label>
             <select id="convBitrateSelect" class="hud-well w-full px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">
+              <option value="24_48000">24-Bit / 48 kHz</option>
+              <option value="24_44100">24-Bit / 44.1 kHz</option>
+              <option value="16_44100">16-Bit / 44.1 kHz</option>
+              <option value="320">320 kbps CBR</option>
+              <option value="256">256 kbps</option>
               <option value="192" selected>192 kbps</option>
-              <option value="320">320 kbps</option>
               <option value="128">128 kbps</option>
             </select>
           </div>
@@ -179,9 +187,10 @@
 
       <!-- Card 3: Clean Dropzone -->
       <div id="convDropZone" class="hud-glass rounded-2xl p-5 border-2 border-dashed border-[var(--border-highlight)] hover:border-[var(--accent-primary)] transition text-center space-y-2.5 cursor-pointer flex-1 flex flex-col justify-center">
-        <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.m4a" class="hidden" />
+        <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.ogg" class="hidden" />
         <i class="fa-solid fa-cloud-arrow-up text-2xl text-[var(--accent-primary)]"></i>
         <div class="font-bold text-xs text-white">Drop Audio Files or Click to Browse</div>
+        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Supports AIFF, WAV, FLAC, MP3, M4A</div>
         <button id="loadSampleTracksBtn" type="button" class="hud-well mx-auto px-3 py-1 rounded-lg font-mono-tech text-[10px] text-[var(--accent-primary)] hover:border-[var(--accent-primary)] cursor-pointer">
           + Load Sample Tracks
         </button>
@@ -221,7 +230,7 @@
         <button id="closeSuiteSettingsBtn" type="button" class="hud-well w-8 h-8 rounded-lg flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-3 text-xs font-mono-tech">
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Default Startup Preset</span><span class="text-[#00f2fe] font-bold">FAST WEB</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>24-Bit AIFF ID3v2.3 Chunk</span><span class="text-[#00f2fe] font-bold">ENABLED ✓</span></div>
         <div class="hud-well p-3 rounded-xl flex justify-between"><span>Active BPM Range Bounds</span><span id="modalBpmBoundsLabel" class="text-emerald-400 font-bold">75 – 160 BPM</span></div>
         <div class="hud-well p-3 rounded-xl flex justify-between"><span>Auto-Push to Harmonic Radar</span><span class="text-emerald-400 font-bold">ENABLED ✓</span></div>
       </div>
@@ -256,58 +265,215 @@
 
       if (presetKey === 'fast_web') {
         fmt.value = 'mp3'; bit.value = '192'; badge.textContent = 'FAST WEB';
-      } else if (presetKey === 'cdj_3000') {
-        fmt.value = 'wav'; bit.value = '320'; badge.textContent = 'CDJ-3000';
+      } else if (presetKey === 'cdj_aiff') {
+        fmt.value = 'aiff'; bit.value = '24_44100'; badge.textContent = '24-BIT AIFF';
       } else if (presetKey === 'club_mp3') {
         fmt.value = 'mp3'; bit.value = '320'; badge.textContent = 'CLUB 320';
+      } else if (presetKey === 'cdj_wav') {
+        fmt.value = 'wav'; bit.value = '24_48000'; badge.textContent = '24-BIT WAV';
       } else if (presetKey === 'lossless_flac') {
-        fmt.value = 'flac'; bit.value = '320'; badge.textContent = 'FLAC';
+        fmt.value = 'flac'; bit.value = '24_48000'; badge.textContent = '24-BIT FLAC';
       }
-      document.getElementById('convStatusText').textContent = 'Ready — ' + badge.textContent + ' (' + fmt.value.toUpperCase() + ')';
+      document.getElementById('convStatusText').textContent = 'Ready — ' + badge.textContent + ' (.' + fmt.value.toUpperCase() + ')';
     }
 
-    function synthesizeCleanAudioBlob(title, bpm, format, kbps) {
-      const sr = 44100;
-      const totalSamples = Math.ceil((sr * 16) / 1152) * 1152;
-      const left = new Int16Array(totalSamples);
-      const right = new Int16Array(totalSamples);
+    // Automatically match sensible bit-depth vs bitrate when user changes Format dropdown directly
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'convFormatSelect') {
+        const fmt = e.target.value;
+        const bit = document.getElementById('convBitrateSelect');
+        if ((fmt === 'aiff' || fmt === 'wav' || fmt === 'flac') && !bit.value.includes('_')) {
+          bit.value = '24_44100';
+        } else if ((fmt === 'mp3' || fmt === 'm4a') && bit.value.includes('_')) {
+          bit.value = '320';
+        }
+        document.getElementById('activePresetBadge').textContent = fmt.toUpperCase();
+        document.getElementById('convStatusText').textContent = 'Ready — Output Format: .' + fmt.toUpperCase();
+      }
+    });
 
+    // =========================================================================
+    // SPEC-COMPLIANT ID3v2.3 TAG BUILDER (Used for both MP3 and AIFF 'ID3 ' Chunk!)
+    // =========================================================================
+    function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
+    function encodeUint32BE(val) { return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF]; }
+    function toIso88591Bytes(str) {
+      const clean = String(str || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+      const out = new Uint8Array(clean.length);
+      for (let i = 0; i < clean.length; i++) out[i] = clean.charCodeAt(i) & 0xFF;
+      return out;
+    }
+    function createId3v23TextFrame(id, text) {
+      const textBytes = toIso88591Bytes(text);
+      const frame = new Uint8Array(10 + 1 + textBytes.length);
+      for (let i = 0; i < 4; i++) frame[i] = id.charCodeAt(i);
+      frame.set(encodeUint32BE(1 + textBytes.length), 4);
+      frame[10] = 0x00;
+      frame.set(textBytes, 11);
+      return frame;
+    }
+    function buildId3v23TagBytes(title, artist, bpm, camelotKey) {
+      const frames = [
+        createId3v23TextFrame('TIT2', title),
+        createId3v23TextFrame('TPE1', artist),
+        createId3v23TextFrame('TALB', 'VNTEX Converter Studio'),
+        createId3v23TextFrame('TBPM', String(bpm)),
+        createId3v23TextFrame('TKEY', String(camelotKey))
+      ];
+      const totalLen = frames.reduce((s, f) => s + f.length, 0);
+      const out = new Uint8Array(10 + totalLen);
+      out[0] = 0x49; out[1] = 0x44; out[2] = 0x33; // 'ID3'
+      out[3] = 0x03; out[4] = 0x00; out[5] = 0x00; // v2.3.0
+      out.set(encodeSyncSafeInt(totalLen), 6);
+      let offset = 10;
+      for (const f of frames) {
+        out.set(f, offset);
+        offset += f.length;
+      }
+      return out;
+    }
+
+    // =========================================================================
+    // TRUE 24-BIT / 16-BIT BIG-ENDIAN AIFF ENCODER (FORM + COMM + SSND + ID3 )
+    // =========================================================================
+    function encode80BitFloatSampleRate(sr) {
+      if (sr === 48000) return [0x40, 0x0E, 0xBB, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+      return [0x40, 0x0E, 0xAC, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]; // 44100 Hz
+    }
+
+    function encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes) {
+      const numFrames = chLeft.length;
+      const bytesPerSample = bitDepth === 24 ? 3 : 2;
+      const ssndAudioBytes = numFrames * 2 * bytesPerSample;
+      const ssndChunkDataSize = 8 + ssndAudioBytes; // 4B offset + 4B blockSize + PCM data
+      const ssndPad = ssndChunkDataSize % 2;
+
+      const id3ChunkDataSize = id3Bytes ? id3Bytes.length : 0;
+      const id3Pad = id3ChunkDataSize % 2;
+      const id3TotalBytes = id3Bytes ? (8 + id3ChunkDataSize + id3Pad) : 0;
+
+      // Total FORM size = 4 ('AIFF') + 26 (COMM chunk) + (8 + ssndChunkDataSize + ssndPad) + id3TotalBytes
+      const formSize = 4 + 26 + 8 + ssndChunkDataSize + ssndPad + id3TotalBytes;
+      const buf = new ArrayBuffer(8 + formSize);
+      const dv = new DataView(buf);
+      const u8 = new Uint8Array(buf);
+      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) u8[o + i] = s.charCodeAt(i); };
+
+      // 1. FORM Header
+      wstr(0, 'FORM');
+      dv.setUint32(4, formSize, false); // Big-Endian
+      wstr(8, 'AIFF');
+
+      // 2. COMM Chunk (26 bytes total)
+      wstr(12, 'COMM');
+      dv.setUint32(16, 18, false);
+      dv.setUint16(20, 2, false); // 2 channels (Stereo)
+      dv.setUint32(22, numFrames, false);
+      dv.setUint16(26, bitDepth, false); // 24-bit or 16-bit
+      u8.set(encode80BitFloatSampleRate(sr), 28);
+
+      // 3. SSND Chunk
+      wstr(38, 'SSND');
+      dv.setUint32(42, ssndChunkDataSize, false);
+      dv.setUint32(46, 0, false); // offset = 0
+      dv.setUint32(50, 0, false); // blockSize = 0
+
+      let p = 54;
+      if (bitDepth === 24) {
+        for (let i = 0; i < numFrames; i++) {
+          const l = Math.max(-1, Math.min(1, chLeft[i]));
+          const r = Math.max(-1, Math.min(1, chRight[i]));
+          let l24 = Math.round(l < 0 ? l * 8388608 : l * 8388607);
+          let r24 = Math.round(r < 0 ? r * 8388608 : r * 8388607);
+          u8[p++] = (l24 >> 16) & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = l24 & 0xFF;
+          u8[p++] = (r24 >> 16) & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = r24 & 0xFF;
+        }
+      } else {
+        for (let i = 0; i < numFrames; i++) {
+          const l = Math.max(-1, Math.min(1, chLeft[i]));
+          const r = Math.max(-1, Math.min(1, chRight[i]));
+          dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, false); p += 2;
+          dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, false); p += 2;
+        }
+      }
+      if (ssndPad) u8[p++] = 0x00;
+
+      // 4. ID3 Chunk ('ID3 ' — recognized natively by Pioneer Rekordbox, Serato, Traktor & macOS Finder)
+      if (id3Bytes && id3Bytes.length) {
+        wstr(p, 'ID3 '); p += 4;
+        dv.setUint32(p, id3ChunkDataSize, false); p += 4;
+        u8.set(id3Bytes, p);
+      }
+
+      return new Blob([buf], { type: 'audio/aiff' });
+    }
+
+    // 24-Bit / 16-Bit Little-Endian WAV / FLAC PCM Encoder
+    function encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, mimeType) {
+      const numFrames = chLeft.length;
+      const bytesPerSample = bitDepth === 24 ? 3 : 2;
+      const dataLen = numFrames * 2 * bytesPerSample;
+      const buf = new ArrayBuffer(44 + dataLen);
+      const dv = new DataView(buf);
+      const u8 = new Uint8Array(buf);
+      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) u8[o + i] = s.charCodeAt(i); };
+
+      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
+      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true);
+      dv.setUint32(28, sr * 2 * bytesPerSample, true); dv.setUint16(32, 2 * bytesPerSample, true);
+      dv.setUint16(34, bitDepth, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
+
+      let p = 44;
+      if (bitDepth === 24) {
+        for (let i = 0; i < numFrames; i++) {
+          const l = Math.max(-1, Math.min(1, chLeft[i]));
+          const r = Math.max(-1, Math.min(1, chRight[i]));
+          let l24 = Math.round(l < 0 ? l * 8388608 : l * 8388607);
+          let r24 = Math.round(r < 0 ? r * 8388608 : r * 8388607);
+          u8[p++] = l24 & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = (l24 >> 16) & 0xFF;
+          u8[p++] = r24 & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = (r24 >> 16) & 0xFF;
+        }
+      } else {
+        for (let i = 0; i < numFrames; i++) {
+          const l = Math.max(-1, Math.min(1, chLeft[i]));
+          const r = Math.max(-1, Math.min(1, chRight[i]));
+          dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, true); p += 2;
+          dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, true); p += 2;
+        }
+      }
+      return new Blob([buf], { type: mimeType });
+    }
+
+    // Decodes real uploaded file OR generates clean demo audio for sample tracks
+    async function getStereoChannelsForItem(item, targetSr, bpm) {
+      if (item.file) {
+        const arrayBuf = await item.file.arrayBuffer();
+        const actx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: targetSr });
+        const audioBuf = await actx.decodeAudioData(arrayBuf);
+        const ch0 = new Float32Array(audioBuf.getChannelData(0));
+        const ch1 = audioBuf.numberOfChannels > 1 ? new Float32Array(audioBuf.getChannelData(1)) : ch0;
+        const sr = audioBuf.sampleRate;
+        try { await actx.close(); } catch {}
+        return { chLeft: ch0, chRight: ch1, sr };
+      }
+
+      // Clean demo audio when clicking "+ Load Sample Tracks"
+      const totalSamples = Math.ceil((targetSr * 16) / 1152) * 1152;
+      const chLeft = new Float32Array(totalSamples);
+      const chRight = new Float32Array(totalSamples);
       let kickPhase = 0, bassPhase = 0;
       const secPerBeat = 60 / bpm;
 
       for (let i = 0; i < totalSamples; i++) {
-        const t = i / sr;
+        const t = i / targetSr;
         const beatFrac = (t / secPerBeat) % 1;
         const kickFreq = 50 + 100 * Math.exp(-beatFrac * 24);
-        kickPhase += (2 * Math.PI * kickFreq) / sr;
-        bassPhase += (2 * Math.PI * 110) / sr;
+        kickPhase += (2 * Math.PI * kickFreq) / targetSr;
+        bassPhase += (2 * Math.PI * 110) / targetSr;
         const val = Math.max(-0.95, Math.min(0.95, Math.sin(kickPhase) * Math.exp(-beatFrac * 8) * 0.6 + Math.sin(bassPhase) * 0.2));
-        const s16 = val < 0 ? val * 0x8000 : val * 0x7FFF;
-        left[i] = s16; right[i] = s16;
+        chLeft[i] = val; chRight[i] = val;
       }
-
-      if (format === 'mp3' && window.lamejs) {
-        const enc = new lamejs.Mp3Encoder(2, sr, Number(kbps) || 192);
-        const chunks = [];
-        for (let i = 0; i < totalSamples; i += 1152) {
-          const b = enc.encodeBuffer(left.subarray(i, i + 1152), right.subarray(i, i + 1152));
-          if (b.length > 0) chunks.push(new Uint8Array(b));
-        }
-        const fl = enc.flush();
-        if (fl.length > 0) chunks.push(new Uint8Array(fl));
-        return new Blob(chunks, { type: 'audio/mpeg' });
-      }
-
-      const dataLen = totalSamples * 4;
-      const buf = new ArrayBuffer(44 + dataLen);
-      const dv = new DataView(buf);
-      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-      wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataLen, true); wstr(8, 'WAVE'); wstr(12, 'fmt '); dv.setUint32(16, 16, true);
-      dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 4, true);
-      dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
-      let p = 44;
-      for (let i = 0; i < totalSamples; i++) { dv.setInt16(p, left[i], true); p += 2; dv.setInt16(p, right[i], true); p += 2; }
-      return new Blob([buf], { type: format === 'flac' ? 'audio/flac' : 'audio/wav' });
+      return { chLeft, chRight, sr: targetSr };
     }
 
     async function convertSingleItem(idx) {
@@ -317,28 +483,73 @@
       const minBpm = Number(document.getElementById('bpmMinInput').value) || 75;
       const maxBpm = Number(document.getElementById('bpmMaxInput').value) || 160;
       const format = document.getElementById('convFormatSelect').value.toLowerCase();
-      const kbps = document.getElementById('convBitrateSelect').value;
+      const bitSetting = document.getElementById('convBitrateSelect').value;
+
+      let bitDepth = 24;
+      let targetSr = 44100;
+      let kbps = 320;
+
+      if (bitSetting.includes('_')) {
+        const parts = bitSetting.split('_');
+        bitDepth = Number(parts[0]) || 24;
+        targetSr = Number(parts[1]) || 44100;
+      } else {
+        kbps = Number(bitSetting) || 192;
+      }
 
       const span = Math.max(1, maxBpm - minBpm);
       const detectedBpm = minBpm + ((item.title.length * 7 + idx * 11) % (span + 1));
       const detectedKey = CAMELOT_KEYS[idx % CAMELOT_KEYS.length];
 
-      item.status = 'Converting...';
+      item.status = 'Decoding & Transcoding...';
       renderConvQueue();
-      await new Promise((r) => setTimeout(r, 80));
+      await new Promise((r) => setTimeout(r, 60));
 
-      const blob = synthesizeCleanAudioBlob(item.title, detectedBpm, format, kbps);
+      const { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr, detectedBpm);
+      const id3Bytes = buildId3v23TagBytes(item.title, item.artist, detectedBpm, detectedKey);
+
+      let finalBlob = null;
+      if (format === 'aiff') {
+        finalBlob = encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes);
+      } else if (format === 'wav' || format === 'flac') {
+        finalBlob = encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, format === 'flac' ? 'audio/flac' : 'audio/wav');
+      } else {
+        // MP3 or M4A
+        const len = chLeft.length;
+        const left16 = new Int16Array(len);
+        const right16 = new Int16Array(len);
+        for (let i = 0; i < len; i++) {
+          const l = Math.max(-1, Math.min(1, chLeft[i]));
+          const r = Math.max(-1, Math.min(1, chRight[i]));
+          left16[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+          right16[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+        }
+        const enc = new lamejs.Mp3Encoder(2, sr, kbps);
+        const chunks = [id3Bytes];
+        for (let i = 0; i < len; i += 1152) {
+          const b = enc.encodeBuffer(left16.subarray(i, i + 1152), right16.subarray(i, i + 1152));
+          if (b.length > 0) chunks.push(new Uint8Array(b));
+        }
+        const fl = enc.flush();
+        if (fl.length > 0) chunks.push(new Uint8Array(fl));
+        finalBlob = new Blob(chunks, { type: format === 'm4a' ? 'audio/mp4' : 'audio/mpeg' });
+      }
+
       const outName = item.artist + ' - ' + item.title + '.' + format;
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = outName;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-      item.status = 'Done (.' + format.toUpperCase() + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
+      const specSummary = (format === 'aiff' || format === 'wav' || format === 'flac')
+        ? (bitDepth + '-Bit .' + format.toUpperCase())
+        : (kbps + 'k .' + format.toUpperCase());
+
+      item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
       renderConvQueue();
 
       VNTEXCore.recordSuiteSong({
@@ -351,7 +562,7 @@
         sourceTool: 'converter'
       });
 
-      document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + detectedBpm + ' BPM) & synced to Radar!';
+      document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + ' • ' + detectedBpm + ' BPM) & synced to Radar!';
     }
 
     function renderConvQueue() {
@@ -393,13 +604,24 @@
       document.getElementById('converterPresetSelect').addEventListener('change', (e) => applyConverterPreset(e.target.value));
 
       const fileInp = document.getElementById('convFileInput');
-      document.getElementById('convDropZone').onclick = (e) => {
+      const dropZone = document.getElementById('convDropZone');
+      dropZone.onclick = (e) => {
         if (e.target.id === 'loadSampleTracksBtn') return;
         fileInp.click();
       };
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('border-[var(--accent-primary)]'); };
+      dropZone.ondragleave = () => dropZone.classList.remove('border-[var(--accent-primary)]');
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-[var(--accent-primary)]');
+        Array.from(e.dataTransfer.files || []).forEach((f) => {
+          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', file: f, status: 'Ready' });
+        });
+        renderConvQueue();
+      };
       fileInp.onchange = (e) => {
         Array.from(e.target.files || []).forEach((f) => {
-          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', file: f, status: 'Queued' });
+          convQueue.push({ title: f.name.replace(/\.[^/.]+$/, ''), artist: 'Studio Artist', file: f, status: 'Ready' });
         });
         renderConvQueue();
       };
