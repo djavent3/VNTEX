@@ -299,26 +299,40 @@
       await writable.close();
     }
 
+    // Parses "## \"Title\" - Artist" or "## Title - Artist" -> Title first, Artist second
     function parseArtistAndTitleFromFilename(rawFilename) {
       let base = String(rawFilename || '').replace(/\.[^/.]+$/, '').trim();
-      base = base.replace(/^\d{1,3}\s*[-._]\s*/, '');
+      // Strip leading track numbers like "01 ", "01 - ", "01. ", "12_"
+      base = base.replace(/^\d{1,3}(?:\s*[-._]\s*|\s+)/, '').trim();
 
+      // Split on " - " where LEFT side is Title (with or without quotes) and RIGHT side is Artist
       const sepMatch = base.match(/\s+[-–—]\s+/);
       if (sepMatch) {
         const idx = base.indexOf(sepMatch[0]);
-        const artist = base.slice(0, idx).replace(/_/g, ' ').trim();
-        const title = base.slice(idx + sepMatch[0].length).replace(/_/g, ' ').trim();
-        if (artist && title) return { artist, title };
+        const rawTitlePart = base.slice(0, idx).trim();
+        const rawArtistPart = base.slice(idx + sepMatch[0].length).trim();
+        if (rawTitlePart && rawArtistPart) {
+          return { title: rawTitlePart, artist: rawArtistPart };
+        }
       }
 
       return { artist: '', title: base || 'Track' };
     }
 
+    // Outputs "Title - Artist.ext" (or just "Title.ext" if Artist is blank)
+    // Converts ASCII double quotes (") to typographic quotes (“ ”) so macOS/Chrome keeps the quotes in the filename instead of turning them into underscores!
+    function sanitizeFilenameKeepQuotes(str) {
+      let s = String(str || '').trim();
+      // Replace paired straight quotes "Title" with “Title” so OS filesystems allow them
+      s = s.replace(/^"([^"]+)"$/, '“$1”').replace(/"([^"]+)"/g, '“$1”');
+      return s.replace(/[\\/:*?"<>|]/g, '').trim();
+    }
+
     function buildCleanOutputFilename(artist, title, format) {
-      const cleanArtist = String(artist || '').replace(/[\\/:*?"<>|]/g, '').trim();
-      const cleanTitle = String(title || 'Track').replace(/[\\/:*?"<>|]/g, '').trim();
+      const cleanTitle = sanitizeFilenameKeepQuotes(title || 'Track');
+      const cleanArtist = sanitizeFilenameKeepQuotes(artist || '');
       if (cleanArtist) {
-        return cleanArtist + ' - ' + cleanTitle + '.' + format;
+        return cleanTitle + ' - ' + cleanArtist + '.' + format;
       }
       return cleanTitle + '.' + format;
     }
