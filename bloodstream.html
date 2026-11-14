@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="vntex-core.js"></script>
@@ -153,7 +154,7 @@
         .replace(/\(official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\)/ig, '')
         .replace(/\[official\s*(music\s*)?(video|audio|lyric\s*video|visualizer)\]/ig, '')
         .trim();
-      let artist = String(rawUploader || 'Creator').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
+      let artist = String(rawUploader || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
       let title = cleaned || 'Audio Track';
       if (cleaned.includes(' - ')) {
         const parts = cleaned.split(' - ');
@@ -481,14 +482,19 @@
           finalBlob = new Blob([hdr, ...frames, rawAudioBlob], { type: 'audio/mpeg' });
         }
 
-        const fileName = safeArtist + ' - ' + safeTitle + '.' + format;
+        const fileName = (safeArtist ? (safeArtist + ' - ' + safeTitle) : safeTitle) + '.' + format;
         const dlUrl = URL.createObjectURL(finalBlob);
 
         const player = document.getElementById('bloodPreviewPlayer');
         player.src = dlUrl;
         player.classList.remove('hidden');
 
-        if (triggerDownload) {
+        if (triggerDownload === 'zip') {
+          const sizeMb = (finalBlob.size / (1024 * 1024)).toFixed(2);
+          item.status = 'Packed in .ZIP (' + sizeMb + ' MB) ✓';
+          renderQueue();
+          return { finalBlob, fileName };
+        } else if (triggerDownload) {
           const a = document.createElement('a');
           a.href = dlUrl;
           a.download = fileName;
@@ -559,7 +565,7 @@
         document.getElementById('ytUrlInput').value = '';
         const { clean, vid } = extractYouTubeIdAndCleanUrl(raw);
         let rawTitle = vid ? ('YouTube Track [' + vid + ']') : raw;
-        let rawUploader = 'Creator';
+        let rawUploader = '';
         let thumb = vid ? ('https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg') : '';
 
         document.getElementById('systemStatusLabel').textContent = 'Loading track metadata...';
@@ -583,15 +589,44 @@
       document.getElementById('importLocalAudioBtn').onclick = () => localInp.click();
       localInp.onchange = (e) => {
         Array.from(e.target.files || []).forEach((f) => {
-          const parsed = parseCleanArtistAndTitle(f.name.replace(/\.[^/.]+$/, ''), 'Artist');
+          const parsed = parseCleanArtistAndTitle(f.name.replace(/\.[^/.]+$/, ''), '');
           queue.push({ url: 'local://file', vid: null, title: parsed.title, uploader: parsed.artist, thumb: '', sourceFile: f, status: 'Ready ✓' });
         });
         renderQueue();
       };
 
       document.getElementById('downloadAllBtn').onclick = async () => {
-        for (let i = 0; i < queue.length; i++) {
-          await processQueueItem(i, true);
+        if (!queue.length) return;
+        if (queue.length >= 3 && window.JSZip) {
+          const zip = new JSZip();
+          const used = new Set();
+          document.getElementById('systemStatusLabel').textContent = 'Extracting & bundling ' + queue.length + ' tracks into .ZIP archive...';
+          for (let i = 0; i < queue.length; i++) {
+            const res = await processQueueItem(i, 'zip');
+            if (res && res.finalBlob) {
+              let name = res.fileName;
+              if (used.has(name)) {
+                const d = name.lastIndexOf('.');
+                name = name.slice(0, d) + '_' + (i + 1) + name.slice(d);
+              }
+              used.add(name);
+              zip.file(name, res.finalBlob);
+            }
+          }
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          const u = URL.createObjectURL(zipBlob);
+          const a = document.createElement('a');
+          a.href = u;
+          a.download = 'VNTEX_Bloodstream_Batch_' + queue.length + '_Tracks.zip';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(u), 8000);
+          document.getElementById('systemStatusLabel').textContent = 'Downloaded VNTEX_Bloodstream_Batch_' + queue.length + '_Tracks.zip ✓';
+        } else {
+          for (let i = 0; i < queue.length; i++) {
+            await processQueueItem(i, true);
+          }
         }
       };
 
