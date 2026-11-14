@@ -191,7 +191,7 @@
         <input id="convFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.aiff,.aif,.m4a,.ogg" class="hidden" />
         <i class="fa-solid fa-cloud-arrow-up text-2xl text-[var(--accent-primary)]"></i>
         <div class="font-bold text-xs text-white">Drop Audio Files or Click to Browse</div>
-        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Choose a target folder or auto-bundle 3+ tracks as .ZIP</div>
+        <div class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Preserves original cover art • 3+ files always bundle as .ZIP</div>
       </div>
 
     </section>
@@ -211,7 +211,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <!-- Direct Output Folder Selector -->
           <div class="flex items-center gap-1">
-            <button id="selectOutputFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-[#00f2fe] hover:border-[#00f2fe] flex items-center gap-1.5 cursor-pointer" title="Choose a local folder on your Mac/PC to save converted tracks directly">
+            <button id="selectOutputFolderBtn" type="button" class="hud-well px-3 py-1.5 rounded-lg text-[11px] text-[#00f2fe] hover:border-[#00f2fe] flex items-center gap-1.5 cursor-pointer" title="Choose a local folder on your Mac/PC to save converted tracks or .ZIP archive directly">
               <i class="fa-regular fa-folder-open"></i>
               <span id="outputFolderLabel">Choose Output Folder</span>
             </button>
@@ -228,7 +228,7 @@
       <div id="convQueueList" class="flex-1 overflow-y-auto p-4 space-y-2.5"></div>
 
       <div class="px-5 py-3 border-t border-[var(--border-hairline)] bg-[#050509] flex items-center justify-between font-mono-tech text-[11px] text-[var(--text-secondary)]">
-        <span id="convStatusText">Ready — Fast Web (192kbps MP3)</span>
+        <span id="convStatusText">Ready — Artwork Preservation Active</span>
         <a href="radar.html" class="text-[var(--accent-primary)] hover:underline">Open in Radar →</a>
       </div>
     </section>
@@ -244,8 +244,8 @@
       </div>
       <div class="p-5 space-y-3 text-xs font-mono-tech">
         <div class="hud-well p-3 rounded-xl flex justify-between"><span>Direct Folder Export</span><span id="modalFolderState" class="text-[#00f2fe] font-bold">BROWSER DEFAULT</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Download Mode (3+ Songs)</span><span class="text-amber-300 font-bold">AUTO .ZIP ARCHIVE ✓</span></div>
-        <div class="hud-well p-3 rounded-xl flex justify-between"><span>24-Bit AIFF ID3v2.3 Chunk</span><span class="text-emerald-400 font-bold">ENABLED ✓</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Batch Download (3+ Songs)</span><span class="text-amber-300 font-bold">ALWAYS .ZIP (FOLDER OR WEB) ✓</span></div>
+        <div class="hud-well p-3 rounded-xl flex justify-between"><span>Artwork Preservation (APIC)</span><span class="text-emerald-400 font-bold">ACTIVE ✓</span></div>
       </div>
     </div>
   </div>
@@ -255,7 +255,6 @@
     const convQueue = [];
     let outputDirectoryHandle = null;
 
-    // Pick a direct destination folder on disk via File System Access API
     async function chooseOutputDirectory() {
       if (!window.showDirectoryPicker) {
         alert('Direct folder selection requires a Chromium browser (Chrome, Edge, Brave, Arc).');
@@ -269,13 +268,11 @@
           document.getElementById('clearOutputFolderBtn').classList.remove('hidden');
           document.getElementById('clearOutputFolderBtn').classList.add('flex');
           document.getElementById('modalFolderState').textContent = handle.name.toUpperCase();
-          document.getElementById('convStatusText').textContent = 'Direct Output Folder set to "' + handle.name + '" — files will save directly into this folder.';
+          document.getElementById('convStatusText').textContent = 'Output Folder set to "' + handle.name + '" (3+ tracks will save as a .ZIP inside this folder).';
           renderConvQueue();
         }
       } catch (err) {
-        if (err && err.name !== 'AbortError') {
-          console.warn('Directory picker error:', err);
-        }
+        if (err && err.name !== 'AbortError') console.warn('Directory picker error:', err);
       }
     }
 
@@ -302,7 +299,6 @@
       await writable.close();
     }
 
-    // Clean Filename Parser: Extracts Artist & Title if separated by a dash; otherwise leaves Artist BLANK ("")
     function parseArtistAndTitleFromFilename(rawFilename) {
       let base = String(rawFilename || '').replace(/\.[^/.]+$/, '').trim();
       base = base.replace(/^\d{1,3}\s*[-._]\s*/, '');
@@ -327,6 +323,147 @@
       return cleanTitle + '.' + format;
     }
 
+    // =========================================================================
+    // MULTI-FORMAT EMBEDDED ARTWORK EXTRACTOR (MP3, AIFF, FLAC, M4A)
+    // =========================================================================
+    function findImageSignatureSlice(bytes) {
+      for (let i = 0; i < bytes.length - 4; i++) {
+        // JPEG SOI marker: FF D8 FF
+        if (bytes[i] === 0xFF && bytes[i + 1] === 0xD8 && bytes[i + 2] === 0xFF) {
+          return { bytes: bytes.slice(i), mime: 'image/jpeg' };
+        }
+        // PNG signature: 89 50 4E 47
+        if (bytes[i] === 0x89 && bytes[i + 1] === 0x50 && bytes[i + 2] === 0x4E && bytes[i + 3] === 0x47) {
+          return { bytes: bytes.slice(i), mime: 'image/png' };
+        }
+      }
+      return null;
+    }
+
+    function parseId3BlockForArtwork(u8, startOffset) {
+      if (startOffset + 10 >= u8.length) return null;
+      if (u8[startOffset] !== 0x49 || u8[startOffset + 1] !== 0x44 || u8[startOffset + 2] !== 0x33) return null;
+
+      const version = u8[startOffset + 3];
+      const tagSize = ((u8[startOffset + 6] & 0x7F) << 21) | ((u8[startOffset + 7] & 0x7F) << 14) | ((u8[startOffset + 8] & 0x7F) << 7) | (u8[startOffset + 9] & 0x7F);
+      const endPos = Math.min(u8.length, startOffset + 10 + tagSize);
+      let pos = startOffset + 10;
+
+      while (pos + 10 < endPos) {
+        if (u8[pos] === 0) break;
+        if (version === 2) {
+          // ID3v2.2 (3-byte frame ID + 3-byte size)
+          const fid = String.fromCharCode(u8[pos], u8[pos + 1], u8[pos + 2]);
+          const fsize = (u8[pos + 3] << 16) | (u8[pos + 4] << 8) | u8[pos + 5];
+          if (fsize <= 0 || pos + 6 + fsize > endPos) break;
+          if (fid === 'PIC') {
+            const found = findImageSignatureSlice(u8.subarray(pos + 6, pos + 6 + fsize));
+            if (found) return found;
+          }
+          pos += 6 + fsize;
+        } else {
+          // ID3v2.3 or ID3v2.4 (4-byte frame ID)
+          const fid = String.fromCharCode(u8[pos], u8[pos + 1], u8[pos + 2], u8[pos + 3]);
+          let fsize = 0;
+          if (version === 4) {
+            fsize = ((u8[pos + 4] & 0x7F) << 21) | ((u8[pos + 5] & 0x7F) << 14) | ((u8[pos + 6] & 0x7F) << 7) | (u8[pos + 7] & 0x7F);
+          } else {
+            fsize = ((u8[pos + 4] << 24) >>> 0) + (u8[pos + 5] << 16) + (u8[pos + 6] << 8) + u8[pos + 7];
+          }
+          if (fsize <= 0 || pos + 10 + fsize > endPos) break;
+          if (fid === 'APIC') {
+            const found = findImageSignatureSlice(u8.subarray(pos + 10, pos + 10 + fsize));
+            if (found) return found;
+          }
+          pos += 10 + fsize;
+        }
+      }
+      return null;
+    }
+
+    async function extractEmbeddedArtworkFromFile(file) {
+      try {
+        const buf = await file.arrayBuffer();
+        const u8 = new Uint8Array(buf);
+        const dv = new DataView(buf);
+
+        // 1. Check ID3v2 at start of file (MP3, etc.)
+        if (u8.length > 10 && u8[0] === 0x49 && u8[1] === 0x44 && u8[2] === 0x33) {
+          const res = parseId3BlockForArtwork(u8, 0);
+          if (res) return await normalizeCoverArtToJpegBytes(res.bytes, res.mime);
+        }
+
+        // 2. Check AIFF 'ID3 ' chunk
+        if (u8.length > 12 && u8[0] === 0x46 && u8[1] === 0x4F && u8[2] === 0x52 && u8[3] === 0x4D) {
+          let offset = 12;
+          while (offset + 8 <= u8.length) {
+            const cid = String.fromCharCode(u8[offset], u8[offset + 1], u8[offset + 2], u8[offset + 3]);
+            const csize = dv.getUint32(offset + 4, false);
+            if (cid === 'ID3 ') {
+              const res = parseId3BlockForArtwork(u8, offset + 8);
+              if (res) return await normalizeCoverArtToJpegBytes(res.bytes, res.mime);
+            }
+            offset += 8 + csize + (csize % 2);
+          }
+        }
+
+        // 3. Check FLAC METADATA_BLOCK_PICTURE (type 6)
+        if (u8.length > 8 && u8[0] === 0x66 && u8[1] === 0x4C && u8[2] === 0x61 && u8[3] === 0x43) {
+          let offset = 4;
+          while (offset + 4 <= u8.length) {
+            const isLast = (u8[offset] & 0x80) !== 0;
+            const blockType = u8[offset] & 0x7F;
+            const blockLen = (u8[offset + 1] << 16) | (u8[offset + 2] << 8) | u8[offset + 3];
+            if (blockType === 6 && offset + 4 + blockLen <= u8.length) {
+              const found = findImageSignatureSlice(u8.subarray(offset + 4, offset + 4 + blockLen));
+              if (found) return await normalizeCoverArtToJpegBytes(found.bytes, found.mime);
+            }
+            offset += 4 + blockLen;
+            if (isLast) break;
+          }
+        }
+
+        // 4. Check M4A / MP4 'covr' atom
+        for (let i = 0; i < u8.length - 16; i++) {
+          if (u8[i] === 0x63 && u8[i + 1] === 0x6F && u8[i + 2] === 0x76 && u8[i + 3] === 0x72) {
+            const atomSize = dv.getUint32(i - 4, false);
+            if (atomSize > 16 && i - 4 + atomSize <= u8.length) {
+              const found = findImageSignatureSlice(u8.subarray(i + 4, i - 4 + atomSize));
+              if (found) return await normalizeCoverArtToJpegBytes(found.bytes, found.mime);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Artwork scan note:', e);
+      }
+      return null;
+    }
+
+    // Normalizes extracted JPEG/PNG bytes into clean 500x500 JPEG bytes + DataURL for preview & ID3v2.3 APIC
+    async function normalizeCoverArtToJpegBytes(rawBytes, mimeType) {
+      const blob = new Blob([rawBytes], { type: mimeType || 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      try {
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+        const canvas = document.createElement('canvas');
+        const size = Math.min(600, Math.max(300, Math.min(img.width, img.height)));
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const s = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const binStr = atob(dataUrl.split(',')[1]);
+        const jpegBytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) jpegBytes[i] = binStr.charCodeAt(i);
+        URL.revokeObjectURL(url);
+        return { jpegBytes, dataUrl };
+      } catch {
+        URL.revokeObjectURL(url);
+        return { jpegBytes: rawBytes, dataUrl: '' };
+      }
+    }
+
     function updateBpmRangeBoundsUI() {
       const minInput = document.getElementById('bpmMinInput');
       const maxInput = document.getElementById('bpmMaxInput');
@@ -338,8 +475,7 @@
       }
       document.getElementById('bpmMinValLabel').textContent = String(minVal);
       document.getElementById('bpmMaxValLabel').textContent = String(maxVal);
-      const labelText = minVal + ' – ' + maxVal + ' BPM';
-      document.getElementById('bpmRangeDynamicText').textContent = labelText;
+      document.getElementById('bpmRangeDynamicText').textContent = minVal + ' – ' + maxVal + ' BPM';
     }
 
     function applyConverterPreset(presetKey) {
@@ -375,6 +511,7 @@
       }
     });
 
+    // Spec-Compliant ID3v2.3 Tag Builder (Includes APIC Cover Art Frame!)
     function encodeSyncSafeInt(val) { return [(val >> 21) & 0x7F, (val >> 14) & 0x7F, (val >> 7) & 0x7F, val & 0x7F]; }
     function encodeUint32BE(val) { return [(val >>> 24) & 0xFF, (val >>> 16) & 0xFF, (val >>> 8) & 0xFF, val & 0xFF]; }
     function toIso88591Bytes(str) {
@@ -392,7 +529,24 @@
       frame.set(textBytes, 11);
       return frame;
     }
-    function buildId3v23TagBytes(title, artist, bpm, camelotKey) {
+    function createId3v23ApicFrame(jpegBytes) {
+      if (!jpegBytes || !jpegBytes.length) return new Uint8Array(0);
+      const mime = toIso88591Bytes('image/jpeg');
+      const payloadLen = 1 + mime.length + 1 + 1 + 1 + jpegBytes.length;
+      const frame = new Uint8Array(10 + payloadLen);
+      frame[0] = 0x41; frame[1] = 0x50; frame[2] = 0x49; frame[3] = 0x43; // 'APIC'
+      frame.set(encodeUint32BE(payloadLen), 4);
+      let o = 10;
+      frame[o++] = 0x00;
+      frame.set(mime, o); o += mime.length;
+      frame[o++] = 0x00;
+      frame[o++] = 0x03; // Front Cover
+      frame[o++] = 0x00;
+      frame.set(jpegBytes, o);
+      return frame;
+    }
+
+    function buildId3v23TagBytes(title, artist, bpm, camelotKey, coverJpegBytes) {
       const frames = [
         createId3v23TextFrame('TIT2', title || 'Track'),
         createId3v23TextFrame('TBPM', String(bpm)),
@@ -400,6 +554,9 @@
       ];
       if (artist && String(artist).trim()) {
         frames.push(createId3v23TextFrame('TPE1', String(artist).trim()));
+      }
+      if (coverJpegBytes && coverJpegBytes.length) {
+        frames.push(createId3v23ApicFrame(coverJpegBytes));
       }
       const totalLen = frames.reduce((s, f) => s + f.length, 0);
       const out = new Uint8Array(10 + totalLen);
@@ -567,8 +724,15 @@
       renderConvQueue();
       await new Promise((r) => setTimeout(r, 40));
 
+      // Extract original artwork if not already cached on item
+      if (item.file && item.coverJpegBytes === undefined) {
+        const art = await extractEmbeddedArtworkFromFile(item.file);
+        item.coverJpegBytes = art ? art.jpegBytes : null;
+        item.coverDataUrl = art ? art.dataUrl : '';
+      }
+
       const { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr, detectedBpm);
-      const id3Bytes = buildId3v23TagBytes(item.title, item.artist, detectedBpm, detectedKey);
+      const id3Bytes = buildId3v23TagBytes(item.title, item.artist, detectedBpm, detectedKey, item.coverJpegBytes);
 
       let finalBlob = null;
       if (format === 'aiff') {
@@ -600,11 +764,12 @@
       const specSummary = (format === 'aiff' || format === 'wav' || format === 'flac')
         ? (bitDepth + '-Bit .' + format.toUpperCase())
         : (kbps + 'k .' + format.toUpperCase());
+      const artNote = item.coverJpegBytes ? ' + Art' : '';
 
       if (triggerDirectSave) {
         if (outputDirectoryHandle) {
           await saveBlobDirectlyToFolder(outputDirectoryHandle, outName, finalBlob);
-          item.status = 'Saved to "' + outputDirectoryHandle.name + '" (' + specSummary + ') ✓';
+          item.status = 'Saved to "' + outputDirectoryHandle.name + '" (' + specSummary + artNote + ') ✓';
           document.getElementById('convStatusText').textContent = 'Saved "' + outName + '" directly to folder "' + outputDirectoryHandle.name + '" ✓';
         } else {
           const url = URL.createObjectURL(finalBlob);
@@ -615,11 +780,11 @@
           a.click();
           a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 5000);
-          item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
-          document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + ')';
+          item.status = 'Done (' + specSummary + artNote + ' • ' + detectedBpm + ' BPM) ✓';
+          document.getElementById('convStatusText').textContent = 'Converted "' + outName + '" (' + specSummary + artNote + ')';
         }
       } else {
-        item.status = 'Done (' + specSummary + ' • ' + detectedBpm + ' BPM • ' + detectedKey + ') ✓';
+        item.status = 'Packed in .ZIP (' + specSummary + artNote + ') ✓';
       }
 
       renderConvQueue();
@@ -637,33 +802,59 @@
       return { blob: finalBlob, fileName: outName };
     }
 
+    async function ingestFilesIntoQueue(fileList) {
+      const files = Array.from(fileList || []);
+      for (const f of files) {
+        const parsed = parseArtistAndTitleFromFilename(f.name);
+        const art = await extractEmbeddedArtworkFromFile(f);
+        convQueue.push({
+          title: parsed.title,
+          artist: parsed.artist,
+          file: f,
+          coverJpegBytes: art ? art.jpegBytes : null,
+          coverDataUrl: art ? art.dataUrl : '',
+          status: art ? 'Ready (Artwork Found ✓)' : 'Ready'
+        });
+      }
+      renderConvQueue();
+    }
+
     function renderConvQueue() {
       document.getElementById('convQueueCount').textContent = String(convQueue.length);
       const zipBadge = document.getElementById('zipModeBadge');
       const convBtn = document.getElementById('convertAllBtn');
 
-      if (outputDirectoryHandle) {
-        zipBadge.classList.add('hidden');
-        convBtn.innerHTML = '<i class="fa-solid fa-folder-arrow-down mr-1"></i>Save All to "' + outputDirectoryHandle.name + '"';
-      } else if (convQueue.length >= 3) {
+      if (convQueue.length >= 3) {
         zipBadge.classList.remove('hidden');
-        convBtn.innerHTML = '<i class="fa-solid fa-file-zipper mr-1"></i>Convert &amp; Download .ZIP (' + convQueue.length + ')';
+        if (outputDirectoryHandle) {
+          convBtn.innerHTML = '<i class="fa-solid fa-file-zipper mr-1"></i>Save .ZIP (' + convQueue.length + ') to "' + outputDirectoryHandle.name + '"';
+        } else {
+          convBtn.innerHTML = '<i class="fa-solid fa-file-zipper mr-1"></i>Convert &amp; Download .ZIP (' + convQueue.length + ')';
+        }
       } else {
         zipBadge.classList.add('hidden');
-        convBtn.innerHTML = '⚡ Convert All';
+        if (outputDirectoryHandle) {
+          convBtn.innerHTML = '<i class="fa-solid fa-folder-arrow-down mr-1"></i>Save to "' + outputDirectoryHandle.name + '"';
+        } else {
+          convBtn.innerHTML = '⚡ Convert All';
+        }
       }
 
       const box = document.getElementById('convQueueList');
       if (!convQueue.length) {
-        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drop audio files on the left to begin. Click "Choose Output Folder" above to save files directly to any folder on your Mac.</div>';
+        box.innerHTML = '<div class="h-full min-h-[220px] flex items-center justify-center font-mono-tech text-xs text-gray-500">Drop audio files on the left to begin. Original cover art is preserved automatically, and 3+ files always bundle as a .ZIP.</div>';
         return;
       }
 
       box.innerHTML = convQueue.map((item, idx) => `
         <div class="hud-well p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
           <div class="flex items-center gap-2.5 flex-1 min-w-[200px]">
+            ${item.coverDataUrl
+              ? `<img src="${item.coverDataUrl}" alt="Art" class="w-10 h-10 rounded-lg object-cover border border-[var(--accent-primary)]/50 shrink-0" title="Original Embedded Cover Art Preserved" />`
+              : `<div class="w-10 h-10 rounded-lg bg-[#08080f] border border-[#1f2030] flex items-center justify-center text-[10px] text-gray-500 shrink-0"><i class="fa-solid fa-music"></i></div>`
+            }
             <input type="text" data-c-title="${idx}" value="${item.title.replace(/"/g, '&quot;')}" placeholder="Song Title (or Artist - Title)" class="hud-well px-2.5 py-1.5 rounded-lg text-xs font-bold text-white flex-1" />
-            <input type="text" data-c-artist="${idx}" value="${(item.artist || '').replace(/"/g, '&quot;')}" placeholder="Artist (optional)" class="hud-well px-2.5 py-1.5 rounded-lg text-[11px] text-gray-300 w-40" />
+            <input type="text" data-c-artist="${idx}" value="${(item.artist || '').replace(/"/g, '&quot;')}" placeholder="Artist (optional)" class="hud-well px-2.5 py-1.5 rounded-lg text-[11px] text-gray-300 w-36" />
           </div>
           <div class="flex items-center gap-2.5">
             <span class="text-[11px] text-emerald-400">${item.status}</span>
@@ -696,42 +887,25 @@
       dropZone.onclick = () => fileInp.click();
       dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('border-[var(--accent-primary)]'); };
       dropZone.ondragleave = () => dropZone.classList.remove('border-[var(--accent-primary)]');
-      dropZone.ondrop = (e) => {
+      dropZone.ondrop = async (e) => {
         e.preventDefault();
         dropZone.classList.remove('border-[var(--accent-primary)]');
-        Array.from(e.dataTransfer.files || []).forEach((f) => {
-          const parsed = parseArtistAndTitleFromFilename(f.name);
-          convQueue.push({ title: parsed.title, artist: parsed.artist, file: f, status: 'Ready' });
-        });
-        renderConvQueue();
+        await ingestFilesIntoQueue(e.dataTransfer.files);
       };
-      fileInp.onchange = (e) => {
-        Array.from(e.target.files || []).forEach((f) => {
-          const parsed = parseArtistAndTitleFromFilename(f.name);
-          convQueue.push({ title: parsed.title, artist: parsed.artist, file: f, status: 'Ready' });
-        });
-        renderConvQueue();
+      fileInp.onchange = async (e) => {
+        await ingestFilesIntoQueue(e.target.files);
       };
 
       document.getElementById('clearConvQueueBtn').onclick = () => { convQueue.length = 0; renderConvQueue(); };
 
+      // Batch Conversion Handler: 3+ tracks ALWAYS bundle as a .ZIP (saved into outputDirectoryHandle if chosen, or downloaded via browser)
       document.getElementById('convertAllBtn').onclick = async () => {
         if (!convQueue.length) return;
 
-        // If user selected a direct output folder, write every file directly to that folder!
-        if (outputDirectoryHandle) {
-          for (let i = 0; i < convQueue.length; i++) {
-            await transcodeQueueItemToBlob(i, true);
-          }
-          document.getElementById('convStatusText').textContent = 'Saved all ' + convQueue.length + ' converted tracks directly to "' + outputDirectoryHandle.name + '" ✓';
-          return;
-        }
-
-        // Otherwise, if 3+ tracks and no folder selected, bundle as a .ZIP archive
         if (convQueue.length >= 3 && window.JSZip) {
           const zip = new JSZip();
           const usedNames = new Set();
-          document.getElementById('convStatusText').textContent = 'Transcoding ' + convQueue.length + ' tracks into .ZIP archive...';
+          document.getElementById('convStatusText').textContent = 'Transcoding ' + convQueue.length + ' tracks (preserving artwork) into .ZIP archive...';
 
           for (let i = 0; i < convQueue.length; i++) {
             const res = await transcodeQueueItemToBlob(i, false);
@@ -746,17 +920,24 @@
             }
           }
 
-          document.getElementById('convStatusText').textContent = 'Compressing VNTEX_Converted_Batch.zip...';
+          const zipFileName = 'VNTEX_Converted_Batch_' + convQueue.length + '_Tracks.zip';
+          document.getElementById('convStatusText').textContent = 'Compressing ' + zipFileName + '...';
           const zipBlob = await zip.generateAsync({ type: 'blob' });
-          const zipUrl = URL.createObjectURL(zipBlob);
-          const a = document.createElement('a');
-          a.href = zipUrl;
-          a.download = 'VNTEX_Converted_Batch_' + convQueue.length + '_Tracks.zip';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(zipUrl), 8000);
-          document.getElementById('convStatusText').textContent = 'Downloaded VNTEX_Converted_Batch_' + convQueue.length + '_Tracks.zip ✓';
+
+          if (outputDirectoryHandle) {
+            await saveBlobDirectlyToFolder(outputDirectoryHandle, zipFileName, zipBlob);
+            document.getElementById('convStatusText').textContent = 'Saved "' + zipFileName + '" directly to folder "' + outputDirectoryHandle.name + '" ✓';
+          } else {
+            const zipUrl = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = zipUrl;
+            a.download = zipFileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(zipUrl), 8000);
+            document.getElementById('convStatusText').textContent = 'Downloaded "' + zipFileName + '" ✓';
+          }
         } else {
           for (let i = 0; i < convQueue.length; i++) {
             await transcodeQueueItemToBlob(i, true);

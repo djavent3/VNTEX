@@ -639,10 +639,6 @@
 
       document.getElementById('downloadAllBtn').onclick = async () => {
         if (!queue.length) return;
-        if (bloodOutputDirHandle) {
-          for (let i = 0; i < queue.length; i++) await processQueueItem(i, true);
-          return;
-        }
         if (queue.length >= 3 && window.JSZip) {
           const zip = new JSZip();
           const used = new Set();
@@ -659,16 +655,22 @@
               zip.file(name, res.finalBlob);
             }
           }
+          const zipFileName = 'VNTEX_Bloodstream_Batch_' + queue.length + '_Tracks.zip';
           const zipBlob = await zip.generateAsync({ type: 'blob' });
-          const u = URL.createObjectURL(zipBlob);
-          const a = document.createElement('a');
-          a.href = u;
-          a.download = 'VNTEX_Bloodstream_Batch_' + queue.length + '_Tracks.zip';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(u), 8000);
-          document.getElementById('systemStatusLabel').textContent = 'Downloaded VNTEX_Bloodstream_Batch_' + queue.length + '_Tracks.zip ✓';
+          if (bloodOutputDirHandle) {
+            await saveBloodBlobToFolder(bloodOutputDirHandle, zipFileName, zipBlob);
+            document.getElementById('systemStatusLabel').textContent = 'Saved "' + zipFileName + '" directly to folder "' + bloodOutputDirHandle.name + '" ✓';
+          } else {
+            const u = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = u;
+            a.download = zipFileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(u), 8000);
+            document.getElementById('systemStatusLabel').textContent = 'Downloaded "' + zipFileName + '" ✓';
+          }
         } else {
           for (let i = 0; i < queue.length; i++) {
             await processQueueItem(i, true);
