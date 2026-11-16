@@ -330,39 +330,43 @@
     let outputDirectoryHandle = null;
     let is432HzMode = false;
 
-    // 4-Point Hermite Cubic Interpolation Resampler for A=432Hz (ratio = 432 / 440 = 0.98181818)
-    function apply432HzPitchShift(chLeft, chRight) {
-      const ratio = 432 / 440; // 0.9818181818181818 (-31.766 cents)
+    // Async Non-Blocking 4-Point Hermite Cubic Resampler for A=432Hz (Yields every 262k frames so UI never freezes!)
+    async function apply432HzPitchShift(chLeft, chRight, onProgress) {
+      const ratio = 432 / 440; // 0.9818181818181818
       const inLen = chLeft.length;
       const outLen = Math.floor(inLen / ratio);
       const outL = new Float32Array(outLen);
       const outR = new Float32Array(outLen);
+      const CHUNK = 262144;
 
-      for (let i = 0; i < outLen; i++) {
-        const srcPos = i * ratio;
-        const idx = Math.floor(srcPos);
-        const frac = srcPos - idx;
+      for (let start = 0; start < outLen; start += CHUNK) {
+        const end = Math.min(outLen, start + CHUNK);
+        for (let i = start; i < end; i++) {
+          const srcPos = i * ratio;
+          const idx = srcPos | 0;
+          const frac = srcPos - idx;
 
-        const i0 = Math.max(0, idx - 1);
-        const i1 = idx;
-        const i2 = Math.min(inLen - 1, idx + 1);
-        const i3 = Math.min(inLen - 1, idx + 2);
+          const i0 = idx > 0 ? idx - 1 : 0;
+          const i1 = idx;
+          const i2 = idx + 1 < inLen ? idx + 1 : inLen - 1;
+          const i3 = idx + 2 < inLen ? idx + 2 : inLen - 1;
 
-        // Left channel cubic Hermite interpolation
-        const y0L = chLeft[i0], y1L = chLeft[i1], y2L = chLeft[i2], y3L = chLeft[i3];
-        const c0L = y1L;
-        const c1L = 0.5 * (y2L - y0L);
-        const c2L = y0L - 2.5 * y1L + 2 * y2L - 0.5 * y3L;
-        const c3L = 0.5 * (y3L - y0L) + 1.5 * (y1L - y2L);
-        outL[i] = Math.max(-1, Math.min(1, ((c3L * frac + c2L) * frac + c1L) * frac + c0L));
+          const y0L = chLeft[i0], y1L = chLeft[i1], y2L = chLeft[i2], y3L = chLeft[i3];
+          const c1L = 0.5 * (y2L - y0L);
+          const c2L = y0L - 2.5 * y1L + 2 * y2L - 0.5 * y3L;
+          const c3L = 0.5 * (y3L - y0L) + 1.5 * (y1L - y2L);
+          const vL = ((c3L * frac + c2L) * frac + c1L) * frac + y1L;
+          outL[i] = vL < -1 ? -1 : (vL > 1 ? 1 : vL);
 
-        // Right channel cubic Hermite interpolation
-        const y0R = chRight[i0], y1R = chRight[i1], y2R = chRight[i2], y3R = chRight[i3];
-        const c0R = y1R;
-        const c1R = 0.5 * (y2R - y0R);
-        const c2R = y0R - 2.5 * y1R + 2 * y2R - 0.5 * y3R;
-        const c3R = 0.5 * (y3R - y0R) + 1.5 * (y1R - y2R);
-        outR[i] = Math.max(-1, Math.min(1, ((c3R * frac + c2R) * frac + c1R) * frac + c0R));
+          const y0R = chRight[i0], y1R = chRight[i1], y2R = chRight[i2], y3R = chRight[i3];
+          const c1R = 0.5 * (y2R - y0R);
+          const c2R = y0R - 2.5 * y1R + 2 * y2R - 0.5 * y3R;
+          const c3R = 0.5 * (y3R - y0R) + 1.5 * (y1R - y2R);
+          const vR = ((c3R * frac + c2R) * frac + c1R) * frac + y1R;
+          outR[i] = vR < -1 ? -1 : (vR > 1 ? 1 : vR);
+        }
+        if (onProgress) onProgress(Math.round((end / outLen) * 100));
+        await new Promise((r) => setTimeout(r, 0));
       }
 
       return { chLeft: outL, chRight: outR };
@@ -1066,7 +1070,8 @@
       return [0x40, 0x0E, 0xAC, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     }
 
-    function encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes) {
+    // Async Non-Blocking 24-Bit / 16-Bit AIFF Encoder (Yields every 262k frames)
+    async function encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes, onProgress) {
       const numFrames = chLeft.length;
       const bytesPerSample = bitDepth === 24 ? 3 : 2;
       const ssndAudioBytes = numFrames * 2 * bytesPerSample;
@@ -1092,21 +1097,32 @@
       dv.setUint32(46, 0, false); dv.setUint32(50, 0, false);
 
       let p = 54;
+      const CHUNK = 262144;
       if (bitDepth === 24) {
-        for (let i = 0; i < numFrames; i++) {
-          const l = Math.max(-1, Math.min(1, chLeft[i]));
-          const r = Math.max(-1, Math.min(1, chRight[i]));
-          let l24 = Math.round(l < 0 ? l * 8388608 : l * 8388607);
-          let r24 = Math.round(r < 0 ? r * 8388608 : r * 8388607);
-          u8[p++] = (l24 >> 16) & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = l24 & 0xFF;
-          u8[p++] = (r24 >> 16) & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = r24 & 0xFF;
+        for (let start = 0; start < numFrames; start += CHUNK) {
+          const end = Math.min(numFrames, start + CHUNK);
+          for (let i = start; i < end; i++) {
+            const l = chLeft[i] < -1 ? -1 : (chLeft[i] > 1 ? 1 : chLeft[i]);
+            const r = chRight[i] < -1 ? -1 : (chRight[i] > 1 ? 1 : chRight[i]);
+            const l24 = (l < 0 ? l * 8388608 : l * 8388607) | 0;
+            const r24 = (r < 0 ? r * 8388608 : r * 8388607) | 0;
+            u8[p++] = (l24 >> 16) & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = l24 & 0xFF;
+            u8[p++] = (r24 >> 16) & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = r24 & 0xFF;
+          }
+          if (onProgress) onProgress(Math.round((end / numFrames) * 100));
+          await new Promise((r) => setTimeout(r, 0));
         }
       } else {
-        for (let i = 0; i < numFrames; i++) {
-          const l = Math.max(-1, Math.min(1, chLeft[i]));
-          const r = Math.max(-1, Math.min(1, chRight[i]));
-          dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, false); p += 2;
-          dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, false); p += 2;
+        for (let start = 0; start < numFrames; start += CHUNK) {
+          const end = Math.min(numFrames, start + CHUNK);
+          for (let i = start; i < end; i++) {
+            const l = chLeft[i] < -1 ? -1 : (chLeft[i] > 1 ? 1 : chLeft[i]);
+            const r = chRight[i] < -1 ? -1 : (chRight[i] > 1 ? 1 : chRight[i]);
+            dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, false); p += 2;
+            dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, false); p += 2;
+          }
+          if (onProgress) onProgress(Math.round((end / numFrames) * 100));
+          await new Promise((r) => setTimeout(r, 0));
         }
       }
       if (ssndPad) u8[p++] = 0x00;
@@ -1120,7 +1136,8 @@
       return new Blob([buf], { type: 'audio/aiff' });
     }
 
-    function encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, mimeType, id3Bytes) {
+    // Async Non-Blocking WAV / FLAC Encoder (Yields every 262k frames)
+    async function encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, mimeType, id3Bytes, onProgress) {
       const numFrames = chLeft.length;
       const bytesPerSample = bitDepth === 24 ? 3 : 2;
       const dataLen = numFrames * 2 * bytesPerSample;
@@ -1139,25 +1156,35 @@
       dv.setUint16(34, bitDepth, true); wstr(36, 'data'); dv.setUint32(40, dataLen, true);
 
       let p = 44;
+      const CHUNK = 262144;
       if (bitDepth === 24) {
-        for (let i = 0; i < numFrames; i++) {
-          const l = Math.max(-1, Math.min(1, chLeft[i]));
-          const r = Math.max(-1, Math.min(1, chRight[i]));
-          let l24 = Math.round(l < 0 ? l * 8388608 : l * 8388607);
-          let r24 = Math.round(r < 0 ? r * 8388608 : r * 8388607);
-          u8[p++] = l24 & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = (l24 >> 16) & 0xFF;
-          u8[p++] = r24 & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = (r24 >> 16) & 0xFF;
+        for (let start = 0; start < numFrames; start += CHUNK) {
+          const end = Math.min(numFrames, start + CHUNK);
+          for (let i = start; i < end; i++) {
+            const l = chLeft[i] < -1 ? -1 : (chLeft[i] > 1 ? 1 : chLeft[i]);
+            const r = chRight[i] < -1 ? -1 : (chRight[i] > 1 ? 1 : chRight[i]);
+            const l24 = (l < 0 ? l * 8388608 : l * 8388607) | 0;
+            const r24 = (r < 0 ? r * 8388608 : r * 8388607) | 0;
+            u8[p++] = l24 & 0xFF; u8[p++] = (l24 >> 8) & 0xFF; u8[p++] = (l24 >> 16) & 0xFF;
+            u8[p++] = r24 & 0xFF; u8[p++] = (r24 >> 8) & 0xFF; u8[p++] = (r24 >> 16) & 0xFF;
+          }
+          if (onProgress) onProgress(Math.round((end / numFrames) * 100));
+          await new Promise((r) => setTimeout(r, 0));
         }
       } else {
-        for (let i = 0; i < numFrames; i++) {
-          const l = Math.max(-1, Math.min(1, chLeft[i]));
-          const r = Math.max(-1, Math.min(1, chRight[i]));
-          dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, true); p += 2;
-          dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, true); p += 2;
+        for (let start = 0; start < numFrames; start += CHUNK) {
+          const end = Math.min(numFrames, start + CHUNK);
+          for (let i = start; i < end; i++) {
+            const l = chLeft[i] < -1 ? -1 : (chLeft[i] > 1 ? 1 : chLeft[i]);
+            const r = chRight[i] < -1 ? -1 : (chRight[i] > 1 ? 1 : chRight[i]);
+            dv.setInt16(p, l < 0 ? l * 0x8000 : l * 0x7FFF, true); p += 2;
+            dv.setInt16(p, r < 0 ? r * 0x8000 : r * 0x7FFF, true); p += 2;
+          }
+          if (onProgress) onProgress(Math.round((end / numFrames) * 100));
+          await new Promise((r) => setTimeout(r, 0));
         }
       }
 
-      // Append 'id3 ' chunk to WAV exports as well so Rekordbox/Serato reads WAV artwork too!
       if (id3Len) {
         wstr(p, 'id3 '); p += 4;
         dv.setUint32(p, id3Len, true); p += 4;
@@ -1176,12 +1203,13 @@
       return mp3Bytes;
     }
 
+    // Zero-Copy Channel Extractor (Avoids extra ArrayBuffer/Float32Array copies to save RAM)
     async function getStereoChannelsForItem(item, targetSr) {
       const arrayBuf = await item.file.arrayBuffer();
       const actx = getSharedAudioContext();
-      const audioBuf = await actx.decodeAudioData(arrayBuf.slice(0));
-      const ch0 = new Float32Array(audioBuf.getChannelData(0));
-      const ch1 = audioBuf.numberOfChannels > 1 ? new Float32Array(audioBuf.getChannelData(1)) : ch0;
+      const audioBuf = await actx.decodeAudioData(arrayBuf);
+      const ch0 = audioBuf.getChannelData(0);
+      const ch1 = audioBuf.numberOfChannels > 1 ? audioBuf.getChannelData(1) : ch0;
       const sr = audioBuf.sampleRate || targetSr;
       return { chLeft: ch0, chRight: ch1, sr };
     }
@@ -1228,13 +1256,13 @@
       const detectedBpm = minBpm + ((item.title.length * 7 + idx * 11) % (span + 1));
       const detectedKey = CAMELOT_KEYS[idx % CAMELOT_KEYS.length];
 
-      setRowStatusText(idx, 'Transcoding...');
-      await new Promise((r) => setTimeout(r, 5));
+      setRowStatusText(idx, 'Decoding...');
+      await new Promise((r) => setTimeout(r, 0));
 
       if (item.coverJpegBytes === undefined) {
         const res = await inspectAndExtractArtworkDeep(item.file);
         item.coverJpegBytes = res.jpegBytes;
-          item.coverMime = res.coverMime || 'image/jpeg';
+        item.coverMime = res.coverMime || 'image/jpeg';
         item.coverDataUrl = res.dataUrl;
         item.diag = res.diag;
         updateRowArtworkDom(item);
@@ -1250,38 +1278,54 @@
         finalBlob = new Blob([id3Bytes, rawU8], { type: 'audio/mpeg' });
       } else {
         let { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr);
+
         if (is432HzMode) {
-          setRowStatusText(idx, 'Retuning to 432 Hz...');
-          await new Promise((r) => setTimeout(r, 5));
-          const shifted = apply432HzPitchShift(chLeft, chRight);
+          const shifted = await apply432HzPitchShift(chLeft, chRight, (pct) => {
+            setRowStatusText(idx, 'Retuning 432Hz (' + pct + '%)...');
+          });
           chLeft = shifted.chLeft;
           chRight = shifted.chRight;
         }
 
         if (format === 'aiff') {
-          finalBlob = encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes);
+          finalBlob = await encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes, (pct) => {
+            setRowStatusText(idx, 'Packing AIFF (' + pct + '%)...');
+          });
         } else if (format === 'wav' || format === 'flac') {
-          finalBlob = encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, format === 'flac' ? 'audio/flac' : 'audio/wav', id3Bytes);
+          finalBlob = await encodeStereoFloatToWavBlob(chLeft, chRight, sr, bitDepth, format === 'flac' ? 'audio/flac' : 'audio/wav', id3Bytes, (pct) => {
+            setRowStatusText(idx, 'Packing ' + format.toUpperCase() + ' (' + pct + '%)...');
+          });
         } else {
+          // Non-Blocking Chunked MP3 / M4A Encoder (Converts float->Int16 and encodes in 64k-sample slices so UI never freezes!)
           const len = chLeft.length;
-          const left16 = new Int16Array(len);
-          const right16 = new Int16Array(len);
-          for (let i = 0; i < len; i++) {
-            const l = Math.max(-1, Math.min(1, chLeft[i]));
-            const r = Math.max(-1, Math.min(1, chRight[i]));
-            left16[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
-            right16[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
-          }
           const enc = new lamejs.Mp3Encoder(2, sr, kbps);
           const chunks = [id3Bytes];
-          for (let i = 0; i < len; i += 1152) {
-            const b = enc.encodeBuffer(left16.subarray(i, i + 1152), right16.subarray(i, i + 1152));
+          const MP3_SLICE = 1152 * 48; // ~55,296 samples per slice (~1.2 sec of audio per tick)
+          const leftSlice = new Int16Array(MP3_SLICE);
+          const rightSlice = new Int16Array(MP3_SLICE);
+
+          for (let start = 0; start < len; start += MP3_SLICE) {
+            const count = Math.min(MP3_SLICE, len - start);
+            for (let i = 0; i < count; i++) {
+              const l = chLeft[start + i];
+              const r = chRight[start + i];
+              leftSlice[i] = l < -1 ? -32768 : (l > 1 ? 32767 : (l < 0 ? l * 32768 : l * 32767));
+              rightSlice[i] = r < -1 ? -32768 : (r > 1 ? 32767 : (r < 0 ? r * 32768 : r * 32767));
+            }
+            const b = enc.encodeBuffer(leftSlice.subarray(0, count), rightSlice.subarray(0, count));
             if (b.length > 0) chunks.push(new Uint8Array(b));
+
+            const pct = Math.round(((start + count) / len) * 100);
+            setRowStatusText(idx, 'Encoding MP3 (' + pct + '%)...');
+            await new Promise((r) => setTimeout(r, 0));
           }
           const fl = enc.flush();
           if (fl.length > 0) chunks.push(new Uint8Array(fl));
           finalBlob = new Blob(chunks, { type: format === 'm4a' ? 'audio/mp4' : 'audio/mpeg' });
         }
+        // Release float channel references immediately for GC
+        chLeft = null;
+        chRight = null;
       }
 
       const outName = buildCleanOutputFilename(item.artist, item.title, format);
