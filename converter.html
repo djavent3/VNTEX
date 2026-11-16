@@ -162,6 +162,21 @@
         </div>
       </div>
 
+      <!-- Card 1B: 432 Hz Natural Tuning Toggle -->
+      <div class="hud-glass rounded-2xl p-3.5 flex items-center justify-between gap-3">
+        <div class="space-y-0.5">
+          <div class="font-mono-tech text-[10px] uppercase tracking-wider text-[var(--accent-primary)] font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-wave-square"></i>
+            <span>Pitch Reference Tuning</span>
+          </div>
+          <div id="tuningSubtext" class="font-mono-tech text-[10px] text-[var(--text-secondary)]">Standard Concert Pitch (A = 440 Hz)</div>
+        </div>
+        <button id="toggle432HzBtn" type="button" class="hud-well px-3.5 py-2 rounded-xl font-mono-tech text-xs font-extrabold text-gray-300 hover:border-[var(--accent-primary)] transition flex items-center gap-2 cursor-pointer" title="Toggle between standard A=440Hz and Natural A=432Hz (-31.77 cents)">
+          <span id="toggle432Dot" class="w-2 h-2 rounded-full bg-gray-500"></span>
+          <span id="toggle432Label">440 Hz</span>
+        </button>
+      </div>
+
       <!-- Card 2: Dynamic BPM Range Bounds -->
       <div class="hud-glass rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
@@ -313,6 +328,45 @@
     const IMAGE_EXT_REGEX = /\.(jpe?g|png|webp|bmp)$/i;
     const convQueue = [];
     let outputDirectoryHandle = null;
+    let is432HzMode = false;
+
+    // 4-Point Hermite Cubic Interpolation Resampler for A=432Hz (ratio = 432 / 440 = 0.98181818)
+    function apply432HzPitchShift(chLeft, chRight) {
+      const ratio = 432 / 440; // 0.9818181818181818 (-31.766 cents)
+      const inLen = chLeft.length;
+      const outLen = Math.floor(inLen / ratio);
+      const outL = new Float32Array(outLen);
+      const outR = new Float32Array(outLen);
+
+      for (let i = 0; i < outLen; i++) {
+        const srcPos = i * ratio;
+        const idx = Math.floor(srcPos);
+        const frac = srcPos - idx;
+
+        const i0 = Math.max(0, idx - 1);
+        const i1 = idx;
+        const i2 = Math.min(inLen - 1, idx + 1);
+        const i3 = Math.min(inLen - 1, idx + 2);
+
+        // Left channel cubic Hermite interpolation
+        const y0L = chLeft[i0], y1L = chLeft[i1], y2L = chLeft[i2], y3L = chLeft[i3];
+        const c0L = y1L;
+        const c1L = 0.5 * (y2L - y0L);
+        const c2L = y0L - 2.5 * y1L + 2 * y2L - 0.5 * y3L;
+        const c3L = 0.5 * (y3L - y0L) + 1.5 * (y1L - y2L);
+        outL[i] = Math.max(-1, Math.min(1, ((c3L * frac + c2L) * frac + c1L) * frac + c0L));
+
+        // Right channel cubic Hermite interpolation
+        const y0R = chRight[i0], y1R = chRight[i1], y2R = chRight[i2], y3R = chRight[i3];
+        const c0R = y1R;
+        const c1R = 0.5 * (y2R - y0R);
+        const c2R = y0R - 2.5 * y1R + 2 * y2R - 0.5 * y3R;
+        const c3R = 0.5 * (y3R - y0R) + 1.5 * (y1R - y2R);
+        outR[i] = Math.max(-1, Math.min(1, ((c3R * frac + c2R) * frac + c1R) * frac + c0R));
+      }
+
+      return { chLeft: outL, chRight: outR };
+    }
     let sharedAudioCtx = null;
     let activeZipUrls = [];
     let pendingCoverTargetIdx = null; // null = apply to all missing, number = specific track index
@@ -1190,12 +1244,19 @@
       let finalBlob = null;
 
       const isInputMp3 = /\.mp3$/i.test(item.file.name || '');
-      if (format === 'mp3' && isInputMp3) {
+      if (format === 'mp3' && isInputMp3 && !is432HzMode) {
         const rawBuf = await item.file.arrayBuffer();
         const rawU8 = stripExistingId3v2TagFromMp3(new Uint8Array(rawBuf));
         finalBlob = new Blob([id3Bytes, rawU8], { type: 'audio/mpeg' });
       } else {
-        const { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr);
+        let { chLeft, chRight, sr } = await getStereoChannelsForItem(item, targetSr);
+        if (is432HzMode) {
+          setRowStatusText(idx, 'Retuning to 432 Hz...');
+          await new Promise((r) => setTimeout(r, 5));
+          const shifted = apply432HzPitchShift(chLeft, chRight);
+          chLeft = shifted.chLeft;
+          chRight = shifted.chRight;
+        }
 
         if (format === 'aiff') {
           finalBlob = encodeStereoFloatToAiffBlob(chLeft, chRight, sr, bitDepth, id3Bytes);
@@ -1227,7 +1288,7 @@
       const specSummary = (format === 'aiff' || format === 'wav' || format === 'flac')
         ? (bitDepth + '-Bit .' + format.toUpperCase())
         : (kbps + 'k .' + format.toUpperCase());
-      const artNote = item.coverJpegBytes ? ' + Art' : '';
+      const artNote = (item.coverJpegBytes ? ' + Art' : '') + (is432HzMode ? ' • 432Hz' : '');
 
       if (triggerDirectSave) {
         if (outputDirectoryHandle) {
@@ -1481,6 +1542,30 @@
       document.getElementById('bpmMaxInput').addEventListener('input', updateBpmRangeBoundsUI);
       document.getElementById('converterPresetSelect').addEventListener('change', (e) => applyConverterPreset(e.target.value));
       document.getElementById('selectOutputFolderBtn').onclick = chooseOutputDirectory;
+      const btn432 = document.getElementById('toggle432HzBtn');
+      if (btn432) {
+        btn432.onclick = () => {
+          is432HzMode = !is432HzMode;
+          const dot = document.getElementById('toggle432Dot');
+          const lbl = document.getElementById('toggle432Label');
+          const sub = document.getElementById('tuningSubtext');
+          if (is432HzMode) {
+            btn432.className = 'px-3.5 py-2 rounded-xl font-mono-tech text-xs font-extrabold bg-[#00f2fe]/15 text-[#00f2fe] border border-[#00f2fe] shadow-[0_0_14px_rgba(0,242,254,0.3)] transition flex items-center gap-2 cursor-pointer';
+            dot.className = 'w-2 h-2 rounded-full bg-[#00f2fe] animate-pulse';
+            lbl.textContent = '432 Hz ON';
+            sub.textContent = 'Natural Tuning Active (A = 432 Hz • -31.8 cents)';
+            sub.className = 'font-mono-tech text-[10px] text-[#00f2fe] font-bold';
+            document.getElementById('convStatusText').textContent = '432 Hz Natural Tuning ENABLED — All converted tracks will be retuned to A=432Hz.';
+          } else {
+            btn432.className = 'hud-well px-3.5 py-2 rounded-xl font-mono-tech text-xs font-extrabold text-gray-300 hover:border-[var(--accent-primary)] transition flex items-center gap-2 cursor-pointer';
+            dot.className = 'w-2 h-2 rounded-full bg-gray-500';
+            lbl.textContent = '440 Hz';
+            sub.textContent = 'Standard Concert Pitch (A = 440 Hz)';
+            sub.className = 'font-mono-tech text-[10px] text-[var(--text-secondary)]';
+            document.getElementById('convStatusText').textContent = 'Reverted to Standard Concert Pitch (A = 440 Hz).';
+          }
+        };
+      }
       document.getElementById('clearOutputFolderBtn').onclick = clearOutputDirectory;
       document.getElementById('closeTagInspectorBtn').onclick = () => document.getElementById('tagInspectorModal').classList.add('hidden');
 
